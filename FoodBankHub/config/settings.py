@@ -25,7 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-jvg9$85_4ln!e1hyr47#_fuwhj%++y2wlrn31a)4^5g#z+dsm5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+# Default False so hosts without DEBUG set (e.g. Render) never enable dev logging to disk.
+# Local: set DEBUG=True in .env (see .env.example).
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
@@ -282,7 +284,7 @@ _csrf_trusted = config('CSRF_TRUSTED_ORIGINS', default='').strip()
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
 
 # Logging: dictConfig configures every entry in handlers, so do not register
-# FileHandler when DEBUG is False (Docker collectstatic, Render — no logs/ dir).
+# FileHandler when DEBUG is False (Docker collectstatic, Render).
 _log_handlers = ['console', 'file'] if DEBUG else ['console']
 _logging_handlers = {
     'console': {
@@ -290,6 +292,7 @@ _logging_handlers = {
     },
 }
 if DEBUG:
+    (BASE_DIR / 'logs').mkdir(parents=True, exist_ok=True)
     _logging_handlers['file'] = {
         'class': 'logging.FileHandler',
         'filename': BASE_DIR / 'logs' / 'django.log',

@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# So Django file logging never fails if DEBUG is ever True without mkdir
+RUN mkdir -p /app/logs
+
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
