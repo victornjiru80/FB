@@ -1,0 +1,525 @@
+<div class="position-sticky pt-3">
+    <ul class="nav flex-column" id="{{ id_prefix }}sidebarAccordion">
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+               href="{% url 'custom_admin:dashboard' %}">
+                <i class="fas fa-home"></i>
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}userManagementSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}userManagementSubmenu">
+                <i class="fas fa-users"></i>
+                User Management
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if 'user' in request.resolver_match.url_name or 'donors' in request.resolver_match.url_name or 'foodbanks' in request.resolver_match.url_name or 'recipients' in request.resolver_match.url_name or 'admins' in request.resolver_match.url_name %}show{% endif %}"
+                 id="{{ id_prefix }}userManagementSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:user_management' %}">
+                            <i class="fas fa-th-large"></i>
+                            All Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'donors_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:donors_management' %}">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            Donors
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'foodbanks_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:foodbanks_management' %}">
+                            <i class="fas fa-building"></i>
+                            Food Banks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipients_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:recipients_management' %}">
+                            <i class="fas fa-user-circle"></i>
+                            Recipients
+                        </a>
+                    </li>
+                    {% if request.user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admins_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:admins_management' %}">
+                            <i class="fas fa-user-shield"></i>
+                            Administrators
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}donationTypesSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}donationTypesSubmenu">
+                <i class="fas fa-gift"></i>
+                Donation Types
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if 'unspecified_donations' in request.resolver_match.url_name or 'subsidized_donations' in request.resolver_match.url_name or 'direct_donations' in request.resolver_match.url_name or 'posted_unspecified' in request.resolver_match.url_name or 'posted_subsidized' in request.resolver_match.url_name or 'posted_specified' in request.resolver_match.url_name or 'received_donations' in request.resolver_match.url_name %}show{% endif %}"
+                 id="{{ id_prefix }}donationTypesSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'received_donations_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:received_donations_management' %}">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            Received Donations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}unspecifiedDonationsSubmenu"
+                           aria-expanded="false" aria-controls="{{ id_prefix }}unspecifiedDonationsSubmenu">
+                            <i class="fas fa-box-open"></i>
+                            Unspecified
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if 'unspecified_donations' in request.resolver_match.url_name or 'posted_unspecified' in request.resolver_match.url_name %}show{% endif %}" id="{{ id_prefix }}unspecifiedDonationsSubmenu">
+                            <ul class="nav flex-column sidebar-submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'unspecified_donations_management' or request.resolver_match.url_name == 'unspecified_donation_details' or request.resolver_match.url_name == 'export_unspecified_donations_excel' or request.resolver_match.url_name == 'export_unspecified_donations_pdf' or request.resolver_match.url_name == 'export_donation_details_pdf' %}active{% endif %}"
+                                       href="{% url 'custom_admin:unspecified_donations_management' %}">
+                                        <i class="fas fa-cog"></i>
+                                        Manage
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'posted_unspecified_donations' %}active{% endif %}"
+                                       href="{% url 'custom_admin:posted_unspecified_donations' %}">
+                                        <i class="fas fa-check-circle"></i>
+                                        Posted
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}subsidizedDonationsSubmenu"
+                           aria-expanded="false" aria-controls="{{ id_prefix }}subsidizedDonationsSubmenu">
+                            <i class="fas fa-tags"></i>
+                            Subsidized
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if 'subsidized_donations' in request.resolver_match.url_name or 'posted_subsidized' in request.resolver_match.url_name %}show{% endif %}" id="{{ id_prefix }}subsidizedDonationsSubmenu">
+                            <ul class="nav flex-column sidebar-submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'subsidized_donations_management' or request.resolver_match.url_name == 'subsidized_donation_details' or request.resolver_match.url_name == 'export_subsidized_donations_excel' or request.resolver_match.url_name == 'export_subsidized_donations_pdf' or request.resolver_match.url_name == 'export_subsidized_donation_details_pdf' %}active{% endif %}"
+                                       href="{% url 'custom_admin:subsidized_donations_management' %}">
+                                        <i class="fas fa-cog"></i>
+                                        Manage
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'posted_subsidized_donations' %}active{% endif %}"
+                                       href="{% url 'custom_admin:posted_subsidized_donations' %}">
+                                        <i class="fas fa-check-circle"></i>
+                                        Posted
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}specifiedDonationsSubmenu"
+                           aria-expanded="false" aria-controls="{{ id_prefix }}specifiedDonationsSubmenu">
+                            <i class="fas fa-arrow-right"></i>
+                            Specified
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if 'specified_donations_management' in request.resolver_match.url_name or 'posted_specified' in request.resolver_match.url_name %}show{% endif %}" id="{{ id_prefix }}specifiedDonationsSubmenu">
+                            <ul class="nav flex-column sidebar-submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'specified_donations_management' or request.resolver_match.url_name == 'direct_donation_details' %}active{% endif %}"
+                                       href="{% url 'custom_admin:specified_donations_management' %}">
+                                        <i class="fas fa-list"></i>
+                                        Manage
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'posted_specified_donations' %}active{% endif %}"
+                                       href="{% url 'custom_admin:posted_specified_donations' %}">
+                                        <i class="fas fa-check-circle"></i>
+                                        Posted
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}directDonationsSubmenu"
+                           aria-expanded="false" aria-controls="{{ id_prefix }}directDonationsSubmenu">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            Direct Donations
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if 'direct_donations' in request.resolver_match.url_name or 'posted_direct' in request.resolver_match.url_name %}show{% endif %}" id="{{ id_prefix }}directDonationsSubmenu">
+                            <ul class="nav flex-column sidebar-submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'direct_donations_management' %}active{% endif %}"
+                                       href="{% url 'custom_admin:direct_donations_management' %}">
+                                        <i class="fas fa-bullhorn"></i>
+                                        Direct Requests
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'direct_donations_inventory' %}active{% endif %}"
+                                       href="{% url 'custom_admin:direct_donations_inventory' %}">
+                                        <i class="fas fa-boxes"></i>
+                                        Inventory
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+
+
+        <li class="nav-item">
+            <a class="nav-link collapsed {% if request.resolver_match.url_name == 'foodbank_approvals' or request.resolver_match.url_name == 'approved_foodbanks' or request.resolver_match.url_name == 'rejected_foodbank_applications' or request.resolver_match.url_name == 'approve_foodbank' or request.resolver_match.url_name == 'reject_foodbank' or request.resolver_match.url_name == 'reopen_foodbank_application' or request.resolver_match.url_name == 'reopen_approved_foodbank' or request.resolver_match.url_name == 'view_foodbank_application' %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}foodbankApprovalsSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}foodbankApprovalsSubmenu">
+                <i class="fas fa-clipboard-check"></i>
+                Foodbank Approvals
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if request.resolver_match.url_name == 'foodbank_approvals' or request.resolver_match.url_name == 'approved_foodbanks' or request.resolver_match.url_name == 'rejected_foodbank_applications' or request.resolver_match.url_name == 'approve_foodbank' or request.resolver_match.url_name == 'reject_foodbank' or request.resolver_match.url_name == 'reopen_foodbank_application' or request.resolver_match.url_name == 'reopen_approved_foodbank' or request.resolver_match.url_name == 'view_foodbank_application' %}show{% endif %}"
+                 id="{{ id_prefix }}foodbankApprovalsSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'foodbank_approvals' %}active{% endif %}"
+                           href="{% url 'custom_admin:foodbank_approvals' %}">
+                            <i class="fas fa-clipboard-check"></i>
+                            Foodbank Approvals
+                            {% if pending_foodbanks > 0 %}
+                                <span class="badge bg-warning text-dark ms-2">{{ pending_foodbanks }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'approved_foodbanks' %}active{% endif %}"
+                           href="{% url 'custom_admin:approved_foodbanks' %}">
+                            <i class="fas fa-check-circle"></i>
+                            Approved Food Banks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'rejected_foodbank_applications' %}active{% endif %}"
+                           href="{% url 'custom_admin:rejected_foodbank_applications' %}">
+                            <i class="fas fa-times-circle"></i>
+                            Rejected Applications
+                            {% if rejected_foodbanks > 0 %}
+                                <span class="badge bg-danger ms-2">{{ rejected_foodbanks }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed {% if request.resolver_match.url_name == 'support_messages' or request.resolver_match.url_name == 'support_message_detail' %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}supportSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}supportSubmenu">
+                <i class="fas fa-headset"></i>
+                Support
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if request.resolver_match.url_name == 'support_messages' or request.resolver_match.url_name == 'support_message_detail' %}show{% endif %}"
+                 id="{{ id_prefix }}supportSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'support_messages' and request.GET.status != 'resolved' and request.GET.status != 'closed' or request.resolver_match.url_name == 'support_message_detail' %}active{% endif %}"
+                           href="{% url 'custom_admin:support_messages' %}">
+                            <i class="fas fa-headset"></i>
+                            Support Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'support_messages' and request.GET.status == 'resolved' or request.resolver_match.url_name == 'support_messages' and request.GET.status == 'closed' %}active{% endif %}"
+                           href="{% url 'custom_admin:support_messages' %}?status=resolved">
+                            <i class="fas fa-check-circle"></i>
+                            Resolved Support
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}accountDeletionSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}accountDeletionSubmenu">
+                <i class="fas fa-user-times"></i>
+                Account Deletion
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if 'account_deletion' in request.resolver_match.url_name %}show{% endif %}"
+                 id="{{ id_prefix }}accountDeletionSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'account_deletion_requests' and request.GET.status|default:'pending' == 'pending' %}active{% endif %}"
+                           href="{% url 'custom_admin:account_deletion_requests' %}?status=pending">
+                            <i class="fas fa-clipboard-check"></i>
+                            Deletion Approvals
+                            {% if pending_deletion_count %}
+                            <span class="badge bg-warning ms-2">{{ pending_deletion_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'account_deletion_requests' and request.GET.status == 'approved' %}active{% endif %}"
+                           href="{% url 'custom_admin:account_deletion_requests' %}?status=approved">
+                            <i class="fas fa-check-circle"></i>
+                            Deleted Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'account_deletion_requests' and request.GET.status == 'rejected' %}active{% endif %}"
+                           href="{% url 'custom_admin:account_deletion_requests' %}?status=rejected">
+                            <i class="fas fa-times-circle"></i>
+                            Rejected Requests
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}adminManagementSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}adminManagementSubmenu">
+                <i class="fas fa-user-shield"></i>
+                Admin Management
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if request.resolver_match.url_name == 'admin_login_logs' or request.resolver_match.url_name == 'admin_codes_management' %}show{% endif %}"
+                 id="{{ id_prefix }}adminManagementSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_login_logs' %}active{% endif %}"
+                           href="{% url 'custom_admin:admin_login_logs' %}">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Admin Login Logs
+                        </a>
+                    </li>
+                    {% if request.user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_codes_management' %}active{% endif %}"
+                           href="{% url 'custom_admin:admin_codes_management' %}">
+                            <i class="fas fa-key"></i>
+                            Admin Codes
+                            <span class="badge bg-warning ms-2">Superuser</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}testimonialsSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}testimonialsSubmenu">
+                <i class="fas fa-comments"></i>
+                All Testimonials
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if request.resolver_match.url_name == 'testimonials_overview' or request.resolver_match.url_name == 'testimonials_category' or request.resolver_match.url_name == 'testimonials_category_status' or request.resolver_match.url_name == 'approve_testimonial' or request.resolver_match.url_name == 'reject_testimonial' %}show{% endif %}"
+                 id="{{ id_prefix }}testimonialsSubmenu" data-bs-parent="#{{ id_prefix }}sidebarAccordion">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_overview' %}active{% endif %}"
+                           href="{% url 'custom_admin:testimonials_overview' %}">
+                            <i class="fas fa-th-large"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}testimonialsRecipientSubmenu" aria-expanded="false" aria-controls="{{ id_prefix }}testimonialsRecipientSubmenu">
+                            <i class="fas fa-user-circle"></i>
+                            Recipient Testimonials
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if request.resolver_match.kwargs.category == 'recipient' and request.resolver_match.url_name == 'testimonials_category_status' or request.resolver_match.kwargs.category == 'recipient' and request.resolver_match.url_name == 'reject_testimonial' %}show{% endif %}" id="{{ id_prefix }}testimonialsRecipientSubmenu">
+                            <ul class="nav flex-column sidebar-submenu ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'recipient' and request.resolver_match.kwargs.status == 'displayed' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'recipient' 'displayed' %}">
+                                        Displayed
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'recipient' and request.resolver_match.kwargs.status == 'pending' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'recipient' 'pending' %}">
+                                        Pending
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'recipient' and request.resolver_match.kwargs.status == 'archived' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'recipient' 'archived' %}">
+                                        Archived
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'recipient' and request.resolver_match.kwargs.status == 'rejected' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'recipient' 'rejected' %}">
+                                        Rejected
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}testimonialsDonorSubmenu" aria-expanded="false" aria-controls="{{ id_prefix }}testimonialsDonorSubmenu">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            Donor Testimonials
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if request.resolver_match.kwargs.category == 'donor' and request.resolver_match.url_name == 'testimonials_category_status' or request.resolver_match.kwargs.category == 'donor' and request.resolver_match.url_name == 'reject_testimonial' %}show{% endif %}" id="{{ id_prefix }}testimonialsDonorSubmenu">
+                            <ul class="nav flex-column sidebar-submenu ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'donor' and request.resolver_match.kwargs.status == 'displayed' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'donor' 'displayed' %}">
+                                        Displayed
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'donor' and request.resolver_match.kwargs.status == 'pending' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'donor' 'pending' %}">
+                                        Pending
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'donor' and request.resolver_match.kwargs.status == 'archived' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'donor' 'archived' %}">
+                                        Archived
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'donor' and request.resolver_match.kwargs.status == 'rejected' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'donor' 'rejected' %}">
+                                        Rejected
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}testimonialsFoodbankSubmenu" aria-expanded="false" aria-controls="{{ id_prefix }}testimonialsFoodbankSubmenu">
+                            <i class="fas fa-building"></i>
+                            Foodbank Testimonials
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse {% if request.resolver_match.kwargs.category == 'foodbank' and request.resolver_match.url_name == 'testimonials_category_status' or request.resolver_match.kwargs.category == 'foodbank' and request.resolver_match.url_name == 'reject_testimonial' %}show{% endif %}" id="{{ id_prefix }}testimonialsFoodbankSubmenu">
+                            <ul class="nav flex-column sidebar-submenu ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'foodbank' and request.resolver_match.kwargs.status == 'displayed' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'foodbank' 'displayed' %}">
+                                        Displayed
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'foodbank' and request.resolver_match.kwargs.status == 'pending' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'foodbank' 'pending' %}">
+                                        Pending
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'foodbank' and request.resolver_match.kwargs.status == 'archived' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'foodbank' 'archived' %}">
+                                        Archived
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'testimonials_category_status' and request.resolver_match.kwargs.category == 'foodbank' and request.resolver_match.kwargs.status == 'rejected' %}active{% endif %}" href="{% url 'custom_admin:testimonials_category_status' 'foodbank' 'rejected' %}">
+                                        Rejected
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}subscriptionsSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}subscriptionsSubmenu">
+                <i class="fas fa-credit-card"></i>
+                Subscriptions
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if request.resolver_match.url_name == 'subscription_management' or request.resolver_match.url_name == 'payment_verification' or request.resolver_match.url_name == 'posted_subscriptions' or request.resolver_match.url_name == 'subscription_detail' or request.resolver_match.url_name == 'payment_detail' or request.resolver_match.url_name == 'system_support_donations' or request.resolver_match.url_name == 'system_support_donation_detail' %}show{% endif %}"
+                 id="{{ id_prefix }}subscriptionsSubmenu">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'subscription_management' or request.resolver_match.url_name == 'subscription_detail' %}active{% endif %}"
+                           href="{% url 'custom_admin:subscription_management' %}">
+                            <i class="fas fa-th-large"></i>
+                            All Subscriptions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'payment_verification' and request.GET.status != 'rejected' or request.resolver_match.url_name == 'payment_detail' %}active{% endif %}"
+                           href="{% url 'custom_admin:payment_verification' %}">
+                            <i class="fas fa-check-circle"></i>
+                            Payment Verification
+                            {% if pending_payments > 0 %}
+                                <span class="badge bg-danger ms-2">{{ pending_payments }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'payment_verification' and request.GET.status == 'rejected' %}active{% endif %}"
+                           href="{% url 'custom_admin:payment_verification' %}?status=rejected">
+                            <i class="fas fa-times-circle"></i>
+                            Rejected Subscriptions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'posted_subscriptions' %}active{% endif %}"
+                           href="{% url 'custom_admin:posted_subscriptions' %}">
+                            <i class="fas fa-check-double"></i>
+                            Posted Subscriptions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'system_support_donations' or request.resolver_match.url_name == 'system_support_donation_detail' %}active{% endif %}"
+                           href="{% url 'custom_admin:system_support_donations' %}">
+                            <i class="fas fa-heart"></i>
+                            Support Donations
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'news_section' in request.resolver_match.url_name %}active{% endif %}"
+               href="{% url 'custom_admin:news_section_list' %}">
+                <i class="fas fa-newspaper"></i>
+                News Sections
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#{{ id_prefix }}environmentSubmenu"
+               aria-expanded="false" aria-controls="{{ id_prefix }}environmentSubmenu">
+                <i class="fas fa-leaf text-success"></i>
+                Environment
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div class="collapse {% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'environmental_impact' %}show{% endif %}"
+                 id="{{ id_prefix }}environmentSubmenu">
+                <ul class="nav flex-column sidebar-submenu">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" href="{% url 'custom_admin:analytics' %}">
+                            <i class="fas fa-chart-line"></i>
+                            Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'environmental_impact' %}active{% endif %}" href="{% url 'custom_admin:environmental_impact' %}">
+                            <i class="fas fa-leaf text-success"></i>
+                            Environmental Impact
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'custom_admin:logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        </li>
+    </ul>
+</div>
+

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-user-cog me-2"></i>Settings</h2>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Profile Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Food Bank Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Food Bank Name</label>
+                                <p class="form-control-plaintext">{{ foodbank_profile.foodbank_name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Location</label>
+                                <p class="form-control-plaintext">{{ foodbank_profile.location }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'update_foodbank_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Account Security</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <p class="form-control-plaintext">{{ user.email }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Account Type</label>
+                        <p class="form-control-plaintext">{{ user.user_type|title }}</p>
+                    </div>
+                    <a href="{% url 'change_foodbank_password' %}" class="btn btn-warning me-2">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    <a href="{% url 'request_account_deletion' %}" class="btn btn-outline-danger me-2">
+                        <i class="fas fa-user-times"></i> Delete My Account
+                    </a>
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-envelope"></i> Update Email
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notification Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <label class="form-check-label" for="emailNotifications">
+                            Email Notifications
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="donationAlerts" checked>
+                        <label class="form-check-label" for="donationAlerts">
+                            New Donation Alerts
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="requestUpdates">
+                        <label class="form-check-label" for="requestUpdates">
+                            Request Status Updates
+                        </label>
+                    </div>
+                    <button class="btn btn-success">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'create_foodbank_request' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create New Request
+                        </a>
+                        <a href="{% url 'foodbank_donations' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> View All Donations
+                        </a>
+                        <a href="{% url 'foodbank_analytics' %}" class="btn btn-outline-info">
+                            <i class="fas fa-chart-bar"></i> View Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-headset me-2"></i>Support</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-question-circle"></i> Help Center
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-comments"></i> Contact Support
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-book"></i> Documentation
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Account Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-circle text-success me-2"></i>
+                        <span>Account Active</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-circle text-success me-2"></i>
+                        <span>Email Verified</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-circle text-success me-2"></i>
+                        <span>Profile Complete</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

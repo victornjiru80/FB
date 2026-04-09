@@ -1,0 +1,145 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if news_section %}Edit{% else %}Create{% endif %} News Section - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">
+                <i class="fas fa-{% if news_section %}edit{% else %}plus{% endif %} text-primary me-2"></i>
+                {% if news_section %}Edit{% else %}Create{% endif %} News Section
+            </h1>
+            <p class="text-muted mb-0">{% if news_section %}Update{% else %}Add new{% endif %} news content for the landing page</p>
+        </div>
+        <a href="{% url 'custom_admin:news_section_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>News Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">
+                                <i class="fas fa-heading me-1"></i>Title <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{% if news_section %}{{ news_section.title }}{% endif %}" 
+                                   required maxlength="200"
+                                   placeholder="Enter news title or headline">
+                            <small class="form-text text-muted">Maximum 200 characters</small>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Content <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="content" name="content" rows="6" required
+                                      placeholder="Enter news content or description">{% if news_section %}{{ news_section.content }}{% endif %}</textarea>
+                            <small class="form-text text-muted">Provide detailed information about the news</small>
+                        </div>
+
+                        <!-- Image -->
+                        <div class="mb-3">
+                            <label for="image" class="form-label">
+                                <i class="fas fa-image me-1"></i>Image {% if not news_section %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            <input type="file" class="form-control" id="image" name="image" 
+                                   accept="image/*" {% if not news_section %}required{% endif %}>
+                            <small class="form-text text-muted">Upload a graphic or image for the news (JPG, PNG, GIF)</small>
+                            {% if news_section and news_section.image %}
+                            <div class="mt-2">
+                                <p class="mb-1"><strong>Current Image:</strong></p>
+                                <img src="{{ news_section.image.url }}" alt="{{ news_section.title }}" 
+                                     style="max-width: 300px; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="mb-3">
+                            <label for="display_order" class="form-label">
+                                <i class="fas fa-sort-numeric-down me-1"></i>Display Order
+                            </label>
+                            <input type="number" class="form-control" id="display_order" name="display_order" 
+                                   value="{% if news_section %}{{ news_section.display_order }}{% else %}0{% endif %}" 
+                                   min="0" max="999">
+                            <small class="form-text text-muted">Lower numbers appear first (0 = highest priority)</small>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {% if not news_section or news_section.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    <i class="fas fa-eye me-1"></i>Display on landing page
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">Only active news sections will be visible to users</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'custom_admin:news_section_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% if news_section %}Update{% else %}Create{% endif %} News Section
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="font-weight-bold">Creating Effective News:</h6>
+                    <ul class="mb-3">
+                        <li>Use clear, concise titles</li>
+                        <li>Keep content engaging and informative</li>
+                        <li>Choose high-quality, relevant images</li>
+                        <li>Update regularly to keep content fresh</li>
+                    </ul>
+                    
+                    <h6 class="font-weight-bold mt-4">Display Order:</h6>
+                    <p class="small text-muted">
+                        News sections are displayed based on their order number. 
+                        Lower numbers appear first. Use this to prioritize important announcements.
+                    </p>
+
+                    <h6 class="font-weight-bold mt-4">Image Guidelines:</h6>
+                    <ul class="small text-muted">
+                        <li>Recommended size: 800x600px</li>
+                        <li>Format: JPG, PNG, or GIF</li>
+                        <li>Keep file size under 2MB</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

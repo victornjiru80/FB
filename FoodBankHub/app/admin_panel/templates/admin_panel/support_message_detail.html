@@ -1,0 +1,281 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Message Details -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>Support Message #{{ support_message.id }}
+                </h5>
+                <a href="{% url 'custom_admin:support_messages' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Messages
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- User Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">From</h6>
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-user-circle fa-2x text-muted"></i>
+                            </div>
+                            <div>
+                                <strong>{{ support_message.user.email }}</strong>
+                                <br>
+                                <span class="badge bg-light text-dark">{{ support_message.get_user_type_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Created</h6>
+                        <p>{{ support_message.created_at|date:"F d, Y \a\t H:i" }}</p>
+                        
+                        {% if support_message.resolved_at %}
+                        <h6 class="text-muted">Resolved</h6>
+                        <p>{{ support_message.resolved_at|date:"F d, Y \a\t H:i" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div class="mb-4">
+                    <h6 class="text-muted">Subject</h6>
+                    <h5>{{ support_message.get_subject_display }}</h5>
+                </div>
+
+                <!-- Message -->
+                <div class="mb-4">
+                    <h6 class="text-muted">Message</h6>
+                    <div class="bg-light p-3 rounded">
+                        {{ support_message.message|linebreaks }}
+                    </div>
+                </div>
+
+                <!-- Admin Response -->
+                <div class="mb-4">
+                    <h6 class="text-muted">Conversation</h6>
+
+                    <div class="mb-3 p-3 rounded bg-light border-start border-primary border-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ support_message.user.email }}</strong>
+                                <div class="small text-muted">{{ support_message.created_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <span class="badge bg-light text-dark">User</span>
+                        </div>
+                        <div class="mt-2">{{ support_message.message|linebreaks }}</div>
+                    </div>
+
+                    {% if replies %}
+                        {% for reply in replies %}
+                            <div class="mb-3 p-3 rounded {% if reply.is_from_admin %}bg-primary bg-opacity-10 border-start border-primary border-3{% else %}bg-light border-start border-secondary border-3{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{% if reply.author %}{{ reply.author.email }}{% else %}Unknown{% endif %}</strong>
+                                        <div class="small text-muted">{{ reply.created_at|date:"M d, Y H:i" }}</div>
+                                    </div>
+                                    {% if reply.is_from_admin %}
+                                        <span class="badge bg-primary">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">User</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-2">{{ reply.message|linebreaks }}</div>
+                            </div>
+                        {% endfor %}
+                    {% elif support_message.admin_response %}
+                        <div class="mb-3 p-3 rounded bg-primary bg-opacity-10 border-start border-primary border-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{% if support_message.assigned_to %}{{ support_message.assigned_to.email }}{% else %}Admin{% endif %}</strong>
+                                    <div class="small text-muted">{{ support_message.updated_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                                <span class="badge bg-primary">Admin</span>
+                            </div>
+                            <div class="mt-2">{{ support_message.admin_response|linebreaks }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Add Response Form -->
+                <div class="border-top pt-4">
+                    <h6>Add Response</h6>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_response">
+                        <div class="mb-3">
+                            <textarea name="admin_response" class="form-control" rows="4" placeholder="Type your response here..." required {% if support_message.status == 'resolved' or support_message.status == 'closed' %}disabled{% endif %}></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" {% if support_message.status == 'resolved' or support_message.status == 'closed' %}disabled{% endif %}>
+                            <i class="fas fa-reply me-1"></i>
+                            Add Response
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Sidebar -->
+    <div class="col-lg-4">
+        <!-- Status & Priority -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>Status & Priority
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Current Status -->
+                <div class="mb-3">
+                    <label class="form-label">Current Status</label>
+                    <div>
+                        <span class="badge {{ support_message.get_status_badge_class }} fs-6">
+                            {{ support_message.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Update Status -->
+                <form method="POST" class="mb-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_status">
+                    <div class="mb-2">
+                        <label for="status" class="form-label">Update Status</label>
+                        <select name="status" id="status" class="form-select">
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if support_message.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Update Status</button>
+                </form>
+
+                <!-- Current Priority -->
+                <div class="mb-3">
+                    <label class="form-label">Current Priority</label>
+                    <div>
+                        <span class="badge {{ support_message.get_priority_badge_class }} fs-6">
+                            {{ support_message.get_priority_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Update Priority -->
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_priority">
+                    <div class="mb-2">
+                        <label for="priority" class="form-label">Update Priority</label>
+                        <select name="priority" id="priority" class="form-select">
+                            {% for value, label in priority_choices %}
+                                <option value="{{ value }}" {% if support_message.priority == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-warning">Update Priority</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assignment -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-user-tag me-2"></i>Assignment
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Current Assignment -->
+                <div class="mb-3">
+                    <label class="form-label">Currently Assigned To</label>
+                    <div>
+                        {% if support_message.assigned_to %}
+                            <i class="fas fa-user me-1"></i>{{ support_message.assigned_to.email }}
+                        {% else %}
+                            <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Assign to Staff -->
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign">
+                    <div class="mb-2">
+                        <label for="assigned_to" class="form-label">Assign To</label>
+                        <select name="assigned_to" id="assigned_to" class="form-select">
+                            <option value="">Unassigned</option>
+                            {% for staff in staff_members %}
+                                <option value="{{ staff.id }}" {% if support_message.assigned_to.id == staff.id %}selected{% endif %}>
+                                    {{ staff.email }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-info">Assign</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if support_message.status != 'resolved' %}
+                    <form method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        <input type="hidden" name="status" value="resolved">
+                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Mark this message as resolved?')">
+                            <i class="fas fa-check me-1"></i>Mark as Resolved
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if support_message.status != 'in_progress' %}
+                    <form method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        <input type="hidden" name="status" value="in_progress">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-clock me-1"></i>Mark as In Progress
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if support_message.priority != 'urgent' %}
+                    <form method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_priority">
+                        <input type="hidden" name="priority" value="urgent">
+                        <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Set priority to urgent?')">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Mark as Urgent
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if not support_message.assigned_to %}
+                    <form method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="assign">
+                        <input type="hidden" name="assigned_to" value="{{ request.user.id }}">
+                        <button type="submit" class="btn btn-info w-100">
+                            <i class="fas fa-user me-1"></i>Assign to Me
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

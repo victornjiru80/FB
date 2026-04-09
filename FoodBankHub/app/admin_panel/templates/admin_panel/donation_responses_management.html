@@ -1,0 +1,167 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-reply-all me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Track recipient responses to subsidized donation offers</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ total_responses }}</h3>
+                    <small class="text-white-50">Total Responses</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ accepted }}</h3>
+                    <small class="text-white-50">Accepted</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-danger">{{ declined }}</h3>
+                    <small class="text-muted">Declined</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Response</label>
+                    <select name="response" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in response_choices %}
+                        <option value="{{ value }}" {% if current_filters.response == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All Foodbanks</option>
+                        {% for fb in foodbanks %}
+                        <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Donor, recipient, product..." value="{{ current_filters.search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-9 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'custom_admin:donation_responses_management' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Responses Table -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Donation Responses</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Donation</th>
+                            <th>Donor</th>
+                            <th>Foodbank</th>
+                            <th>Recipient</th>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Response</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for response in page_obj %}
+                        <tr>
+                            <td>{{ response.id }}</td>
+                            <td>#{{ response.donation.id }}</td>
+                            <td>{{ response.donation.donor.email }}</td>
+                            <td>{{ response.donation.foodbank.foodbank_name }}</td>
+                            <td>{{ response.recipient.full_name }}</td>
+                            <td>{{ response.donation.subsidized_product_type|default:"N/A" }}</td>
+                            <td>KES {{ response.donation.subsidized_price|floatformat:2 }}</td>
+                            <td>
+                                {% if response.response_type == 'accepted' %}
+                                <span class="badge bg-success">Accepted</span>
+                                {% else %}
+                                <span class="badge bg-danger">Declined</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ response.responded_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No donation responses found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

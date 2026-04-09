@@ -1,0 +1,313 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<style>
+    .posted-subscriptions-table {
+        min-width: 1580px;
+        table-layout: fixed;
+    }
+    .posted-subscriptions-table th,
+    .posted-subscriptions-table td {
+        vertical-align: middle;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .posted-subscriptions-table th.col-serial { width: 60px; }
+    .posted-subscriptions-table th.col-foodbank { width: 240px; }
+    .posted-subscriptions-table th.col-plan { width: 150px; }
+    .posted-subscriptions-table th.col-amount { width: 120px; }
+    .posted-subscriptions-table th.col-method { width: 170px; }
+    .posted-subscriptions-table th.col-txn { width: 170px; }
+.posted-subscriptions-table th.col-paydate { width: 130px; }
+.posted-subscriptions-table th.col-message { width: 230px; }
+.posted-subscriptions-table th.col-evidence { width: 150px; }
+.posted-subscriptions-table th.col-verified-by { width: 170px; }
+.posted-subscriptions-table th.col-verified-at { width: 150px; }
+.posted-subscriptions-table th.col-sub-status { width: 160px; }
+    .posted-subscriptions-table .plan-badge,
+    .posted-subscriptions-table .status-badge {
+        white-space: normal;
+        line-height: 1.2;
+        display: inline-block;
+        max-width: 100%;
+    }
+    .posted-subscriptions-table .transaction-ref {
+        white-space: normal;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+    }
+    .posted-subscriptions-table .evidence-thumb {
+        width: 52px;
+        height: 52px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        display: block;
+        margin-bottom: 0.35rem;
+    }
+</style>
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card success">
+            <div class="card-body text-center">
+                <h6 class="card-title">Total Posted</h6>
+                <h2 class="mb-0">{{ total_posted }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card primary">
+            <div class="card-body text-center">
+                <h6 class="card-title">Total Revenue</h6>
+                <h2 class="mb-0">KSH {{ total_revenue|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card info">
+            <div class="card-body text-center">
+                <h6 class="card-title">Monthly Plans</h6>
+                <h2 class="mb-0">{{ monthly_payments }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card warning">
+            <div class="card-body text-center">
+                <h6 class="card-title">Yearly Plans</h6>
+                <h2 class="mb-0">{{ yearly_payments }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Buttons -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-0">Export Posted Subscriptions</h6>
+                <small class="text-muted">Download approved subscription payments in your preferred format</small>
+            </div>
+            <div>
+                <a href="{% url 'custom_admin:export_posted_subscriptions_excel' %}?{{ request.GET.urlencode }}" 
+                   class="btn btn-success me-2">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </a>
+                <a href="{% url 'custom_admin:export_posted_subscriptions_csv' %}?{{ request.GET.urlencode }}" 
+                   class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-file-csv"></i> Export to CSV
+                </a>
+                <a href="{% url 'custom_admin:export_posted_subscriptions_pdf' %}?{{ request.GET.urlencode }}" 
+                   class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label for="plan" class="form-label">Plan Type</label>
+                <select class="form-select" id="plan" name="plan">
+                    <option value="">All Plans</option>
+                    {% for value, label in plan_choices %}
+                        <option value="{{ value }}" {% if current_filters.plan == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="payment_method" class="form-label">Payment Method</label>
+                <select class="form-select" id="payment_method" name="payment_method">
+                    <option value="">All Methods</option>
+                    {% for value, label in payment_method_choices %}
+                        <option value="{{ value }}" {% if current_filters.payment_method == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="subscription_status" class="form-label">Subscription Status</label>
+                <select class="form-select" id="subscription_status" name="subscription_status">
+                    <option value="">All Statuses</option>
+                    {% for value, label in subscription_status_choices %}
+                        <option value="{{ value }}" {% if current_filters.subscription_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" 
+                       value="{{ current_filters.date_from|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" 
+                       value="{{ current_filters.date_to|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control search-box" id="search" name="search" 
+                       placeholder="Search by food bank or transaction ref..." value="{{ current_filters.search|default:'' }}">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                    <a href="{% url 'custom_admin:posted_subscriptions' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Posted Subscriptions Table -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">
+            <i class="fas fa-check-double"></i> Posted Subscriptions
+            <span class="badge bg-success ms-2">{{ page_obj.paginator.count }} total</span>
+            {% if recent_approvals > 0 %}
+                <span class="badge bg-info ms-2">{{ recent_approvals }} in last 30 days</span>
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover posted-subscriptions-table">
+                    <thead>
+                        <tr>
+                            <th class="col-serial">S/No</th>
+                            <th class="col-foodbank">Food Bank</th>
+                            <th class="col-plan">Plan</th>
+                            <th class="col-sub-status">Subscription Status</th>
+                            <th class="col-amount">Amount</th>
+                            <th class="col-method">Payment Method</th>
+                            <th class="col-txn">Transaction Ref</th>
+                            <th class="col-paydate">Payment Date</th>
+                            <th class="col-message">Message</th>
+                            <th class="col-evidence">Evidence</th>
+                            <th class="col-verified-by">Verified By</th>
+                            <th class="col-verified-at">Verified At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                            <td>
+                                <strong>{{ payment.foodbank.foodbank_name }}</strong><br>
+                                <small class="text-muted">{{ payment.foodbank.user.email }}</small><br>
+                                <small class="text-muted">{{ payment.foodbank.user.phone_number|default:"N/A" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge plan-badge {% if payment.plan_type == 'monthly' %}bg-info{% else %}bg-primary{% endif %}">
+                                    {{ payment.get_plan_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge status-badge
+                                    {% if payment.subscription.status == 'active' %}bg-success
+                                    {% elif payment.subscription.status == 'trial' %}bg-info
+                                    {% elif payment.subscription.status == 'expired' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ payment.subscription.get_status_display }}
+                                </span>
+                            </td>
+                            <td><strong>KSH {{ payment.amount|floatformat:2 }}</strong></td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                            <td><code class="transaction-ref">{{ payment.transaction_reference }}</code></td>
+                            <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if payment.notes %}
+                                    <small title="{{ payment.notes }}">{{ payment.notes|truncatechars:80 }}</small>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.payment_evidence %}
+                                    <a href="{{ payment.payment_evidence.url }}" target="_blank" rel="noopener" title="View original uploaded evidence">
+                                        <img src="{{ payment.payment_evidence.url }}" alt="Payment evidence for {{ payment.foodbank.foodbank_name }}" class="evidence-thumb">
+                                    </a>
+                                    <a href="{{ payment.payment_evidence.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-image"></i> View Image
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No evidence</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.verified_by %}
+                                    <small>{{ payment.verified_by.email }}</small>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.verified_at %}
+                                    {{ payment.verified_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.subscription_status %}&subscription_status={{ current_filters.subscription_status }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.subscription_status %}&subscription_status={{ current_filters.subscription_status }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.subscription_status %}&subscription_status={{ current_filters.subscription_status }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.subscription_status %}&subscription_status={{ current_filters.subscription_status }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No posted subscriptions found.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

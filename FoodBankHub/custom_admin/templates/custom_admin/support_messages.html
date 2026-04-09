@@ -1,0 +1,477 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Messages</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ total_messages }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-envelope fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card primary">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">New Messages</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ new_messages }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-bell fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">In Progress</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ in_progress_messages }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card danger">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Urgent</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ urgent_messages }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select name="priority" id="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if priority_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="subject" class="form-label">Subject</label>
+                <select name="subject" id="subject" class="form-select">
+                    <option value="">All Subjects</option>
+                    {% for value, label in subject_choices %}
+                        <option value="{{ value }}" {% if subject_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="user_type" class="form-label">User Type</label>
+                <select name="user_type" id="user_type" class="form-select">
+                    <option value="">All User Types</option>
+                    {% for value, label in user_type_choices %}
+                        <option value="{{ value }}" {% if user_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" name="search" id="search" class="form-control" placeholder="Email, subject, message, or subject label..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">From</label>
+                <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">To</label>
+                <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-1"></i>Filter
+                </button>
+                <a href="{% url 'custom_admin:support_messages' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Support Messages Table -->
+{% if status_filter != 'resolved' and status_filter != 'closed' %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-headset me-2"></i>Support Messages
+        </h5>
+        <div>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bulkActionsModal">
+                <i class="fas fa-tasks me-1"></i>Bulk Actions
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="bulkActionsForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="bulkAction">
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th width="30">
+                                <input type="checkbox" id="selectAll" class="form-check-input">
+                            </th>
+                            <th>S/No</th>
+                            <th>User</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assigned To</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in support_messages %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="selected_messages" value="{{ message.id }}" class="form-check-input message-checkbox">
+                            </td>
+                            <td>{{ forloop.counter|add:support_messages.start_index|add:"-1" }}</td>
+                            <td>
+                                <div>
+                                    <strong>{{ message.user.email }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <span class="badge bg-light text-dark">{{ message.get_user_type_display }}</span>
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ message.get_subject_display }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ message.message|truncatechars:50 }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {{ message.get_status_badge_class }}">
+                                    {{ message.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {{ message.get_priority_badge_class }}">
+                                    {{ message.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if message.last_admin_reply_email %}
+                                    <small>{{ message.last_admin_reply_email }}</small>
+                                {% elif message.assigned_to %}
+                                    <small>{{ message.assigned_to.email }}</small>
+                                {% else %}
+                                    <small class="text-muted">Unassigned</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ message.created_at|date:"M d, Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'custom_admin:support_message_detail' message.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <br>
+                                No support messages found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        
+        <!-- Pagination -->
+        {% if support_messages.has_other_pages %}
+        <nav aria-label="Support messages pagination">
+            <ul class="pagination justify-content-center">
+                {% if support_messages.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?active_page={{ support_messages.previous_page_number }}{% if resolved_support_messages.number %}&resolved_page={{ resolved_support_messages.number }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in support_messages.paginator.page_range %}
+                    {% if support_messages.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?active_page={{ num }}{% if resolved_support_messages.number %}&resolved_page={{ resolved_support_messages.number }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if support_messages.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?active_page={{ support_messages.next_page_number }}{% if resolved_support_messages.number %}&resolved_page={{ resolved_support_messages.number }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if status_filter == 'resolved' or status_filter == 'closed' %}
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-check-circle me-2"></i>Resolved Support
+        </h5>
+        <div>
+            <span class="badge bg-success">{{ resolved_messages|default:0 }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>S/No</th>
+                        <th>User</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Assigned To</th>
+                        <th>Resolved</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message in resolved_support_messages %}
+                    <tr>
+                        <td>{{ forloop.counter|add:resolved_support_messages.start_index|add:"-1" }}</td>
+                        <td>
+                            <div>
+                                <strong>{{ message.user.email }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    <span class="badge bg-light text-dark">{{ message.get_user_type_display }}</span>
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ message.get_subject_display }}</strong>
+                                <br>
+                                <small class="text-muted">{{ message.message|truncatechars:50 }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge {{ message.get_status_badge_class }}">
+                                {{ message.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {{ message.get_priority_badge_class }}">
+                                {{ message.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if message.last_admin_reply_email %}
+                                <small>{{ message.last_admin_reply_email }}</small>
+                            {% elif message.assigned_to %}
+                                <small>{{ message.assigned_to.email }}</small>
+                            {% else %}
+                                <small class="text-muted">Unassigned</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if message.resolved_at %}
+                                <small>{{ message.resolved_at|date:"M d, Y H:i" }}</small>
+                            {% else %}
+                                <small class="text-muted">-</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'custom_admin:support_message_detail' message.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <br>
+                            No resolved support messages found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if resolved_support_messages.has_other_pages %}
+        <nav aria-label="Resolved support pagination">
+            <ul class="pagination justify-content-center">
+                {% if resolved_support_messages.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?resolved_page={{ resolved_support_messages.previous_page_number }}{% if support_messages.number %}&active_page={{ support_messages.number }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">Page {{ resolved_support_messages.number }} of {{ resolved_support_messages.paginator.num_pages }}</span>
+                </li>
+                {% if resolved_support_messages.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?resolved_page={{ resolved_support_messages.next_page_number }}{% if support_messages.number %}&active_page={{ support_messages.number }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Bulk Actions Modal -->
+{% if status_filter != 'resolved' and status_filter != 'closed' %}
+<div class="modal fade" id="bulkActionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Actions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select an action to perform on selected messages:</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-warning" onclick="performBulkAction('mark_in_progress')">
+                        <i class="fas fa-clock me-1"></i>Mark as In Progress
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="performBulkAction('mark_resolved')">
+                        <i class="fas fa-check me-1"></i>Mark as Resolved
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="performBulkAction('assign_to_me')">
+                        <i class="fas fa-user me-1"></i>Assign to Me
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" onclick="performBulkAction('set_priority_high')">
+                        <i class="fas fa-exclamation me-1"></i>Set Priority: High
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="performBulkAction('set_priority_urgent')">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Set Priority: Urgent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<style>
+.stats-card {
+    border-left: 4px solid #e3e6f0;
+    transition: all 0.3s ease;
+}
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.stats-card.primary { border-left-color: #4e73df; }
+.stats-card.success { border-left-color: #1cc88a; }
+.stats-card.warning { border-left-color: #f6c23e; }
+.stats-card.danger { border-left-color: #e74a3b; }
+</style>
+
+<script>
+// Select all functionality
+const selectAll = document.getElementById('selectAll');
+if (selectAll) {
+    selectAll.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.message-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+}
+
+// Bulk actions
+function performBulkAction(action) {
+    const bulkForm = document.getElementById('bulkActionsForm');
+    if (!bulkForm) {
+        return;
+    }
+
+    const selectedCheckboxes = document.querySelectorAll('.message-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one message.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to perform this action on ${selectedCheckboxes.length} message(s)?`)) {
+        document.getElementById('bulkAction').value = action;
+        bulkForm.submit();
+    }
+}
+
+// Close modal after action
+document.querySelectorAll('[onclick^="performBulkAction"]').forEach(button => {
+    button.addEventListener('click', function() {
+        const modalEl = document.getElementById('bulkActionsModal');
+        if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+            return;
+        }
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) {
+            modal.hide();
+        }
+    });
+});
+</script>
+{% endblock %}

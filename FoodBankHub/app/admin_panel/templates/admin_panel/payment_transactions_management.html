@@ -1,0 +1,151 @@
+{% extends 'custom_admin/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-credit-card me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Monitor payment transactions for subsidized and monetary donations</p>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card"><div class="card-body text-center">
+                <h3 class="mb-0">{{ total_transactions }}</h3>
+                <small class="text-white-50">Total Transactions</small>
+            </div></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card warning"><div class="card-body text-center">
+                <h3 class="mb-0">{{ pending_transactions }}</h3>
+                <small class="text-white-50">Pending</small>
+            </div></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card success"><div class="card-body text-center">
+                <h3 class="mb-0">{{ completed_transactions }}</h3>
+                <small class="text-white-50">Completed</small>
+            </div></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card info"><div class="card-body text-center">
+                <h4 class="mb-0">KES {{ total_transaction_amount|floatformat:2 }}</h4>
+                <small class="text-white-50">Total Amount</small>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5></div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Payment Method</label>
+                    <select name="payment_method" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in payment_methods %}
+                            <option value="{{ value }}" {% if current_filters.payment_method == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All</option>
+                        {% for fb in foodbanks %}
+                            <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Min Amount</label>
+                    <input type="number" step="0.01" name="min_amount" class="form-control" value="{{ current_filters.min_amount }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Max Amount</label>
+                    <input type="number" step="0.01" name="max_amount" class="form-control" value="{{ current_filters.max_amount }}">
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" value="{{ current_filters.search }}" placeholder="Receipt, donor email, foodbank...">
+                </div>
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary me-2"><i class="fas fa-search"></i> Apply Filters</button>
+                    <a href="{% url 'custom_admin:payment_transactions_management' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i> Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="mb-0">Transactions ({{ page_obj.paginator.count }})</h5></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>ID</th><th>Donation</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in page_obj %}
+                        <tr>
+                            <td>#{{ transaction.id }}</td>
+                            <td>Donation #{{ transaction.donation.id }}<br><small>{{ transaction.donation.donor.email }}</small></td>
+                            <td><strong>{{ transaction.currency }} {{ transaction.amount }}</strong></td>
+                            <td>{{ transaction.get_payment_method_display }}</td>
+                            <td>
+                                {% if transaction.status == 'pending' %}<span class="badge bg-warning">Pending</span>
+                                {% elif transaction.status == 'completed' %}<span class="badge bg-success">Completed</span>
+                                {% elif transaction.status == 'failed' %}<span class="badge bg-danger">Failed</span>
+                                {% else %}<span class="badge bg-secondary">{{ transaction.get_status_display }}</span>{% endif %}
+                            </td>
+                            <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center py-4">No transactions found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

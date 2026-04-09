@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - FoodBankHub</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            padding: 2.25rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 1.4rem;
+        }
+        
+        .login-header h1 {
+            color: #1f2937;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            font-size: 1.8rem;
+            line-height: 1.2;
+        }
+        
+        .login-header p {
+            color: #4b5563;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .login-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        
+        .login-icon i {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .form-floating {
+            margin-bottom: 0.85rem;
+        }
+        
+        .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            background: #f9fafb;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            background: white;
+        }
+        
+        .form-floating > label {
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .form-help {
+            color: #374151;
+            font-size: 0.86rem;
+            font-weight: 500;
+            margin-top: -0.2rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .invalid-feedback {
+            font-weight: 500;
+            margin-top: -0.1rem;
+            margin-bottom: 0.55rem;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-login:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        .btn-login i {
+            margin-right: 0.5rem;
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .alert-success {
+            background-color: #d1edff;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        .alert-info {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+
+        .password-field-wrapper {
+            position: relative;
+            margin-bottom: 0.25rem;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 0.75rem;
+            transform: translateY(-50%);
+            z-index: 5;
+            border: none;
+            background: transparent;
+            color: #667eea;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .password-toggle:hover {
+            color: #5a6ed6;
+        }
+
+        .password-toggle:focus-visible {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .caps-lock-hint {
+            display: none;
+            color: #7c4a03;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .security-note {
+            font-size: 0.85rem;
+            color: #4b5563;
+            margin-bottom: 0.65rem;
+            font-weight: 500;
+        }
+        
+        .back-to-site {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .back-to-site a {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .back-to-site a:hover {
+            color: #667eea;
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .btn-login.loading .btn-text {
+            opacity: 0;
+        }
+        
+        .btn-login.loading .loading {
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 576px) {
+            .login-container {
+                margin: 1rem;
+                padding: 1.85rem;
+            }
+            
+            .login-header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .login-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .login-icon i {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-icon">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <h1>Admin Login</h1>
+            <p>Admin access only</p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'success' in message.tags %}alert-success{% elif 'warning' in message.tags %}alert-warning{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert" aria-live="assertive">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Login Form -->
+        <form method="post" id="loginForm">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <div class="form-floating">
+                <input type="email" class="form-control {% if field_errors.email %}is-invalid{% endif %}" id="email" name="email" placeholder="Email address" value="{{ entered_email }}" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" required aria-invalid="{% if field_errors.email %}true{% else %}false{% endif %}" aria-describedby="emailHelp{% if field_errors.email %} emailError{% endif %}">
+                <label for="email">
+                    <i class="fas fa-envelope me-2"></i>Email Address
+                </label>
+            </div>
+            <div id="emailHelp" class="form-text form-help">Use your staff/admin account email.</div>
+            {% if field_errors.email %}
+            <div id="emailError" class="invalid-feedback d-block mb-2">{{ field_errors.email }}</div>
+            {% endif %}
+
+            <div class="password-field-wrapper">
+                <div class="form-floating">
+                    <input type="password" class="form-control pe-5 {% if field_errors.password %}is-invalid{% endif %}" id="password" name="password" placeholder="Password" autocomplete="current-password" required aria-invalid="{% if field_errors.password %}true{% else %}false{% endif %}" aria-describedby="{% if field_errors.password %}passwordError{% endif %} capsLockHint">
+                    <label for="password">
+                        <i class="fas fa-lock me-2"></i>Password
+                    </label>
+                </div>
+                <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password" aria-controls="password">
+                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                </button>
+            </div>
+            {% if field_errors.password %}
+            <div id="passwordError" class="invalid-feedback d-block mb-2">{{ field_errors.password }}</div>
+            {% endif %}
+            <div id="capsLockHint" class="caps-lock-hint">
+                <i class="fas fa-exclamation-circle me-1"></i>Caps Lock is on.
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="remember" name="remember" {% if remember_checked %}checked{% endif %}>
+                    <label class="form-check-label" for="remember">
+                        Remember me
+                    </label>
+                </div>
+                <a href="{% url 'password_reset' %}" class="small text-decoration-none">Forgot password?</a>
+            </div>
+
+            <p class="security-note">Authorized users only. Login activity may be monitored.</p>
+
+            <button type="submit" class="btn btn-login" id="submitLoginBtn">
+                <span class="btn-text">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In to Dashboard
+                </span>
+                <span class="loading" role="status" aria-live="polite">
+                    <i class="fas fa-spinner spinner"></i>
+                    Signing in...
+                </span>
+            </button>
+        </form>
+
+        <div class="back-to-site">
+            <a href="/">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to FoodBankHub
+            </a>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Form submission with loading state
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitLoginBtn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+        const capsLockHint = document.getElementById('capsLockHint');
+
+        loginForm.addEventListener('submit', function() {
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            submitBtn.setAttribute('aria-busy', 'true');
+
+            // Re-enable button after 10 seconds in case of network delay
+            setTimeout(() => {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('aria-busy');
+            }, 10000);
+        });
+
+        // Show/hide password
+        togglePasswordBtn.addEventListener('click', function() {
+            const showPassword = passwordInput.type === 'password';
+            passwordInput.type = showPassword ? 'text' : 'password';
+            togglePasswordIcon.className = showPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            togglePasswordBtn.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+        });
+
+        // Caps Lock detection
+        function handleCapsLock(event) {
+            const isCapsLockOn = event.getModifierState && event.getModifierState('CapsLock');
+            capsLockHint.style.display = isCapsLockOn ? 'block' : 'none';
+        }
+
+        passwordInput.addEventListener('keyup', handleCapsLock);
+        passwordInput.addEventListener('keydown', handleCapsLock);
+        passwordInput.addEventListener('blur', function() {
+            capsLockHint.style.display = 'none';
+        });
+
+        // Auto-focus first empty input
+        if (emailInput.value.trim()) {
+            passwordInput.focus();
+        } else {
+            emailInput.focus();
+        }
+    </script>
+</body>
+</html>

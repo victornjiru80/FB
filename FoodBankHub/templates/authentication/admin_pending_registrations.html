@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pending Food Bank Registrations - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+    }
+    
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-rejected { background-color: #f8d7da; color: #721c24; }
+    
+    .application-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .application-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        text-align: center;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #dc3545;
+    }
+    
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .action-buttons .btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .document-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .document-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Pending Food Bank Registrations
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">Review and approve food bank applications</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'dashboard' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ pending_count }}</div>
+                <div class="stats-label">Pending Applications</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-success">{{ recent_decisions|length }}</div>
+                <div class="stats-label">Recent Decisions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-info">
+                    {{ recent_decisions|dictsort:"is_approved"|dictsortreversed:"is_approved"|slice:":5"|length }}
+                </div>
+                <div class="stats-label">This Week</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number text-warning">⏱️</div>
+                <div class="stats-label">Avg. Review Time</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Pending Applications -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-hourglass-half me-2"></i>
+                        Pending Applications ({{ pending_count }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_registrations %}
+                        {% for registration in pending_registrations %}
+                            <div class="application-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6 class="card-title mb-1">{{ registration.foodbank_name }}</h6>
+                                            <span class="status-badge status-{{ registration.is_approved }}">
+                                                {{ registration.get_is_approved_display }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">
+                                            Applied {{ registration.application_date|timesince }} ago
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p class="mb-1">
+                                                <i class="fas fa-user fa-fw me-2"></i>
+                                                <strong>Contact:</strong> {{ registration.contact_person }}
+                                            </p>
+                                            <p class="mb-1">
+                                                <i class="fas fa-envelope fa-fw me-2"></i>
+                                                <strong>Email:</strong> {{ registration.user.email }}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1">
+                                                <i class="fas fa-map-marker-alt fa-fw me-2"></i>
+                                                <strong>Location:</strong> {{ registration.address|default:"Not provided" }}
+                                            </p>
+                                            <p class="mb-1">
+                                                <i class="fas fa-tags fa-fw me-2"></i>
+                                                <strong>Service Type:</strong> {{ registration.get_service_type_display }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Documents -->
+                                    <div class="mb-3">
+                                        <strong>Documents:</strong>
+                                        <div class="mt-1">
+                                            {% if registration.authority_picture %}
+                                                <a href="{{ registration.authority_picture.url }}" target="_blank" class="document-link me-3">
+                                                    <i class="fas fa-image"></i>Authority Picture
+                                                </a>
+                                            {% endif %}
+                                            {% if registration.urgent_request_picture %}
+                                                <a href="{{ registration.urgent_request_picture.url }}" target="_blank" class="document-link me-3">
+                                                    <i class="fas fa-image"></i>Urgent Request Picture
+                                                </a>
+                                            {% endif %}
+                                            {% if registration.additional_documents %}
+                                                <a href="{{ registration.additional_documents.url }}" target="_blank" class="document-link me-3">
+                                                    <i class="fas fa-file"></i>Additional Documents
+                                                </a>
+                                            {% endif %}
+                                            {% if not registration.authority_picture and not registration.urgent_request_picture and not registration.additional_documents %}
+                                                <span class="text-muted">No documents uploaded</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Actions -->
+                                    <div class="action-buttons">
+                                        <a href="{% url 'view_foodbank_application' registration.id %}" 
+                                           class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                        <a href="{% url 'approve_foodbank_registration' registration.id %}" 
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </a>
+                                        <a href="{% url 'reject_foodbank_registration' registration.id %}" 
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5 class="text-muted">No Pending Applications</h5>
+                            <p class="text-muted">All food bank applications have been processed!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Decisions -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Decisions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_decisions %}
+                        {% for decision in recent_decisions %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h6 class="mb-1 fs-6">{{ decision.foodbank_name }}</h6>
+                                    <span class="status-badge status-{{ decision.is_approved }}">
+                                        {{ decision.get_is_approved_display }}
+                                    </span>
+                                    {% if decision.approved_by %}
+                                        <div class="small text-muted mt-1">
+                                            by {{ decision.approved_by.email }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {{ decision.approval_date|timesince }} ago
+                                </small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No recent decisions</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'admin_pending_registrations' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-sync me-1"></i>Refresh Page
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-tachometer-alt me-1"></i>Admin Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh page every 5 minutes
+    setTimeout(function() {
+        window.location.reload();
+    }, 300000);
+    
+    // Confirmation for actions
+    document.querySelectorAll('.btn-success, .btn-danger').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            const action = this.textContent.trim().toLowerCase();
+            if (!confirm(`Are you sure you want to ${action} this application?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

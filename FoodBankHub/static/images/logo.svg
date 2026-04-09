@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150" height="40" viewBox="0 0 150 40" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        .text { font-family: 'Montserrat', sans-serif; font-weight: bold; fill: #ffffff; }
+        .icon { fill: #ff8f00; }
+    </style>
+    <g transform="translate(5, 30)">
+        <path class="icon" d="M15 0h-2v-2h2v2zm-4-2H9v2h2v-2zm4-2h-2v2h2v-2zm-4-2H9v2h2v-2zm4-2h-2v2h2v-2zm-4-2H9v2h2v-2z"/>
+        <path class="icon" d="M22 14v-2h-2v-2h2v-2h-2V6h2V4h-2V2h2V0h-4v14h4zM6 14V0H2v2h2v2H2v2h2v2H2v2h2v2H2v2h4z"/>
+        <text x="35" y="0" class="text" font-size="24">FBHMS</text>
+    </g>
+</svg> 

@@ -1,0 +1,310 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">FoodBank Hub Admin</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Custom Admin Sidebar Styles */
+    .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 250px;
+        height: 100vh;
+        background: #2c3e50;
+        color: white;
+        overflow-y: auto;
+        z-index: 1000;
+        padding-top: 60px;
+    }
+    
+    .admin-sidebar-header {
+        padding: 20px;
+        background: #1a252f;
+        text-align: center;
+        border-bottom: 2px solid #34495e;
+    }
+    
+    .admin-sidebar-header h2 {
+        color: white;
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    
+    .admin-sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .admin-sidebar-menu li {
+        border-bottom: 1px solid #34495e;
+    }
+    
+    .admin-sidebar-menu a {
+        display: block;
+        padding: 15px 20px;
+        color: #ecf0f1;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .admin-sidebar-menu a:hover {
+        background: #34495e;
+        padding-left: 25px;
+    }
+    
+    .admin-sidebar-menu a.active {
+        background: #3498db;
+        border-left: 4px solid #2980b9;
+    }
+    
+    .admin-sidebar-menu i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .admin-sidebar-section {
+        padding: 15px 20px 5px;
+        color: #95a5a6;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Adjust main content to accommodate sidebar */
+    #content-main,
+    #content {
+        margin-left: 250px;
+    }
+    
+    #header {
+        margin-left: 250px;
+    }
+    
+    .breadcrumbs {
+        margin-left: 250px;
+    }
+    
+    /* Badge for pending items */
+    .sidebar-badge {
+        background: #e74c3c;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 5px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .admin-sidebar {
+            width: 60px;
+        }
+        
+        .admin-sidebar-menu a span {
+            display: none;
+        }
+        
+        #content-main,
+        #content,
+        #header,
+        .breadcrumbs {
+            margin-left: 60px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block nav-sidebar %}
+<div class="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h2><i class="fas fa-tachometer-alt"></i> Admin Panel</h2>
+    </div>
+    
+    <ul class="admin-sidebar-menu">
+        <li>
+            <a href="{% url 'custom_admin:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        
+        <li class="admin-sidebar-section">User Management</li>
+        
+        <li>
+            <a href="/admin/authentication/customuser/">
+                <i class="fas fa-users"></i>
+                <span>All Users</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/donorprofile/">
+                <i class="fas fa-hand-holding-heart"></i>
+                <span>Donors</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/foodbankprofile/">
+                <i class="fas fa-warehouse"></i>
+                <span>Food Banks</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/recipientprofile/">
+                <i class="fas fa-users"></i>
+                <span>Recipients</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{% url 'admin_deletion_requests' %}">
+                <i class="fas fa-user-times"></i>
+                <span>Account Deletion Requests</span>
+                <span class="sidebar-badge" id="pending-deletion-count">0</span>
+            </a>
+        </li>
+        
+        <li class="admin-sidebar-section">Content Management</li>
+        
+        <li>
+            <a href="{% url 'admin_testimonials_pending' %}" class="{% if 'testimonials/pending' in request.path %}active{% endif %}">
+                <i class="fas fa-clock"></i>
+                <span>Pending Testimonials</span>
+                <span class="sidebar-badge" id="pending-count">0</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'admin_all_testimonials' %}" class="{% if 'testimonials/all' in request.path %}active{% endif %}">
+                <i class="fas fa-comments"></i>
+                <span>All Testimonials</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/testimonial/">
+                <i class="fas fa-edit"></i>
+                <span>Manage Testimonials</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/landingpageimage/">
+                <i class="fas fa-images"></i>
+                <span>Landing Page Images</span>
+            </a>
+        </li>
+        
+        <li class="admin-sidebar-section">Donations</li>
+        
+        <li>
+            <a href="/admin/authentication/donation/">
+                <i class="fas fa-gift"></i>
+                <span>All Donations</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/donationallocation/">
+                <i class="fas fa-share-alt"></i>
+                <span>Allocations</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="/admin/authentication/foodbankrequest/">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Food Bank Requests</span>
+            </a>
+        </li>
+        
+        <li class="admin-sidebar-section">Subscriptions</li>
+        
+        <li>
+            <a href="{% url 'custom_admin:subscription_management' %}" class="{% if 'subscriptions' in request.path %}active{% endif %}">
+                <i class="fas fa-credit-card"></i>
+                <span>All Subscriptions</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'custom_admin:payment_verification' %}" class="{% if 'payments' in request.path %}active{% endif %}">
+                <i class="fas fa-check-circle"></i>
+                <span>Payment Verification</span>
+                <span class="sidebar-badge" id="pending-payments-count">0</span>
+            </a>
+        </li>
+        
+        <li class="admin-sidebar-section">System</li>
+        
+        <li>
+            <a href="{% url 'home' %}">
+                <i class="fas fa-globe"></i>
+                <span>View Site</span>
+            </a>
+        </li>
+        
+        <li>
+            <a href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<script>
+    // Update pending testimonials count
+    fetch('{% url "admin_testimonials_pending" %}')
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const badge = doc.querySelector('.badge');
+            if (badge) {
+                const count = badge.textContent.trim().split(' ')[0];
+                document.getElementById('pending-count').textContent = count;
+            }
+        })
+        .catch(err => console.log('Could not fetch pending count'));
+    
+    // Update pending payments count
+    fetch('{% url "custom_admin:payment_verification" %}?status=pending')
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            // Try to find pending count in the page
+            const pendingElement = doc.querySelector('[class*="pending"]');
+            if (pendingElement) {
+                const text = pendingElement.textContent;
+                const match = text.match(/(\d+)/);
+                if (match) {
+                    const count = match[1];
+                    const badge = document.getElementById('pending-payments-count');
+                    badge.textContent = count;
+                    if (count > 0) {
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        })
+        .catch(err => console.log('Could not fetch pending payments count'));
+</script>
+{% endblock %}

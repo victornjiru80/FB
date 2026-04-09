@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Donations - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Full borders for all tables */
+    .donations-table {
+        border: 1px solid #dee2e6 !important;
+        border-collapse: collapse !important;
+    }
+    
+    .donations-table th,
+    .donations-table td {
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    .donations-table thead th {
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+
+    /* Force table to fit within container without horizontal scroll */
+    .table-card {
+        overflow: hidden;
+    }
+    
+    .table-card .card-body {
+        padding: 0 !important;
+    }
+    
+    .table-card .table-responsive {
+        overflow-x: visible !important;
+        padding: 1rem;
+    }
+    
+    .donations-table {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    
+    .donations-table th,
+    .donations-table td {
+        padding: 0.6rem 0.4rem !important;
+        vertical-align: middle;
+        font-size: 0.875rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Column widths - total should equal 100% */
+    .donations-table th:nth-child(1),
+    .donations-table td:nth-child(1) { width: 10%; } /* Date */
+    
+    .donations-table th:nth-child(2),
+    .donations-table td:nth-child(2) { width: 18%; } /* Donor */
+    
+    .donations-table th:nth-child(3),
+    .donations-table td:nth-child(3) { width: 8%; } /* Type */
+    
+    .donations-table th:nth-child(4),
+    .donations-table td:nth-child(4) { width: 14%; } /* Details */
+    
+    .donations-table th:nth-child(5),
+    .donations-table td:nth-child(5) { width: 12%; } /* Amount */
+    
+    .donations-table th:nth-child(6),
+    .donations-table td:nth-child(6) { width: 14%; } /* Status */
+    
+    .donations-table th:nth-child(7),
+    .donations-table td:nth-child(7) { width: 24%; } /* Actions */
+    
+    /* Allow text wrapping for longer content columns */
+    .donations-table .wrap-cell {
+        white-space: normal !important;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+    
+    .donations-table .btn-group {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+    }
+    
+    .donations-table .btn-sm {
+        padding: 0.25rem 0.4rem !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap;
+    }
+    
+    .donations-table .badge {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-list me-2"></i>All Donations</h2>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ total_donations }}</h5>
+                    <p class="card-text">Total Donations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ total_money }}</h5>
+                    <p class="card-text">Money Donations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">{{ total_items }}</h5>
+                    <p class="card-text">Item Donations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ total_subsidized }}</h5>
+                    <p class="card-text">Subsidized Donations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Donation Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="money" {% if request.GET.type == 'money' %}selected{% endif %}>Money</option>
+                        <option value="item" {% if request.GET.type == 'item' %}selected{% endif %}>Items</option>
+                        <option value="subsidized" {% if request.GET.type == 'subsidized' %}selected{% endif %}>Subsidized</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filter</button>
+                    <a href="{% url 'foodbank_donations_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Donations Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            {% if donations %}
+                <div style="overflow-x: auto; padding: 1rem;">
+                    <table class="table table-hover mb-0 donations-table" style="width: 100%; table-layout: fixed;">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">#</th>
+                                <th style="width: 10%;">Date</th>
+                                <th style="width: 18%;">Donor</th>
+                                <th style="width: 8%;">Type</th>
+                                <th style="width: 15%;">Details</th>
+                                <th style="width: 12%;">Amount/Qty</th>
+                                <th style="width: 12%;">Status</th>
+                                <th style="width: 20%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donations %}
+                            <tr>
+                                <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                <td style="white-space: nowrap;">{{ donation.donated_at|date:"M d, Y" }}</td>
+                                <td style="white-space: normal; word-break: break-all; overflow: hidden;">{{ donation.donor.email }}</td>
+                                <td>
+                                    <span class="badge bg-{% if donation.donation_type == 'money' %}success{% elif donation.donation_type == 'item' %}primary{% else %}warning{% endif %}">
+                                        {{ donation.donation_type|title }}
+                                    </span>
+                                </td>
+                                <td class="wrap-cell">
+                                    {% if donation.donation_type == 'item' %}
+                                        {{ donation.item_name }}
+                                    {% else %}
+                                        Donation
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if donation.donation_type == 'item' %}
+                                        <span style="color: #16a34a; font-weight: 500;">{{ donation.quantity }} {{ donation.quantity_unit|default:"units" }}</span>
+                                        {% comment %} Debug: foodbank_request={{ donation.foodbank_request }}, request_management={{ donation.request_management }} {% endcomment %}
+                                        {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                            <br><small style="color: #6b7280;">({{ donation.foodbank_request.quantity_needed }} {{ donation.foodbank_request.quantity_unit }} requested)</small>
+                                        {% elif donation.foodbank_request and donation.foodbank_request.original_request %}
+                                            <br><small style="color: #6b7280;">({{ donation.foodbank_request.original_request.quantity }} {{ donation.foodbank_request.original_request.unit }} requested)</small>
+                                        {% elif donation.request_management %}
+                                            <br><small style="color: #6b7280;">({{ donation.request_management.quantity }} {{ donation.request_management.unit }} requested)</small>
+                                        {% endif %}
+                                    {% elif donation.donation_type == 'money' %}
+                                        <strong style="color: #059669;">{{ donation.amount|floatformat:0 }}</strong>
+                                        {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                            <br><small style="color: #6b7280;">(for {{ donation.foodbank_request.quantity_needed }} {{ donation.foodbank_request.quantity_unit }})</small>
+                                        {% elif donation.foodbank_request and donation.foodbank_request.original_request %}
+                                            <br><small style="color: #6b7280;">(for {{ donation.foodbank_request.original_request.quantity }} {{ donation.foodbank_request.original_request.unit }})</small>
+                                        {% elif donation.request_management %}
+                                            <br><small style="color: #6b7280;">(for {{ donation.request_management.quantity }} {{ donation.request_management.unit }})</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color: #d97706;">{{ donation.subsidized_price|floatformat:0 }}</span>
+                                        {% if donation.subsidized_market_price %}
+                                            <br><small style="color: #9ca3af;">(Market {{ donation.subsidized_market_price|floatformat:0 }})</small>
+                                        {% endif %}
+                                        {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                            <br><small style="color: #6b7280;">(for {{ donation.foodbank_request.quantity_needed }} {{ donation.foodbank_request.quantity_unit }})</small>
+                                        {% elif donation.foodbank_request and donation.foodbank_request.original_request %}
+                                            <br><small style="color: #6b7280;">(for {{ donation.foodbank_request.original_request.quantity }} {{ donation.foodbank_request.original_request.unit }})</small>
+                                        {% elif donation.request_management %}
+                                            <br><small style="color: #6b7280;">(for {{ donation.request_management.quantity }} {{ donation.request_management.unit }})</small>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with total_allocations=donation.allocations.count %}
+                                        {% if total_allocations == 0 %}
+                                            <span class="badge bg-warning">Not Allocated</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ total_allocations }} Allocation{{ total_allocations|pluralize }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'donation_detail' donation.id %}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'donation_detail' donation.id %}" class="btn btn-sm btn-outline-secondary">
+                                            Details
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?type={{ request.GET.type }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}&page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?type={{ request.GET.type }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}&page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?type={{ request.GET.type }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}&page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <p class="text-center text-muted small mt-2 mb-0">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} total donations)
+                    </p>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No donations found</h5>
+                    <p class="text-muted">Donations will appear here when they come in</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

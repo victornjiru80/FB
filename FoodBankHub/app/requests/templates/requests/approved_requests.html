@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approved Requests - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">Approved Recipient Requests</h2>
+                    <p class="text-muted mb-0">Manage and fulfill approved requests</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ approved_requests.count }}</h3>
+                            <p>Approved Requests</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ approved_requests|length }}</h3>
+                            <p>To Be Fulfilled</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ approved_requests|length }}</h3>
+                            <p>Recipients</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests List -->
+            {% if approved_requests %}
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Recipient</th>
+                                    <th>Request</th>
+                                    <th>Quantity</th>
+                                    <th>Location</th>
+                                    <th>Delivery</th>
+                                    <!--<th>Approved On</th>-->
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in approved_requests %}
+                                <tr id="request-row-{{ req.id }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <strong>
+                                                    {% if req.is_anonymous %}
+                                                        <span class="badge bg-info">Anonymous</span>
+                                                    {% else %}
+                                                        {{ req.recipient.full_name }}
+                                                    {% endif %}
+                                                </strong>
+                                                {% if not req.is_anonymous %}
+                                                <br><small class="text-muted">{{ req.recipient.phone_number }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ req.title }}</strong>
+                                        <br><small class="text-muted">{{ req.description|truncatechars:50 }}</small>
+                                    </td>
+                                    <td>{{ req.quantity }} {{ req.quantity_unit }}</td>
+                                    <td>{{ req.location|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ req.delivery_method|default:"Not specified" }}</span>
+                                    </td>
+                                    <!--<td>{{ req.updated_at|date:"M d, Y" }}</td>-->
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'fulfill_recipient_request' req.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-box me-1"></i> Fulfill
+                                            </a>
+                                            <button class="btn btn-sm btn-success complete-btn" data-id="{{ req.id }}">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h4>No Approved Requests</h4>
+                <p class="text-muted">You don't have any approved requests to fulfill at the moment.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark as completed
+    document.querySelectorAll('.complete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const requestId = this.dataset.id;
+            const row = document.getElementById(`request-row-${requestId}`);
+            
+            if (!confirm('Mark this request as completed?')) return;
+            
+            fetch(`/foodbank/request/${requestId}/complete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    row.remove();
+                    showNotification('Request marked as completed!', 'success');
+                    
+                    // Check if table is empty
+                    const tbody = document.querySelector('tbody');
+                    if (tbody && tbody.children.length === 0) {
+                        location.reload();
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-info';
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 80px; right: 20px; z-index: 9999;';
+    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 3000);
+}
+</script>
+{% endblock %}

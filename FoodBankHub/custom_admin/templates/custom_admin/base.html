@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }} - FoodBankHub Admin{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('ca-theme');
+                if (t) {
+                    document.documentElement.setAttribute('data-theme', t);
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {
+            }
+        })();
+    </script>
+    
+    <style>
+        :root {
+            --sb-accent: #a78bfa;
+        }
+        html[data-theme="dark"] {
+            --sb-bg-1: #0c1424;
+            --sb-bg-2: #1b1635;
+            --sb-surface: rgba(255,255,255,0.08);
+            --sb-surface-strong: rgba(255,255,255,0.12);
+            --sb-border: rgba(255,255,255,0.18);
+            --sb-text: rgba(255,255,255,0.94);
+            --sb-text-muted: rgba(255,255,255,0.74);
+            --sb-hover: rgba(167,139,250,0.20);
+            --sb-active: rgba(167,139,250,0.26);
+
+            --ca-bg: radial-gradient(1200px 600px at 20% -10%, rgba(167,139,250,0.20), transparent 60%),
+                     radial-gradient(900px 500px at 90% 0%, rgba(56,189,248,0.14), transparent 55%),
+                     linear-gradient(180deg, #0b1326 0%, #101a2e 100%);
+            --ca-text: rgba(255,255,255,0.94);
+            --ca-text-muted: rgba(255,255,255,0.72);
+            --ca-border: rgba(255,255,255,0.16);
+            --ca-link: rgba(196,181,253,0.95);
+            --ca-link-hover: #ddd6fe;
+
+            --ca-card-bg: rgba(255,255,255,0.06);
+            --ca-card-border: rgba(255,255,255,0.14);
+            --ca-card-border-hover: rgba(167,139,250,0.30);
+            --ca-card-shadow: 0 12px 26px rgba(0,0,0,0.45);
+            --ca-card-header-bg: rgba(255,255,255,0.04);
+
+            --ca-table-head-bg: rgba(255,255,255,0.06);
+            --ca-table-striped-bg: rgba(255,255,255,0.04);
+            --ca-table-hover-bg: rgba(167,139,250,0.14);
+            --ca-table-text: rgba(255,255,255,0.92);
+            --ca-table-border: rgba(255,255,255,0.14);
+
+            --ca-input-bg: rgba(255,255,255,0.08);
+            --ca-input-border: rgba(255,255,255,0.18);
+            --ca-input-placeholder: rgba(255,255,255,0.65);
+            --ca-input-focus-shadow: rgba(167,139,250,0.28);
+
+            --ca-outline-btn-text: rgba(255,255,255,0.88);
+            --ca-outline-btn-border: rgba(255,255,255,0.26);
+            --ca-outline-btn-hover-bg: rgba(255,255,255,0.12);
+            --ca-outline-btn-hover-border: rgba(255,255,255,0.36);
+            --ca-outline-btn-hover-text: rgba(255,255,255,0.96);
+
+            --ca-badge-text: rgba(255,255,255,0.96);
+
+            --ca-kpi-icon-bg: rgba(255,255,255,0.10);
+            --ca-kpi-icon-border: rgba(255,255,255,0.18);
+            --ca-kpi-icon-fg: rgba(255,255,255,0.96);
+            --ca-kpi-label: rgba(255,255,255,0.72);
+            --ca-kpi-value: rgba(255,255,255,0.96);
+            --ca-kpi-sub: rgba(255,255,255,0.76);
+
+            --ca-hover-surface: rgba(255,255,255,0.10);
+
+            --ca-appbar-bg: rgba(11,18,32,0.88);
+            --ca-appbar-border: rgba(255,255,255,0.16);
+
+            --ca-chart-grid: rgba(255,255,255,0.14);
+            --ca-chart-ticks: rgba(255,255,255,0.82);
+            --ca-chart-legend: rgba(255,255,255,0.85);
+        }
+        html[data-theme="light"] {
+            --sb-bg-1: #fbfbff;
+            --sb-bg-2: #f4f1ff;
+            --sb-surface: rgba(15,23,42,0.04);
+            --sb-surface-strong: rgba(15,23,42,0.05);
+            --sb-border: rgba(15,23,42,0.10);
+            --sb-text: rgba(15,23,42,0.88);
+            --sb-text-muted: rgba(15,23,42,0.56);
+            --sb-hover: rgba(167,139,250,0.16);
+            --sb-active: rgba(167,139,250,0.22);
+
+            --ca-bg: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            --ca-text: rgba(15,23,42,0.90);
+            --ca-text-muted: rgba(15,23,42,0.62);
+            --ca-border: rgba(15,23,42,0.10);
+            --ca-link: rgba(88,28,135,0.92);
+            --ca-link-hover: rgba(76,29,149,0.92);
+
+            --ca-card-bg: rgba(255,255,255,0.88);
+            --ca-card-border: rgba(15,23,42,0.08);
+            --ca-card-border-hover: rgba(167,139,250,0.34);
+            --ca-card-shadow: 0 10px 25px rgba(15,23,42,0.10);
+            --ca-card-header-bg: rgba(15,23,42,0.02);
+
+            --ca-table-head-bg: rgba(15,23,42,0.03);
+            --ca-table-striped-bg: rgba(15,23,42,0.02);
+            --ca-table-hover-bg: rgba(167,139,250,0.10);
+            --ca-table-text: rgba(15,23,42,0.86);
+            --ca-table-border: rgba(15,23,42,0.10);
+
+            --ca-input-bg: rgba(255,255,255,0.96);
+            --ca-input-border: rgba(15,23,42,0.14);
+            --ca-input-placeholder: rgba(15,23,42,0.48);
+            --ca-input-focus-shadow: rgba(167,139,250,0.22);
+
+            --ca-outline-btn-text: rgba(15,23,42,0.78);
+            --ca-outline-btn-border: rgba(15,23,42,0.18);
+            --ca-outline-btn-hover-bg: rgba(15,23,42,0.05);
+            --ca-outline-btn-hover-border: rgba(15,23,42,0.24);
+            --ca-outline-btn-hover-text: rgba(15,23,42,0.90);
+
+            --ca-badge-text: rgba(15,23,42,0.90);
+
+            --ca-kpi-icon-bg: rgba(15,23,42,0.06);
+            --ca-kpi-icon-border: rgba(15,23,42,0.10);
+            --ca-kpi-icon-fg: rgba(15,23,42,0.86);
+            --ca-kpi-label: rgba(15,23,42,0.62);
+            --ca-kpi-value: rgba(15,23,42,0.90);
+            --ca-kpi-sub: rgba(15,23,42,0.68);
+
+            --ca-hover-surface: rgba(15,23,42,0.05);
+
+            --ca-appbar-bg: rgba(248,250,252,0.90);
+            --ca-appbar-border: rgba(15,23,42,0.10);
+
+            --ca-chart-grid: rgba(15,23,42,0.10);
+            --ca-chart-ticks: rgba(15,23,42,0.70);
+            --ca-chart-legend: rgba(15,23,42,0.78);
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--sb-bg-1) 0%, var(--sb-bg-2) 100%);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar:not(.sidebar-offcanvas) {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            align-self: flex-start;
+        }
+        .ca-sidebar-local-toggle-wrap {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 10px 0;
+        }
+        .ca-sidebar-local-toggle {
+            border-radius: 10px;
+        }
+        @media (min-width: 768px) {
+            #caDesktopSidebar,
+            #caMainContent {
+                transition: max-width 0.25s ease, flex-basis 0.25s ease, opacity 0.2s ease;
+            }
+            body.ca-sidebar-collapsed #caDesktopSidebar {
+                max-width: 0 !important;
+                flex: 0 0 0 !important;
+                padding: 0 !important;
+                overflow: hidden;
+                opacity: 0;
+            }
+            body.ca-sidebar-collapsed #caMainContent {
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+            }
+        }
+        .sidebar-brand {
+            padding: 16px 16px 8px;
+        }
+        .sidebar-brand-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 14px;
+            background: var(--sb-surface-strong);
+            border: 1px solid var(--sb-border);
+            backdrop-filter: blur(6px);
+        }
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: var(--sb-text);
+            background: rgba(167,139,250,0.16);
+            border: 1px solid rgba(167,139,250,0.22);
+        }
+        .brand-title {
+            margin: 0;
+            font-weight: 700;
+            color: var(--sb-text);
+            font-size: 1.0rem;
+            line-height: 1.1;
+        }
+        .brand-subtitle {
+            margin: 2px 0 0;
+            color: var(--sb-text-muted);
+            font-size: 0.82rem;
+            line-height: 1.2;
+        }
+        .sidebar .nav-link {
+            color: var(--sb-text);
+            padding: 10px 14px;
+            margin: 4px 10px;
+            border-radius: 12px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+        .sidebar .nav-link i {
+            width: 18px;
+            text-align: center;
+            margin-right: 0;
+            opacity: 0.95;
+        }
+        .sidebar .nav-link:hover {
+            color: var(--sb-text);
+            background: var(--sb-hover);
+        }
+        .sidebar .nav-link.active {
+            color: var(--sb-text);
+            background: var(--sb-active);
+            border: 1px solid rgba(167,139,250,0.24);
+        }
+        .sidebar .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: -10px;
+            top: 10px;
+            bottom: 10px;
+            width: 3px;
+            border-radius: 999px;
+            background: var(--sb-accent);
+        }
+        .sidebar .nav-link .fa-chevron-down {
+            transition: transform 0.2s ease;
+            opacity: 0.9;
+        }
+        .sidebar .nav-link:not(.collapsed) .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+        .sidebar-section-title {
+            padding: 14px 16px 6px;
+            color: var(--sb-text-muted);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+        .sidebar-submenu {
+            margin: 6px 10px 10px;
+            padding: 6px 0;
+            border-radius: 14px;
+            background: var(--sb-surface);
+            border: 1px solid var(--sb-border);
+        }
+        .sidebar-submenu .nav-link {
+            margin: 2px 6px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            color: var(--sb-text);
+        }
+        .sidebar-submenu .nav-link:hover {
+            background: var(--sb-hover);
+        }
+        .sidebar-submenu .nav-link.active {
+            background: var(--sb-active);
+        }
+        .main-content {
+            background: var(--ca-bg);
+            min-height: 100vh;
+            color: var(--ca-text);
+        }
+        .main-content .border-bottom {
+            border-bottom-color: var(--ca-border) !important;
+        }
+        .main-content a {
+            color: var(--ca-link);
+            text-decoration: none;
+        }
+        .main-content a:hover {
+            color: var(--ca-link-hover);
+            text-decoration: underline;
+        }
+        .main-content .text-muted {
+            color: var(--ca-text-muted) !important;
+        }
+        .main-content h1,
+        .main-content h2,
+        .main-content h3,
+        .main-content h4,
+        .main-content h5,
+        .main-content h6 {
+            color: var(--ca-text);
+        }
+        .card {
+            background: var(--ca-card-bg);
+            border: 1px solid var(--ca-card-border);
+            border-radius: 16px;
+            box-shadow: var(--ca-card-shadow);
+            transition: transform 0.25s ease, border-color 0.25s ease;
+        }
+        .card:hover {
+            border-color: var(--ca-card-border-hover);
+        }
+        a.text-decoration-none:hover .card:not(.no-hover-lift) {
+            transform: translateY(-4px);
+        }
+        .card.no-hover-lift:hover {
+            transform: none;
+        }
+        .ca-appbar {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            background: var(--ca-appbar-bg);
+            border-bottom: 1px solid var(--ca-appbar-border);
+            backdrop-filter: blur(10px);
+        }
+        .ca-appbar .breadcrumb {
+            --bs-breadcrumb-divider: '›';
+        }
+        .ca-search .input-group-text {
+            background: var(--ca-input-bg);
+            border: 1px solid var(--ca-input-border);
+            color: var(--ca-text-muted);
+        }
+        .ca-search .form-control {
+            border-left: 0;
+        }
+        .sidebar-offcanvas {
+            width: 320px;
+        }
+        html[data-theme="dark"] .sidebar-offcanvas .btn-close {
+            filter: invert(1) grayscale(100%);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, rgba(167,139,250,0.14) 0%, var(--ca-card-bg) 70%);
+            border-color: rgba(167,139,250,0.22);
+            color: var(--ca-text);
+        }
+        .stats-card.success {
+            background: linear-gradient(135deg, rgba(52,211,153,0.14) 0%, var(--ca-card-bg) 70%);
+            border-color: rgba(52,211,153,0.24);
+        }
+        .stats-card.warning {
+            background: linear-gradient(135deg, rgba(251,191,36,0.14) 0%, var(--ca-card-bg) 70%);
+            border-color: rgba(251,191,36,0.26);
+        }
+        .stats-card.info {
+            background: linear-gradient(135deg, rgba(56,189,248,0.14) 0%, var(--ca-card-bg) 70%);
+            border-color: rgba(56,189,248,0.26);
+        }
+        .stats-card.danger {
+            background: linear-gradient(135deg, rgba(251,113,133,0.14) 0%, var(--ca-card-bg) 70%);
+            border-color: rgba(251,113,133,0.26);
+        }
+        .stats-card.primary {
+            background: linear-gradient(135deg, rgba(167,139,250,0.14) 0%, var(--ca-card-bg) 70%);
+            border-color: rgba(167,139,250,0.22);
+        }
+        .main-content .card-header {
+            background: var(--ca-card-header-bg);
+            border-bottom: 1px solid var(--ca-border);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--sb-accent) !important;
+        }
+        .btn-primary {
+            background: var(--sb-accent);
+            border: 1px solid rgba(167,139,250,0.35);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #c4b5fd;
+            border-color: rgba(196,181,253,0.55);
+            color: #0b1220;
+        }
+        .main-content .btn-outline-secondary {
+            color: var(--ca-outline-btn-text);
+            border-color: var(--ca-outline-btn-border);
+        }
+        .main-content .btn-outline-secondary:hover {
+            background: var(--ca-outline-btn-hover-bg);
+            border-color: var(--ca-outline-btn-hover-border);
+            color: var(--ca-outline-btn-hover-text);
+        }
+        .main-content .badge.bg-primary {
+            background-color: rgba(167,139,250,0.20) !important;
+            border: 1px solid rgba(167,139,250,0.26);
+            color: var(--ca-badge-text) !important;
+        }
+        .main-content .badge.bg-success {
+            background-color: rgba(52,211,153,0.18) !important;
+            border: 1px solid rgba(52,211,153,0.24);
+            color: var(--ca-badge-text) !important;
+        }
+        .main-content .badge.bg-warning {
+            background-color: rgba(251,191,36,0.20) !important;
+            border: 1px solid rgba(251,191,36,0.26);
+            color: var(--ca-badge-text) !important;
+        }
+        .main-content .badge.bg-danger {
+            background-color: rgba(251,113,133,0.18) !important;
+            border: 1px solid rgba(251,113,133,0.24);
+            color: var(--ca-badge-text) !important;
+        }
+        .main-content .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--ca-table-text);
+            --bs-table-striped-color: var(--ca-table-text);
+            --bs-table-striped-bg: var(--ca-table-striped-bg);
+            --bs-table-hover-color: var(--ca-text);
+            --bs-table-hover-bg: var(--ca-table-hover-bg);
+            --bs-table-border-color: var(--ca-table-border);
+        }
+        .table th {
+            border-top: none;
+            background-color: var(--ca-table-head-bg);
+            font-weight: 600;
+            color: var(--ca-text);
+        }
+        .main-content .form-control,
+        .main-content .form-select {
+            background-color: var(--ca-input-bg);
+            border: 1px solid var(--ca-input-border);
+            color: var(--ca-text);
+        }
+        .main-content .form-control::placeholder {
+            color: var(--ca-input-placeholder);
+        }
+        .main-content .form-control:focus,
+        .main-content .form-select:focus {
+            border-color: rgba(167,139,250,0.55);
+            box-shadow: 0 0 0 0.25rem var(--ca-input-focus-shadow);
+        }
+        .main-content .pagination {
+            --bs-pagination-bg: var(--ca-input-bg);
+            --bs-pagination-border-color: var(--ca-input-border);
+            --bs-pagination-color: var(--ca-text);
+            --bs-pagination-hover-color: var(--ca-text);
+            --bs-pagination-hover-bg: var(--ca-hover-surface);
+            --bs-pagination-hover-border-color: var(--ca-card-border-hover);
+            --bs-pagination-focus-color: var(--ca-text);
+            --bs-pagination-focus-bg: var(--ca-hover-surface);
+            --bs-pagination-focus-box-shadow: 0 0 0 0.25rem var(--ca-input-focus-shadow);
+            --bs-pagination-active-bg: rgba(167,139,250,0.22);
+            --bs-pagination-active-border-color: rgba(167,139,250,0.34);
+            --bs-pagination-active-color: var(--ca-text);
+            --bs-pagination-disabled-bg: var(--ca-input-bg);
+            --bs-pagination-disabled-border-color: var(--ca-input-border);
+            --bs-pagination-disabled-color: var(--ca-text-muted);
+        }
+        .main-content .page-link {
+            border-radius: 12px;
+            margin: 0 4px;
+        }
+        .main-content .dropdown-menu {
+            background: var(--ca-card-bg);
+            border: 1px solid var(--ca-border);
+            border-radius: 14px;
+            box-shadow: var(--ca-card-shadow);
+            padding: 8px;
+        }
+        .main-content .dropdown-divider {
+            border-top-color: var(--ca-border);
+            opacity: 1;
+        }
+        .main-content .dropdown-item {
+            color: var(--ca-text);
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+        .main-content .dropdown-item:hover,
+        .main-content .dropdown-item:focus {
+            background: var(--ca-hover-surface);
+            color: var(--ca-text);
+        }
+        .main-content .dropdown-header {
+            color: var(--ca-text-muted);
+        }
+        .badge {
+            font-size: 0.75em;
+        }
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid var(--ca-input-border);
+            transition: border-color 0.3s ease;
+        }
+        .search-box:focus {
+            border-color: rgba(167,139,250,0.55);
+            box-shadow: 0 0 0 0.2rem var(--ca-input-focus-shadow);
+        }
+        .ca-kpi-card .card-body,
+        .stats-card .card-body {
+            padding: 14px;
+        }
+        .ca-kpi {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ca-kpi-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            color: var(--ca-kpi-icon-fg);
+            background: var(--ca-kpi-icon-bg);
+            border: 1px solid var(--ca-kpi-icon-border);
+        }
+        .ca-kpi-icon.ca-accent {
+            background: rgba(167,139,250,0.14);
+            border-color: rgba(167,139,250,0.20);
+        }
+        .ca-kpi-icon.ca-success {
+            background: rgba(52,211,153,0.14);
+            border-color: rgba(52,211,153,0.20);
+        }
+        .ca-kpi-icon.ca-warning {
+            background: rgba(251,191,36,0.14);
+            border-color: rgba(251,191,36,0.22);
+        }
+        .ca-kpi-icon.ca-info {
+            background: rgba(56,189,248,0.14);
+            border-color: rgba(56,189,248,0.22);
+        }
+        .ca-kpi-icon.ca-danger {
+            background: rgba(251,113,133,0.14);
+            border-color: rgba(251,113,133,0.22);
+        }
+        .ca-kpi-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ca-kpi-label);
+            font-weight: 700;
+        }
+        .ca-kpi-value {
+            font-size: 1.28rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--ca-kpi-value);
+        }
+        .ca-kpi-sub {
+            font-size: 0.80rem;
+            color: var(--ca-kpi-sub);
+        }
+        .main-content .nav-tabs {
+            border-bottom: 1px solid var(--ca-border);
+        }
+        .main-content .nav-tabs .nav-link {
+            color: var(--ca-text-muted);
+            border: 0;
+            border-radius: 12px;
+            margin-right: 6px;
+            padding: 8px 12px;
+        }
+        .main-content .nav-tabs .nav-link:hover {
+            background: var(--ca-hover-surface);
+            color: var(--ca-text);
+        }
+        .main-content .nav-tabs .nav-link.active {
+            color: var(--ca-text);
+            background: rgba(167,139,250,0.14);
+            border: 1px solid rgba(167,139,250,0.22);
+        }
+        .ca-chart {
+            position: relative;
+            height: 260px;
+        }
+        .ca-chart.ca-chart-sm {
+            height: 220px;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="caDesktopSidebar" class="col-md-3 col-lg-2 d-none d-md-block sidebar">
+                <div class="ca-sidebar-local-toggle-wrap">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary ca-sidebar-local-toggle"
+                        data-ca-sidebar-toggle="desktop"
+                        aria-label="Collapse sidebar"
+                        title="Collapse sidebar"
+                    >
+                        <i class="fas fa-angles-left"></i>
+                    </button>
+                </div>
+                {% include 'custom_admin/partials/sidebar.html' with id_prefix='' %}
+            </nav>
+
+            <div class="offcanvas offcanvas-start sidebar sidebar-offcanvas d-md-none" tabindex="-1" id="caSidebarOffcanvas" aria-labelledby="caSidebarOffcanvasLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="caSidebarOffcanvasLabel">Menu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body p-0">
+                    {% include 'custom_admin/partials/sidebar.html' with id_prefix='oc-' %}
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main id="caMainContent" class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- Top navbar -->
+                <div class="ca-appbar d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#caSidebarOffcanvas" aria-controls="caSidebarOffcanvas" aria-label="Open menu">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0 small">
+                                    <li class="breadcrumb-item"><a href="{% url 'custom_admin:dashboard' %}">Admin</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                                </ol>
+                            </nav>
+                            <h1 class="h4 mb-0">{{ title }}</h1>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                        <form class="d-none d-lg-block" method="get" action="{% url 'custom_admin:user_management' %}">
+                            <div class="input-group input-group-sm ca-search">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ request.GET.search|default:'' }}">
+                            </div>
+                        </form>
+
+                        <div class="btn-toolbar mb-0">
+                            {% block header_actions %}{% endblock %}
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex" id="caSidebarToggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                                    <i class="fas fa-angles-left"></i>
+                                </button>
+                            </div>
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="caThemeToggle" aria-label="Toggle theme" title="Toggle theme">
+                                    <i class="fas fa-moon"></i>
+                                </button>
+                            </div>
+                            <div class="btn-group me-2 d-none d-md-inline-flex">
+                                <button type="button" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ "now"|date:"M d, Y" }}
+                                </button>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user"></i>
+                                    <span class="d-none d-lg-inline">{{ request.user.email|default:request.user.username }}</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><h6 class="dropdown-header">{{ request.user.get_full_name|default:request.user.email|default:request.user.username }}</h6></li>
+                                    <li><a class="dropdown-item" href="{% url 'custom_admin:admin_login_logs' %}"><i class="fas fa-sign-in-alt me-2"></i>Login Logs</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'custom_admin:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Page content -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Quick Actions JavaScript -->
+    <script>
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // Toggle User Status
+        document.addEventListener('DOMContentLoaded', function() {
+            const desktopSidebar = document.querySelector('.sidebar:not(.sidebar-offcanvas)');
+            const sidebarToggleButtons = Array.from(document.querySelectorAll('[data-ca-sidebar-toggle="desktop"], #caSidebarToggle')).filter(Boolean);
+            const sidebarScrollStorageKey = 'ca-sidebar-scroll-top';
+
+            const applySidebarToggleUi = () => {
+                const collapsed = document.body.classList.contains('ca-sidebar-collapsed');
+                const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+                sidebarToggleButtons.forEach((button) => {
+                    const icon = button.querySelector('i');
+                    if (icon) {
+                        icon.className = collapsed ? 'fas fa-angles-right' : 'fas fa-angles-left';
+                    }
+                    button.title = label;
+                    button.setAttribute('aria-label', label);
+                });
+            };
+
+            try {
+                const persistedCollapsed = localStorage.getItem('ca-sidebar-collapsed') === '1';
+                document.body.classList.toggle('ca-sidebar-collapsed', persistedCollapsed);
+            } catch (e) {
+            }
+            applySidebarToggleUi();
+
+            if (sidebarToggleButtons.length) {
+                sidebarToggleButtons.forEach((button) => button.addEventListener('click', function() {
+                    const collapsedNow = !document.body.classList.contains('ca-sidebar-collapsed');
+                    document.body.classList.toggle('ca-sidebar-collapsed', collapsedNow);
+                    try {
+                        localStorage.setItem('ca-sidebar-collapsed', collapsedNow ? '1' : '0');
+                    } catch (e) {
+                    }
+                    applySidebarToggleUi();
+                }));
+            }
+
+            if (desktopSidebar) {
+                try {
+                    const savedSidebarScrollTop = sessionStorage.getItem(sidebarScrollStorageKey);
+                    if (savedSidebarScrollTop !== null) {
+                        desktopSidebar.scrollTop = parseInt(savedSidebarScrollTop, 10) || 0;
+                    }
+                } catch (e) {
+                }
+
+                const persistSidebarScroll = () => {
+                    try {
+                        sessionStorage.setItem(sidebarScrollStorageKey, String(desktopSidebar.scrollTop || 0));
+                    } catch (e) {
+                    }
+                };
+
+                desktopSidebar.addEventListener('scroll', persistSidebarScroll, { passive: true });
+                window.addEventListener('beforeunload', persistSidebarScroll);
+            }
+
+            const themeToggle = document.getElementById('caThemeToggle');
+            const applyThemeToggleUi = () => {
+                if (!themeToggle) return;
+                const theme = document.documentElement.getAttribute('data-theme') || 'light';
+                const icon = themeToggle.querySelector('i');
+                if (icon) {
+                    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                }
+                themeToggle.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+                themeToggle.setAttribute('aria-label', themeToggle.title);
+            };
+            applyThemeToggleUi();
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme') || 'light';
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try {
+                        localStorage.setItem('ca-theme', next);
+                    } catch (e) {
+                    }
+                    applyThemeToggleUi();
+                    window.dispatchEvent(new CustomEvent('ca-theme-changed', { detail: { theme: next } }));
+                });
+            }
+
+            document.querySelectorAll('.toggle-status-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const currentStatus = this.dataset.currentStatus === 'true';
+                    const row = this.closest('tr');
+                    
+                    if (confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this user?`)) {
+                        fetch(`/custom-admin/users/${userId}/toggle-status/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrftoken,
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Update button
+                                const icon = this.querySelector('i');
+                                if (data.is_active) {
+                                    this.classList.remove('btn-outline-success');
+                                    this.classList.add('btn-outline-warning');
+                                    icon.classList.remove('fa-check');
+                                    icon.classList.add('fa-ban');
+                                    this.title = 'Deactivate User';
+                                } else {
+                                    this.classList.remove('btn-outline-warning');
+                                    this.classList.add('btn-outline-success');
+                                    icon.classList.remove('fa-ban');
+                                    icon.classList.add('fa-check');
+                                    this.title = 'Activate User';
+                                }
+                                this.dataset.currentStatus = data.is_active;
+                                
+                                // Update status badge in row
+                                const statusBadge = row.querySelector('td:nth-last-child(3) .badge');
+                                if (statusBadge) {
+                                    if (data.is_active) {
+                                        statusBadge.classList.remove('bg-danger');
+                                        statusBadge.classList.add('bg-success');
+                                        statusBadge.textContent = 'Active';
+                                    } else {
+                                        statusBadge.classList.remove('bg-success');
+                                        statusBadge.classList.add('bg-danger');
+                                        statusBadge.textContent = 'Inactive';
+                                    }
+                                }
+                                
+                                // Show success message
+                                showAlert('success', data.message);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            showAlert('danger', 'An error occurred. Please try again.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+
+            // Copy Email to Clipboard
+            document.querySelectorAll('.copy-email-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const email = this.dataset.email;
+                    navigator.clipboard.writeText(email).then(() => {
+                        // Change icon temporarily
+                        const icon = this.querySelector('i');
+                        const originalClass = icon.className;
+                        icon.className = 'fas fa-check';
+                        setTimeout(() => {
+                            icon.className = originalClass;
+                        }, 1500);
+                        showAlert('success', `Email copied: ${email}`);
+                    }).catch(err => {
+                        showAlert('danger', 'Failed to copy email');
+                        console.error('Error:', err);
+                    });
+                });
+            });
+
+            // Delete User
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const userEmail = this.dataset.userEmail;
+                    const row = this.closest('tr');
+                    
+                    if (confirm(`Are you sure you want to DELETE user "${userEmail}"?\n\nThis action cannot be undone!`)) {
+                        fetch(`/custom-admin/users/${userId}/delete/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrftoken,
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Remove row with animation
+                                row.style.transition = 'opacity 0.3s';
+                                row.style.opacity = '0';
+                                setTimeout(() => {
+                                    row.remove();
+                                }, 300);
+                                showAlert('success', data.message);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            showAlert('danger', 'An error occurred. Please try again.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+        });
+
+        // Show alert message
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.minWidth = '300px';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto dismiss after 3 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

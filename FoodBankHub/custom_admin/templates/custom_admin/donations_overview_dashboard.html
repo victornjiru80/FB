@@ -1,0 +1,753 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-chart-pie me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Comprehensive overview of all donation-related activities</p>
+        </div>
+        <div>
+            <form method="GET" class="d-inline">
+                <select name="days" class="form-select" onchange="this.form.submit()">
+                    <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 Days</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 Days</option>
+                    <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 Days</option>
+                    <option value="365" {% if days == 365 %}selected{% endif %}>Last Year</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row 1: Recipient Requests -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-user-circle me-2"></i>Recipient Requests</h5>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Requests</h6>
+                            <h3 class="mb-0">{{ recipient_requests_total }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">+{{ recipient_requests_recent }} in last {{ days }} days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Pending</h6>
+                            <h3 class="mb-0">{{ recipient_requests_pending }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:recipient_requests_management' %}?status=pending" class="text-white text-decoration-none">
+                        <small>View Pending <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row 2: Foodbank Requests -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-building me-2"></i>Foodbank Requests to Donors</h5>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Requests</h6>
+                            <h3 class="mb-0">{{ foodbank_requests_total }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">+{{ foodbank_requests_recent }} in last {{ days }} days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Active</h6>
+                            <h3 class="mb-0">{{ foodbank_requests_active }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:foodbank_requests_enhanced' %}?status=active" class="text-white text-decoration-none">
+                        <small>View Active <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Urgent</h6>
+                            <h3 class="mb-0">{{ foodbank_requests_urgent }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:foodbank_requests_enhanced' %}?priority=urgent&status=active" class="text-white text-decoration-none">
+                        <small>View Urgent <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row 3: Donor Donations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-gift me-2"></i>Donor Donations</h5>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Donations</h6>
+                            <h3 class="mb-0">{{ donations_total }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-donate"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">+{{ donations_recent }} in last {{ days }} days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Pending</h6>
+                            <h3 class="mb-0">{{ donations_pending }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:donor_donations_management' %}?status=pending" class="text-white text-decoration-none">
+                        <small>View Pending <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Accepted</h6>
+                            <h3 class="mb-0">{{ donations_accepted }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:donor_donations_management' %}?status=accepted" class="text-white text-decoration-none">
+                        <small>View Accepted <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Stats -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-money-bill-wave me-2"></i>Financial Overview</h5>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Monetary Donations</h6>
+                            <h3 class="mb-0">KES {{ total_monetary_donations|floatformat:2 }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">Total accepted monetary donations</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Subsidized Value</h6>
+                            <h3 class="mb-0">KES {{ total_subsidized_value|floatformat:2 }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">Total subsidized goods value</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Allocations & Discussions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5 class="mb-3"><i class="fas fa-share-alt me-2"></i>Donation Allocations</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Total Allocations</h6>
+                            <h3 class="mb-0">{{ allocations_total }}</h3>
+                            <small class="text-muted">+{{ allocations_recent }} in last {{ days }} days</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Pending Acknowledgment</h6>
+                            <h3 class="mb-0 text-warning">{{ allocations_pending_ack }}</h3>
+                            <a href="{% url 'custom_admin:donation_allocations_management' %}?acknowledged=no" class="text-warning text-decoration-none">
+                                <small>View Pending <i class="fas fa-arrow-right"></i></small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5 class="mb-3"><i class="fas fa-comments me-2"></i>Donation Discussions</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Total</h6>
+                            <h3 class="mb-0">{{ discussions_total }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Pending</h6>
+                            <h3 class="mb-0 text-warning">{{ discussions_pending }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">In Progress</h6>
+                            <h3 class="mb-0 text-info">{{ discussions_in_progress }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Transactions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Payment Transactions</h5>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Total Transactions</h6>
+                    <h3 class="mb-0">{{ transactions_total }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Pending</h6>
+                    <h3 class="mb-0 text-warning">{{ transactions_pending }}</h3>
+                    <a href="{% url 'custom_admin:payment_transactions_management' %}?status=pending" class="text-warning text-decoration-none">
+                        <small>View Pending <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Completed</h6>
+                    <h3 class="mb-0 text-success">{{ transactions_completed }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW DONATION SYSTEM SECTIONS -->
+    
+    <!-- Unspecified Donations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-box-open me-2"></i>Unspecified Donations</h5>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Unspecified</h6>
+                            <h3 class="mb-0">{{ unspecified_total }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:unspecified_donations_management' %}" class="text-white text-decoration-none">
+                        <small>View All <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Pending Foodbank</h6>
+                            <h3 class="mb-0">{{ unspecified_pending_foodbank }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:unspecified_donations_management' %}?foodbank_status=pending_foodbank" class="text-white text-decoration-none">
+                        <small>View Pending <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Pending Recipient</h6>
+                            <h3 class="mb-0">{{ unspecified_pending_recipient }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:unspecified_donations_management' %}?recipient_status=pending_recipient" class="text-white text-decoration-none">
+                        <small>View Pending <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Received</h6>
+                            <h3 class="mb-0">{{ unspecified_received }}</h3>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'custom_admin:unspecified_donations_management' %}?recipient_status=received" class="text-white text-decoration-none">
+                        <small>View Received <i class="fas fa-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subsidized & Direct Donations -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5 class="mb-3"><i class="fas fa-tags me-2"></i>Subsidized Donations</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Total</h6>
+                            <h3 class="mb-0">{{ subsidized_total }}</h3>
+                            <a href="{% url 'custom_admin:subsidized_donations_management' %}" class="text-primary text-decoration-none">
+                                <small>View All <i class="fas fa-arrow-right"></i></small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Pending</h6>
+                            <h3 class="mb-0 text-warning">{{ subsidized_pending }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">With Responses</h6>
+                            <h3 class="mb-0 text-info">{{ subsidized_with_responses }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5 class="mb-3"><i class="fas fa-arrow-right me-2"></i>Direct Donations</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Total</h6>
+                            <h3 class="mb-0">{{ direct_donations_total }}</h3>
+                            <a href="{% url 'custom_admin:direct_donations_management' %}" class="text-primary text-decoration-none">
+                                <small>View All <i class="fas fa-arrow-right"></i></small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Pending</h6>
+                            <h3 class="mb-0 text-warning">{{ direct_donations_pending }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Accepted</h6>
+                            <h3 class="mb-0 text-success">{{ direct_donations_accepted }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Management & Donation Responses -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5 class="mb-3"><i class="fas fa-tasks me-2"></i>Request Management</h5>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Total</h6>
+                            <h3 class="mb-0">{{ request_management_total }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Pending</h6>
+                            <h3 class="mb-0 text-warning">{{ request_management_pending }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Fulfilled</h6>
+                            <h3 class="mb-0 text-success">{{ request_management_fulfilled }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Anonymous</h6>
+                            <h3 class="mb-0 text-info">{{ request_management_anonymous }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'custom_admin:request_management_admin' %}" class="btn btn-sm btn-outline-primary">
+                View Request Management <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <h5 class="mb-3"><i class="fas fa-reply-all me-2"></i>Donation Responses</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Total</h6>
+                            <h3 class="mb-0">{{ donation_responses_total }}</h3>
+                            <small class="text-muted">+{{ donation_responses_recent }} in last {{ days }} days</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Accepted</h6>
+                            <h3 class="mb-0 text-success">{{ donation_responses_accepted }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Declined</h6>
+                            <h3 class="mb-0 text-danger">{{ donation_responses_declined }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'custom_admin:donation_responses_management' %}" class="btn btn-sm btn-outline-primary">
+                View All Responses <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Donation Types Breakdown -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Donation Types Breakdown (Accepted)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for type_data in donation_types_breakdown %}
+                        <div class="col-md-2 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-1">{{ type_data.donation_type|title }}</h6>
+                                    <h3 class="mb-0 text-primary">{{ type_data.count }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center text-muted py-3">
+                            No donation data available
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Donors & Foodbanks -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Top Donors</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Donor</th>
+                                    <th>Donations</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donor in top_donors %}
+                                <tr>
+                                    <td>{{ donor.donor__email }}</td>
+                                    <td><span class="badge bg-primary">{{ donor.total_donations }}</span></td>
+                                    <td>{% if donor.total_amount %}KES {{ donor.total_amount|floatformat:2 }}{% else %}-{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-building me-2 text-info"></i>Top Foodbanks (by Donations)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Foodbank</th>
+                                    <th>Total Donations</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for foodbank in top_foodbanks %}
+                                <tr>
+                                    <td>{{ foodbank.foodbank__foodbank_name }}</td>
+                                    <td><span class="badge bg-info">{{ foodbank.total_donations }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">No data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Recipient Requests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for request in recent_recipient_requests %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ request.title }}</h6>
+                                    <small class="text-muted">
+                                        {% if not request.is_anonymous %}
+                                            {{ request.recipient.user.email }}
+                                        {% else %}
+                                            Anonymous
+                                        {% endif %}
+                                        {% if request.foodbank %} → {{ request.foodbank.foodbank_name }}{% endif %}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ request.status|yesno:'success,warning,secondary' }}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ request.created_at|timesince }} ago</small>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">No recent requests</div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <a href="{% url 'custom_admin:recipient_requests_management' %}" class="btn btn-sm btn-outline-primary">
+                            View All Requests <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-gift me-2"></i>Recent Donations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for donation in recent_donations %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {% if donation.item_name %}{{ donation.item_name }}{% else %}{{ donation.get_donation_type_display }}{% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ donation.donor.email }} → {{ donation.foodbank.foodbank_name }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ donation.status|yesno:'success,warning,danger' }}">
+                                    {{ donation.get_status_display }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ donation.donated_at|timesince }} ago</small>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">No recent donations</div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <a href="{% url 'custom_admin:donor_donations_management' %}" class="btn btn-sm btn-outline-primary">
+                            View All Donations <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-box-open me-2"></i>Recent Unspecified</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for item in recent_unspecified %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {% if item.donation.item_name %}{{ item.donation.item_name }}{% else %}{{ item.donation.get_donation_type_display }}{% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ item.donation.donor.email }} → {{ item.donation.foodbank.foodbank_name }}
+                                    </small>
+                                </div>
+                                <span class="badge {{ item.get_foodbank_status_badge_class }}">
+                                    {{ item.get_foodbank_status_display }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ item.created_at|timesince }} ago</small>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">No recent unspecified donations</div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <a href="{% url 'custom_admin:unspecified_donations_management' %}" class="btn btn-sm btn-outline-primary">
+                            View All Unspecified <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

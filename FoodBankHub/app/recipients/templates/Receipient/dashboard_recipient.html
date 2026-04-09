@@ -1,0 +1,3119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recipient Dashboard - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Dashboard Styles */
+    :root {
+        --primary-color: #1f2933;
+        --secondary-color: #4b5563;
+        --accent-color: #2563eb;
+        --danger-color: #b91c1c;
+        --warning-color: #a16207;
+        --info-color: #075985;
+        --light-bg: #f5f6f7;
+        --white: #ffffff;
+        --text-primary: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 2px rgba(17,24,39,0.04);
+        --shadow-md: 0 4px 8px rgba(17,24,39,0.08);
+        --shadow-lg: 0 24px 48px rgba(17,24,39,0.12);
+    }
+
+    body {
+        background-color: var(--light-bg);
+        font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Dashboard Container */
+    .dashboard-wrapper {
+        min-height: 100vh;
+        padding-top: 0.75rem;
+        padding-bottom: 2rem;
+    }
+
+    /* Hero Section */
+    .dashboard-hero {
+        background: var(--white);
+        color: var(--text-primary);
+        padding: 0.9rem 1.25rem;
+        border-radius: 16px;
+        margin-bottom: 1.25rem;
+        border: 1px solid var(--border-color);
+        box-shadow: none;
+    }
+
+    .hero-content {
+        max-width: 520px;
+        margin: 0;
+        display: block;
+    }
+
+    .hero-welcome {
+        min-width: 100%;
+    }
+
+    .hero-welcome h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+        margin-bottom: 0.35rem;
+        color: var(--text-primary);
+    }
+
+    .hero-welcome p {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .hero-eyebrow {
+        font-size: 0.85rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .greeting-fade {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        position: relative;
+        overflow: hidden;
+        font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        background: linear-gradient(120deg, #0f172a, #1d4ed8, #059669);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
+
+    .greeting-fade::after {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        animation: pulse-dot 2.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+        0% { transform: scale(0.4); opacity: 0.4; }
+        50% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(0.4); opacity: 0.4; }
+    }
+
+    /* Quick Actions Bar */
+    .quick-actions-bar {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: none;
+    }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .quick-action-btn {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.95rem 1rem;
+        background: var(--light-bg);
+        border: 1px solid transparent;
+        border-radius: 14px;
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .quick-action-btn:hover {
+        background: var(--white);
+        border-color: var(--border-color);
+        transform: translateY(-2px);
+    }
+
+    .quick-action-btn:focus-visible {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+    }
+
+    .qa-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: var(--white);
+        border: 1px solid rgba(17,24,39,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-color);
+        font-size: 1.15rem;
+    }
+
+    .quick-action-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .quick-action-label {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .quick-action-hint {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    /* Preview Tables */
+    .preview-table-wrapper {
+        margin: 0 -1.5rem 1.5rem;
+        padding: 1.25rem 1.5rem 1rem;
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .preview-table-wrapper + .preview-table-wrapper {
+        margin-top: 0.5rem;
+    }
+
+    .preview-table-scroll {
+        overflow-x: visible;
+    }
+
+    .requests-preview-scroll {
+        overflow-x: hidden;
+    }
+
+    .unspecified-preview-scroll {
+        overflow-x: hidden;
+    }
+
+    .subsidized-dashboard-scroll {
+        overflow-x: hidden;
+    }
+
+    .unspecified-preview-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        background: #ffffff;
+        font-size: 0.66rem;
+        line-height: 1.2;
+    }
+
+    .unspecified-preview-table th,
+    .unspecified-preview-table td {
+        padding: 0.34rem 0.3rem !important;
+        vertical-align: top;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .unspecified-preview-table thead th {
+        font-size: 0.6rem;
+        line-height: 1.1;
+        letter-spacing: 0.02em;
+    }
+
+    .unspecified-preview-table th:nth-child(1),
+    .unspecified-preview-table td:nth-child(1) { width: 3%; text-align: center; }
+    .unspecified-preview-table th:nth-child(2),
+    .unspecified-preview-table td:nth-child(2) { width: 8%; }
+    .unspecified-preview-table th:nth-child(3),
+    .unspecified-preview-table td:nth-child(3) { width: 10%; }
+    .unspecified-preview-table th:nth-child(4),
+    .unspecified-preview-table td:nth-child(4) { width: 12%; }
+    .unspecified-preview-table td:nth-child(4) {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .unspecified-preview-table th:nth-child(5),
+    .unspecified-preview-table td:nth-child(5) { width: 9%; }
+    .unspecified-preview-table th:nth-child(6),
+    .unspecified-preview-table td:nth-child(6) { width: 8%; }
+    .unspecified-preview-table th:nth-child(7),
+    .unspecified-preview-table td:nth-child(7) { width: 7%; }
+    .unspecified-preview-table th:nth-child(8),
+    .unspecified-preview-table td:nth-child(8) { width: 11%; }
+    .unspecified-preview-table th:nth-child(9),
+    .unspecified-preview-table td:nth-child(9) { width: 8%; }
+    .unspecified-preview-table th:nth-child(10),
+    .unspecified-preview-table td:nth-child(10) { width: 7%; }
+    .unspecified-preview-table th:nth-child(11),
+    .unspecified-preview-table td:nth-child(11) { width: 9%; }
+    .unspecified-preview-table th:nth-child(12),
+    .unspecified-preview-table td:nth-child(12) { width: 8%; }
+
+    .unspecified-preview-table td:last-child .btn,
+    .unspecified-preview-table td .view-unspecified-notes-btn {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.34rem !important;
+        line-height: 1.15;
+        white-space: normal !important;
+    }
+
+    .unspecified-preview-table td:last-child .d-flex {
+        gap: 0.2rem !important;
+    }
+
+    /* Keep long status labels inside Status column */
+    .unspecified-preview-table td:nth-child(9) .badge {
+        display: inline-block;
+        max-width: 100%;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        line-height: 1.1;
+        text-align: center;
+    }
+
+    .bg-purple {
+        background-color: #7c3aed !important;
+        color: #ffffff !important;
+    }
+
+    .csr-type-label {
+        display: block;
+        margin-top: 0.15rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1.15;
+        color: #4c1d95 !important;
+        white-space: normal;
+    }
+
+    .dashboard-requests-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .dashboard-requests-table th:nth-child(1),
+    .dashboard-requests-table td:nth-child(1) { width: 3%; }
+    .dashboard-requests-table th:nth-child(2),
+    .dashboard-requests-table td:nth-child(2) { width: 6%; }
+    .dashboard-requests-table th:nth-child(3),
+    .dashboard-requests-table td:nth-child(3) { width: 7%; }
+    .dashboard-requests-table th:nth-child(4),
+    .dashboard-requests-table td:nth-child(4) { width: 14%; }
+    .dashboard-requests-table th:nth-child(5),
+    .dashboard-requests-table td:nth-child(5) { width: 9%; }
+    .dashboard-requests-table th:nth-child(6),
+    .dashboard-requests-table td:nth-child(6) { width: 14%; }
+    .dashboard-requests-table th:nth-child(7),
+    .dashboard-requests-table td:nth-child(7) { width: 7%; }
+    .dashboard-requests-table th:nth-child(8),
+    .dashboard-requests-table td:nth-child(8) { width: 10%; }
+    .dashboard-requests-table th:nth-child(9),
+    .dashboard-requests-table td:nth-child(9) { width: 13%; }
+    .dashboard-requests-table th:nth-child(10),
+    .dashboard-requests-table td:nth-child(10) { width: 7%; }
+    .dashboard-requests-table th:nth-child(11),
+    .dashboard-requests-table td:nth-child(11) { width: 5%; }
+    .dashboard-requests-table th:nth-child(12),
+    .dashboard-requests-table td:nth-child(12) { width: 5%; }
+
+    .dashboard-requests-table th,
+    .dashboard-requests-table td {
+        padding: 0.4rem 0.45rem !important;
+        font-size: 0.72rem !important;
+        vertical-align: middle;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .dashboard-requests-table th {
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+    }
+
+    .dashboard-requests-table td {
+        white-space: normal !important;
+    }
+
+    .dashboard-requests-table th.recipient-actions-col,
+    .dashboard-requests-table td.recipient-actions-col {
+        width: 180px;
+        min-width: 180px;
+    }
+
+    .recipient-actions-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        align-items: center;
+    }
+
+    .dashboard-requests-table td.recipient-actions-col .btn {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.68rem !important;
+        line-height: 1.2;
+    }
+
+    .dashboard-requests-table td:nth-child(9) {
+        overflow: hidden;
+    }
+
+    .dashboard-requests-table td:nth-child(9) > span {
+        display: inline-flex !important;
+        max-width: 100%;
+        white-space: normal !important;
+        line-height: 1.15;
+        flex-wrap: wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .dashboard-requests-table td:nth-child(9) > span > span {
+        margin-left: 0 !important;
+        margin-top: 0.2rem;
+        max-width: 100%;
+        white-space: normal !important;
+        display: inline-flex;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-requests-table td:nth-child(9) .btn {
+        margin-top: 0.2rem;
+        white-space: normal;
+        line-height: 1.1;
+    }
+
+    .dashboard-requests-table td:nth-child(11) {
+        overflow: hidden;
+    }
+
+    .dashboard-requests-table td:nth-child(11) .view-notes-btn {
+        display: inline-block;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.56rem !important;
+        padding: 0.16rem 0.24rem !important;
+        line-height: 1.05;
+    }
+
+    .dashboard-requests-table td:nth-child(11) .view-notes-btn i {
+        margin-right: 0.15rem !important;
+    }
+
+    .preview-table-wrapper table {
+        margin-bottom: 0;
+        border: 1px solid rgba(17,24,39,0.12);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .preview-table-wrapper table th,
+    .preview-table-wrapper table td {
+        border-color: rgba(17,24,39,0.08) !important;
+    }
+
+    .preview-table-wrapper table thead th + th,
+    .preview-table-wrapper table tbody td + td {
+        border-left: 1px solid rgba(17,24,39,0.08);
+    }
+
+    /* Subsidized preview table styles */
+    .subsidized-preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #f8fafc;
+        font-size: 0.8rem;
+    }
+
+    .subsidized-preview-table th,
+    .subsidized-preview-table td {
+        padding: clamp(0.45rem, 0.8vw, 0.65rem) clamp(0.5rem, 1vw, 0.9rem);
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .subsidized-preview-table thead,
+    .dashboard-subsidized-table thead {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+        color: #ffffff !important;
+    }
+
+    .subsidized-preview-table thead th {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.85rem;
+        background: transparent !important;
+        color: #ffffff !important;
+    }
+
+    .dashboard-subsidized-table thead th {
+        background: transparent !important;
+        color: #ffffff !important;
+    }
+
+    .column-serial { width: clamp(48px, 4vw, 64px); text-align: center; }
+    .column-foodbank { width: clamp(150px, 14vw, 190px); }
+    .column-type,
+    .column-category { width: clamp(110px, 9vw, 140px); }
+    .column-product { width: clamp(180px, 18vw, 230px); }
+    .column-quantity { width: clamp(105px, 9vw, 130px); text-align: center; }
+    .column-price { width: clamp(120px, 10vw, 150px); text-align: right; }
+    .column-status,
+    .column-delivery { width: clamp(130px, 10vw, 160px); }
+    .notes-cell { min-width: 220px; max-width: 260px; white-space: normal !important; }
+    .text-wrap-cell,
+    .title-column { white-space: normal !important; word-break: break-word; }
+    .action-column { width: clamp(190px, 18vw, 240px); }
+
+    .note-label {
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 0.15rem;
+        display: block;
+    }
+
+    .note-text {
+        font-size: 0.75rem;
+        color: #374151;
+        line-height: 1.35;
+        margin-bottom: 0.35rem;
+    }
+
+    .note-empty { color: #94a3b8; font-style: italic; }
+
+    .dashboard-note-box {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+    }
+
+    .accept-donation-summary {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .accept-donation-details,
+    .accept-donation-source {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+    }
+    .decline-donation-summary {
+        max-width: 100%;
+        overflow: hidden;
+    }
+    .decline-donation-details,
+    .decline-donation-source {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+    }
+    #declineDonationModal .modal-body {
+        overflow-x: hidden;
+    }
+
+    .subsidized-preview-table .badge,
+    .subsidized-preview-table .action-btn {
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Subsidized preview: Actions column - keep Accept/Decline visible and wrapped */
+    .subsidized-preview-table td.subsidized-preview-actions-cell,
+    .subsidized-table-wrapper td:last-of-type {
+        min-width: 140px;
+        white-space: normal !important;
+        vertical-align: middle;
+    }
+    .subsidized-preview-actions-wrap {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+    }
+    .subsidized-preview-actions-wrap .btn {
+        flex-shrink: 0;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+
+    /* Subsidized dashboard table: fit all columns without horizontal scrolling */
+    .dashboard-subsidized-table {
+        width: 100%;
+        table-layout: fixed;
+        margin-bottom: 0;
+    }
+
+    .dashboard-subsidized-table th,
+    .dashboard-subsidized-table td {
+        padding: 0.22rem 0.28rem !important;
+        font-size: 0.61rem !important;
+        vertical-align: middle;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .dashboard-subsidized-table thead th {
+        font-size: 0.58rem !important;
+        line-height: 1.05;
+        letter-spacing: 0.01em;
+    }
+
+    .dashboard-subsidized-table th:nth-child(1),
+    .dashboard-subsidized-table td:nth-child(1) { width: 3%; text-align: center; }
+    .dashboard-subsidized-table th:nth-child(2),
+    .dashboard-subsidized-table td:nth-child(2) { width: 4%; }
+    .dashboard-subsidized-table th:nth-child(3),
+    .dashboard-subsidized-table td:nth-child(3) { width: 8%; }
+    .dashboard-subsidized-table th:nth-child(4),
+    .dashboard-subsidized-table td:nth-child(4) { width: 8%; }
+    .dashboard-subsidized-table th:nth-child(5),
+    .dashboard-subsidized-table td:nth-child(5) { width: 5%; }
+    .dashboard-subsidized-table th:nth-child(6),
+    .dashboard-subsidized-table td:nth-child(6) { width: 5%; }
+    .dashboard-subsidized-table th:nth-child(7),
+    .dashboard-subsidized-table td:nth-child(7) { width: 12%; }
+    .dashboard-subsidized-table th:nth-child(8),
+    .dashboard-subsidized-table td:nth-child(8) { width: 6%; }
+    .dashboard-subsidized-table th:nth-child(9),
+    .dashboard-subsidized-table td:nth-child(9) { width: 7%; }
+    .dashboard-subsidized-table th:nth-child(10),
+    .dashboard-subsidized-table td:nth-child(10) { width: 6%; }
+    .dashboard-subsidized-table th:nth-child(11),
+    .dashboard-subsidized-table td:nth-child(11) { width: 7%; }
+    .dashboard-subsidized-table th:nth-child(12),
+    .dashboard-subsidized-table td:nth-child(12) { width: 10%; }
+    .dashboard-subsidized-table th:nth-child(13),
+    .dashboard-subsidized-table td:nth-child(13) { width: 6%; }
+    .dashboard-subsidized-table th:nth-child(14),
+    .dashboard-subsidized-table td:nth-child(14) { width: 5%; }
+    .dashboard-subsidized-table th:nth-child(15),
+    .dashboard-subsidized-table td:nth-child(15) { width: 8%; }
+
+    .dashboard-subsidized-table td:nth-child(2),
+    .dashboard-subsidized-table td:nth-child(8),
+    .dashboard-subsidized-table td:nth-child(9),
+    .dashboard-subsidized-table td:nth-child(10),
+    .dashboard-subsidized-table td:nth-child(11) {
+        white-space: nowrap !important;
+    }
+
+    .dashboard-subsidized-table td:nth-child(5) .badge,
+    .dashboard-subsidized-table td:nth-child(6) .badge,
+    .dashboard-subsidized-table td:nth-child(12) .badge {
+        display: inline-block;
+        max-width: 100%;
+        white-space: normal !important;
+        font-size: 0.54rem;
+        line-height: 1.05;
+        padding: 0.16rem 0.24rem;
+    }
+
+    .dashboard-subsidized-table td:nth-child(14) .btn,
+    .dashboard-subsidized-table td:last-child .btn {
+        width: 100%;
+        max-width: 100%;
+        font-size: 0.54rem !important;
+        padding: 0.14rem 0.22rem !important;
+        white-space: normal !important;
+        line-height: 1.05;
+        justify-content: center;
+    }
+
+    .dashboard-subsidized-table td:last-child form {
+        display: block;
+        width: 100%;
+    }
+
+    .dashboard-subsidized-table .subsidized-preview-actions-wrap {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0.2rem;
+    }
+
+    .dashboard-subsidized-table .subsidized-preview-actions-wrap .btn {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .table-divider-row td {
+        background: #eff6ff;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        color: #1d4ed8;
+    }
+
+    @media (max-width: 768px) {
+        .preview-table-wrapper {
+            margin: 0 -1rem 1.25rem;
+            padding: 1rem;
+            border-radius: 16px;
+        }
+    }
+
+    /* Main Content Grid */
+    .content-container {
+        width: 100%;
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    @media (min-width: 1900px) {
+        .content-container {
+            max-width: 90vw;
+        }
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Section Card */
+    .section-card {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .section-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--light-bg);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        color: var(--primary-color);
+    }
+
+    .view-all-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.2s ease;
+    }
+
+    .view-all-link:hover {
+        gap: 0.5rem;
+        color: #20a037;
+    }
+
+    /* Donations List */
+    .donations-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .donation-card {
+        background: var(--light-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .donation-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-color);
+    }
+
+    .donation-card:hover {
+        transform: translateX(4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .donation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.75rem;
+    }
+
+    .donation-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem 0;
+    }
+
+    .donation-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .meta-item i {
+        width: 16px;
+        color: var(--primary-color);
+    }
+
+    .donation-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-subsidized {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-free {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .donation-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .donor-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .donor-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Food Bank Card */
+    .foodbank-card {
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .foodbank-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-md);
+    }
+
+    .foodbank-header {
+        display: flex;
+        align-items: start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .foodbank-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary-color), #20a037);
+        color: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .foodbank-info h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        color: var(--text-primary);
+    }
+
+    .foodbank-location {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .foodbank-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .btn-primary:hover {
+        background: #20a037;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .btn-sm {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: var(--light-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .empty-state-icon i {
+        font-size: 2.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state h5 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-color);
+    }
+
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: -2.5rem;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        border: 3px solid var(--white);
+    }
+
+    .timeline-item:last-child::before {
+        display: none;
+    }
+
+    .timeline-content {
+        background: var(--light-bg);
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .timeline-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-primary);
+    }
+
+    .timeline-desc {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-time {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-hero {
+            padding: 1.5rem 1rem;
+        }
+
+        .hero-content {
+            flex-direction: column;
+        }
+
+        .hero-stats {
+            width: 100%;
+        }
+
+        .hero-welcome h1 {
+            font-size: 1.5rem;
+        }
+
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .section-card {
+            padding: 0.875rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+        }
+
+        .donation-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .donation-footer {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+    }
+
+    /* Loading Animation */
+    .skeleton {
+        animation: skeleton-loading 1s linear infinite alternate;
+    }
+
+    @keyframes skeleton-loading {
+        0% {
+            background-color: hsl(200, 20%, 80%);
+        }
+        100% {
+            background-color: hsl(200, 20%, 95%);
+        }
+    }
+
+    /* Notification Badge */
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: var(--danger-color);
+        color: var(--white);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 2px solid var(--white);
+    }
+
+    /* Action Card with Icon */
+    .action-icon-card {
+        position: relative;
+    }
+
+    /* Tooltip */
+    [data-tooltip] {
+        position: relative;
+    }
+
+    [data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text-primary);
+        color: var(--white);
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-bottom: 0.5rem;
+        z-index: 1000;
+    }
+
+    /* Request Table Styles */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05) !important;
+    }
+    
+    /* Dashboard Requests Table - Ensure headers are visible with bright blue */
+    .dashboard-requests-table thead {
+        background: #0d6efd !important;
+        background-color: #0d6efd !important;
+        background-image: none !important;
+    }
+    
+    .dashboard-requests-table thead th {
+        background: #0d6efd !important;
+        background-color: #0d6efd !important;
+        background-image: none !important;
+        color: #ffffff !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        font-weight: 700 !important;
+        font-size: 0.62rem !important;
+        line-height: 1.05;
+        padding: 0.45rem 0.35rem !important;
+    }
+    
+    /* Override any global table styles */
+    .table-responsive .dashboard-requests-table thead th {
+        background: #0d6efd !important;
+        background-color: #0d6efd !important;
+        background-image: none !important;
+        color: #ffffff !important;
+    }
+    
+    /* Request Stats Grid */
+    .request-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: var(--light-bg);
+        border-radius: 8px;
+    }
+    
+    .stat-item-dashboard {
+        text-align: center;
+    }
+    
+    .stat-number-dashboard {
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: block;
+    }
+    
+    .stat-label-dashboard {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+    }
+
+    .dashboard-tabs {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .tab-alert {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: 0.35rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 999px;
+        background: rgba(34,197,94,0.15);
+        color: #047857;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .tab-alert i {
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="content-container">
+        <div class="dashboard-hero">
+            <div class="hero-content">
+                <div class="hero-welcome">
+                    <p class="hero-eyebrow greeting-fade">{{ greeting_text|default:"Good day" }}</p>
+                    <h1>
+                        Hello there,
+                        {% if user.recipient_profile.is_organization and user.recipient_profile.organization_name %}
+                            {{ user.recipient_profile.organization_name }}
+                        {% else %}
+                            {{ user.recipient_profile.full_name|default:user.email|default:"Friend" }}
+                        {% endif %}
+                    </h1>
+                    <p>Here's what's happening with your account today.</p>
+                </div>
+            </div>
+        </div>
+        <!-- View Terms Modal -->
+        <div class="modal fade" id="recipientDashboardViewTermsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Donor initiative description</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="recipientDashboardViewTermsModalBody" style="white-space: pre-wrap;">No description provided.</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions-bar">
+            <div class="quick-actions-grid">
+                <a href="{% url 'create_request' %}" class="quick-action-btn" data-tooltip="Create a new food request">
+                    <div class="qa-icon"><i class="fas fa-plus"></i></div>
+                    <div class="quick-action-content">
+                        <span class="quick-action-label">New Request</span>
+                        <span class="quick-action-hint">Log a fresh need</span>
+                    </div>
+                </a>
+                <a href="{% url 'recipient_foodbanks_list' %}" class="quick-action-btn" data-tooltip="View all food banks">
+                    <div class="qa-icon"><i class="fas fa-warehouse"></i></div>
+                    <div class="quick-action-content">
+                        <span class="quick-action-label">Food Banks</span>
+                        <span class="quick-action-hint">Browse partners</span>
+                    </div>
+                </a>
+                <a href="{% url 'recipient_testimonials_list' %}" class="quick-action-btn" data-tooltip="Manage your testimonials">
+                    <div class="qa-icon"><i class="fas fa-comment-dots"></i></div>
+                    <div class="quick-action-content">
+                        <span class="quick-action-label">Testimonials</span>
+                        <span class="quick-action-hint">Share impact</span>
+                    </div>
+                </a>
+                <!--<a href="{% url 'reports_dashboard' %}" class="quick-action-btn" data-tooltip="View reports and analytics">
+                    <div class="qa-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="quick-action-content">
+                        <span class="quick-action-label">Reports</span>
+                        <span class="quick-action-hint">Review insights</span>
+                    </div>
+                </a>-->
+                <a href="{% url 'my_support_messages' %}" class="quick-action-btn action-icon-card" data-tooltip="View support messages">
+                    <div class="qa-icon"><i class="fas fa-headset"></i></div>
+                    <div class="quick-action-content">
+                        <span class="quick-action-label">Support</span>
+                        <span class="quick-action-hint">Get help fast</span>
+                    </div>
+                    {% if unread_support_count > 0 %}
+                        <span class="notification-badge">{{ unread_support_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'recipient_settings' %}" class="quick-action-btn" data-tooltip="Account settings">
+                    <div class="qa-icon"><i class="fas fa-sliders-h"></i></div>
+                    <div class="quick-action-content">
+                        <span class="quick-action-label">Settings</span>
+                        <span class="quick-action-hint">Adjust account</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Organization-specific actions (hidden) -->
+            {% comment %}
+            {% load math_extras %}
+            {% with is_org=user.recipient_profile|get_item:'is_organization'|default:False %}
+            {% if is_org %}
+            <div class="organization-actions" style="margin-top: 1rem; padding: 1rem; background: rgba(40, 167, 69, 0.1); border-radius: 8px; border: 1px solid rgba(40, 167, 69, 0.2);">
+                <h6 style="color: var(--primary-color); margin-bottom: 0.5rem;"><i class="fas fa-building me-2"></i>Organization Features</h6>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'recipient_subsidized_donations' %}?donation_type=csr" class="btn btn-sm btn-outline-success" title="View CSR donations available to organizations">
+                        <i class="fas fa-handshake me-1"></i>CSR Donations
+                    </a>
+                    <a href="{% url 'recipient_subsidized_donations' %}?donation_type=other" class="btn btn-sm btn-outline-info" title="View special donations requiring discussion">
+                        <i class="fas fa-gift me-1"></i>Special Donations
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+            {% endcomment %}
+        </div>
+
+        <div class="dashboard-tabs" id="recipientDashboardTabs">
+            <button type="button" class="btn btn-primary" data-tab="requests">
+                Recent Requests
+                {% if recipient_tab_alerts.requests %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ recipient_tab_alerts.requests }}
+                    </span>
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-outline" data-tab="unspecified">
+                Unspecified Donations
+                {% if recipient_tab_alerts.unspecified %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ recipient_tab_alerts.unspecified }}
+                    </span>
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-outline" data-tab="subsidized">
+                Subsidized Donations
+                {% if recipient_tab_alerts.subsidized %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ recipient_tab_alerts.subsidized }}
+                    </span>
+                {% endif %}
+            </button>
+        </div>
+
+        <!-- Recent Requests Section -->
+        <div class="section-card" data-tab-panel="requests" style="margin-bottom: 1.5rem;">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-list-alt"></i>
+                    Recent Requests
+                </h3>
+                <a href="{% url 'recipient_requests_view' %}" class="view-all-link">
+                    View All <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Requests Table -->
+            {% if recent_requests %}
+                <div class="preview-table-wrapper">
+                    <div class="table-responsive preview-table-scroll requests-preview-scroll">
+                    <table class="table table-hover dashboard-requests-table" style="font-size: 0.8rem; background-color: transparent;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">S/No</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Type</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Category</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Description</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Foodbank</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Quantity</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Delivery</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Location</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Status</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Requested</th>
+                                <th style="padding: 0.75rem; font-size: 0.85rem;">Notes</th>
+                                <th class="recipient-actions-col" style="padding: 0.75rem; font-size: 0.85rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in recent_requests %}
+                            <tr {% if request.is_overdue %}style="background-color: rgba(255,193,7,0.15);"{% else %}style="background-color: {% cycle '#ffffff' '#f8f9fa' %};"{% endif %}>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem; text-align: center;">{{ forloop.counter }}</td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    {% with category=request.request_category|default:request.request_type %}
+                                        {% if category == 'food' %}
+                                            <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #dbeafe; color: #1e40af;">Food</span>
+                                        {% elif category == 'non_food' %}
+                                            <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #fef3c7; color: #92400e;">Non-Food</span>
+                                        {% else %}
+                                            <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #f3f4f6; color: #6b7280;">Other</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    {% with donation=request.primary_donation %}
+                                        {% if donation %}
+                                            {% if donation.donation_type == 'item' %}
+                                                <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #d1fae5; color: #065f46;">Free Goods</span>
+                                            {% elif donation.donation_type == 'money' %}
+                                                <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #dbeafe; color: #1e40af;">Money</span>
+                                            {% elif donation.donation_type == 'subsidized' %}
+                                                <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #fef3c7; color: #92400e;">Subsidized</span>
+                                            {% elif donation.donation_type == 'csr' %}
+                                                <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #e9d5ff; color: #6b21a8;">CSR</span>
+                                            {% else %}
+                                                <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #f3f4f6; color: #6b7280;">{{ donation.get_donation_type_display }}</span>
+                                            {% endif %}
+                                        {% elif request.is_anonymous %}
+                                            <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #f3f4f6; color: #111827;">Anonymous</span>
+                                        {% else %}
+                                            <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; background: #e5e7eb; color: #6b7280;">Request</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    <div style="max-width: 180px; white-space: normal; word-wrap: break-word;" title="{{ request.description }}">
+                                        {{ request.description|truncatechars:50 }}
+                                    </div>
+                                </td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">{{ request.foodbank_name }}</td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    {% with remaining=request.get_remaining_quantity %}
+                                        <div>
+                                            <strong>{{ request.quantity }} {{ request.get_unit_display }}</strong>
+                                            <small class="text-muted ms-1">Requested</small>
+                                        </div>
+                                        <div class="mt-1 d-flex justify-content-between align-items-center gap-2">
+                                            <small>
+                                                <span class="text-success fw-bold">{{ request.quantity_fulfilled|default:0 }} {{ request.get_unit_display }}</span>
+                                                <span class="text-muted">Fulfilled</span>
+                                                <span class="text-muted mx-1">|</span>
+                                                <span class="text-warning fw-bold">{{ remaining|default:0 }} {{ request.get_unit_display }}</span>
+                                                <span class="text-muted">Remaining</span>
+                                            </small>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#quantityBreakdownModal{{ request.id }}"
+                                                    title="View breakdown"
+                                                    aria-label="View breakdown"
+                                                    style="padding: 0.2rem 0.35rem; line-height: 1;">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                        </div>
+                                    {% endwith %}
+                                </td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">{{ request.get_delivery_method_display }}</td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    <div style="max-width: 150px; white-space: normal; word-wrap: break-word;" title="{{ request.location }}">
+                                        {{ request.location|truncatechars:30 }}
+                                    </div>
+                                </td>
+
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    {% if request.status == 'partial' %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #dbeafe; color: #1d4ed8;">
+                                            <i class="fas fa-adjust" style="font-size: 0.6rem;"></i>
+                                            Partially Fulfilled
+                                            {% if "Receipt Confirmed" in request.additional_notes|default:"" %}
+                                                <span style="margin-left: 0.5rem; background: #059669; color: white; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.6rem;">
+                                                    <i class="fas fa-box-open"></i> Received
+                                                </span>
+                                            {% elif request.acknowledged_by_recipient %}
+                                                <span style="margin-left: 0.5rem; background: #dcfce7; color: #166534; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.6rem;">
+                                                    <i class="fas fa-check-circle"></i> Recipient Received
+                                                </span>
+                                            {% endif %}
+                                        </span>
+                                    {% elif request.status == 'awaiting_recipient' %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #fef3c7; color: #92400e;">
+                                            <i class="fas fa-clock" style="font-size: 0.6rem;"></i>
+                                            Awaiting Your Response
+                                        </span>
+                                    {% elif request.status == 'fulfilled' %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #dcfce7; color: #166534;">
+                                            <i class="fas fa-check-circle" style="font-size: 0.6rem;"></i>
+                                            {% if "Receipt Confirmed" in request.additional_notes|default:"" %}
+                                                <i class="fas fa-box-open" style="font-size: 0.6rem;"></i> Received
+                                            {% elif request.acknowledged_by_recipient %}
+                                                Recipient Received
+                                            {% else %}
+                                                Fulfilled
+                                            {% endif %}
+                                        </span>
+                                    {% elif request.status == 'donation_received' %}
+                                        <span class="badge bg-info">Donated awaiting approval</span>
+                                    {% elif request.status == 'submitted' %}
+                                        <span style="color: orange;">Sent to Donors</span>
+                                    {% elif request.status == 'declined' %}
+                                        {% if request.foodbank_declined_donation %}
+                                                <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #f3f4f6; color: #374151;">
+                                                    <i class="fas fa-clock" style="font-size: 0.6rem;"></i>
+                                                    Pending
+                                                </span>
+                                        {% else %}
+                                            <span style="color: red;">Declined</span>
+                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#declineMessageModal{{ request.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
+                                                View reason
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color: gray;">Sent to FB</span>
+                                    {% endif %}
+                                </td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    <small></small>{{ request.time_of_request|date:"M d, Y" }}</small>
+                                    <br><small class="text-muted">{{ request.time_of_request|date:"H:i" }}</small>
+                                    {% if request.fulfilled_at %}
+                                        <br><small class="text-success">
+                                            <i class="fas fa-check"></i> {{ request.fulfilled_at|date:"M d" }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    {% if request.additional_notes %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary view-notes-btn"
+                                                data-note-title="Notes for {{ request.foodbank_name|default:'Request' }}"
+                                                data-note-body="{{ request.additional_notes|default_if_none:''|escapejs }}"
+                                                data-note-ack="{{ request.acknowledged_by_recipient|yesno:'true,false' }}"
+                                                data-note-ack-time="{{ request.fulfilled_at|default:request.updated_at|date:'M d, Y H:i' }}">
+                                            <i class="fas fa-sticky-note me-1"></i>View
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="recipient-actions-col" style="vertical-align: middle; font-size: 0.75rem; padding: 0.5rem;">
+                                    <div class="recipient-actions-wrap">
+                                        {% if request.status == 'declined' %}
+                                            {# Empty when declined - no actions #}
+                                        {% elif request.status == 'awaiting_recipient' or request.status == 'partial' and not request.acknowledged_by_recipient %}
+                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#acknowledgeModal{{ request.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
+                                                <i class="fas fa-check me-1"></i>Accept
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger ms-1" data-bs-toggle="modal" data-bs-target="#declineModal{{ request.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
+                                                <i class="fas fa-times me-1"></i>Decline
+                                            </button>
+                                        {% elif request.status == 'fulfilled' or request.status == 'partial' %}
+                                            {% if not request.acknowledged_by_recipient %}
+                                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#acknowledgeModal{{ request.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
+                                                    <i class="fas fa-check me-1"></i>Acknowledge
+                                                </button>
+                                            {% elif request.acknowledged_by_recipient and "Receipt Confirmed" not in request.additional_notes|default:"" %}
+                                                <form method="POST" action="{% url 'confirm_request_received' request.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-info btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;" onclick="return confirm('Confirm that you have received the products?')">
+                                                        <i class="fas fa-box-open"></i> Confirm Received
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <span class="text-success" style="font-size: 0.7rem;">
+                                                    <i class="fas fa-check-double me-1"></i>Received
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {% if request.status != 'declined' %}
+                                        <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-outline-primary" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;" title="View details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Quantity Breakdown Modal -->
+                            <div class="modal fade" id="quantityBreakdownModal{{ request.id }}" tabindex="-1" aria-labelledby="quantityBreakdownModalLabel{{ request.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="quantityBreakdownModalLabel{{ request.id }}">
+                                                <i class="fas fa-list-ul me-2"></i>Quantity Breakdown
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            {% with remaining=request.get_remaining_quantity %}
+                                            <div class="border rounded p-3 bg-light mb-3">
+                                                <div><strong>Requested:</strong> {{ request.quantity }} {{ request.get_unit_display }}</div>
+                                                <div><strong>Fulfilled:</strong> {{ request.quantity_fulfilled|default:0 }} {{ request.get_unit_display }}</div>
+                                                <div><strong>Remaining:</strong> {{ remaining|default:0 }} {{ request.get_unit_display }}</div>
+                                            </div>
+                                            {% endwith %}
+
+                                            {% if request.quantity_timeline %}
+                                                <div class="list-group list-group-flush">
+                                                    {% for entry in request.quantity_timeline %}
+                                                    <div class="list-group-item px-0">
+                                                        <div class="d-flex align-items-start">
+                                                            <div class="me-2 mt-1">
+                                                                {% if entry.state == 'declined' %}
+                                                                    <i class="fas fa-times-circle text-danger"></i>
+                                                                {% elif entry.state == 'accepted' %}
+                                                                    <i class="fas fa-check-circle text-success"></i>
+                                                                {% else %}
+                                                                    <i class="fas fa-circle text-muted" style="font-size: 0.55rem;"></i>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="w-100">
+                                                                <div{% if entry.is_declined %} style="text-decoration: line-through; color: #9ca3af;"{% endif %}>
+                                                                    {{ entry.display }}
+                                                                </div>
+                                                                {% if entry.label %}
+                                                                    <small class="text-muted d-block">{{ entry.label }}</small>
+                                                                {% endif %}
+                                                                {% if entry.timestamp %}
+                                                                    <small class="text-muted d-block">{{ entry.timestamp|date:"M d, Y H:i" }}</small>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <p class="text-muted mb-0">No donation breakdown yet.</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Decline Message Modal -->
+                            {% if request.status == 'declined' and request.decline_message and not request.foodbank_declined_donation %}
+                            <div class="modal fade" id="declineMessageModal{{ request.id }}" tabindex="-1" aria-labelledby="declineMessageModalLabel{{ request.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="declineMessageModalLabel{{ request.id }}">Decline Message</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>{{ request.decline_message }}</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Acknowledgment Modal -->
+                            {% if request.status == 'awaiting_recipient' or request.status == 'fulfilled' or request.status == 'partial' %}
+                            {% if not request.acknowledged_by_recipient %}
+                            <div class="modal fade" id="acknowledgeModal{{ request.id }}" tabindex="-1" aria-labelledby="acknowledgeModalLabel{{ request.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="acknowledgeModalLabel{{ request.id }}">
+                                                <i class="fas fa-check-circle text-success me-2"></i>Acknowledge Request
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="{% url 'acknowledge_request' request.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    You are about to acknowledge receipt of this donation. This confirms that you have received the items as described.
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="acknowledgment_note{{ request.id }}" class="form-label">
+                                                        <i class="fas fa-sticky-note me-1"></i>Acknowledgment Note (Optional)
+                                                    </label>
+                                                    <textarea
+                                                        class="form-control"
+                                                        id="acknowledgment_note{{ request.id }}"
+                                                        name="acknowledgment_note"
+                                                        rows="3"
+                                                        placeholder="Add any notes about the donation you received (e.g., condition of items, feedback, etc.)"
+                                                        maxlength="500"></textarea>
+                                                    <div class="form-text">Maximum 500 characters</div>
+                                                </div>
+
+                                                <div class="border rounded p-3 bg-light">
+                                                    <h6 class="mb-2"><i class="fas fa-list me-1"></i>Request Details:</h6>
+                                                    <p class="mb-1"><strong>Type:</strong> {{ request.get_request_type_display }}</p>
+                                                    <p class="mb-1"><strong>Description:</strong> {{ request.description|truncatechars:100 }}</p>
+                                                    <p class="mb-1"><strong>Foodbank:</strong> {{ request.foodbank_name }}</p>
+                                                    <p class="mb-1"><strong>Quantity:</strong> {{ request.quantity }} {{ request.get_unit_display }}</p>
+                                                    <p class="mb-0"><strong>Status:</strong>
+                                                        <span class="badge bg-{% if request.status == 'fulfilled' %}success{% else %}warning{% endif %}">
+                                                            {{ request.get_status_display }}
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="fas fa-times me-1"></i>Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-success">
+                                                    <i class="fas fa-check me-1"></i>Acknowledge Receipt
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                            
+                            <!-- Recipient Decline Modal -->
+                            {% if request.status == 'awaiting_recipient' or request.status == 'partial' %}
+                            <div class="modal fade" id="declineModal{{ request.id }}" tabindex="-1" aria-labelledby="declineModalLabel{{ request.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="declineModalLabel{{ request.id }}">
+                                                <i class="fas fa-times-circle text-danger me-2"></i>Decline Request
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="{% url 'recipient_decline_request' request.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                                    You are about to decline this request. Please provide a reason for declining.
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="decline_note{{ request.id }}" class="form-label">
+                                                        <i class="fas fa-comment me-1"></i>Reason for Declining <span class="text-danger">*</span>
+                                                    </label>
+                                                    <textarea
+                                                        class="form-control"
+                                                        id="decline_note{{ request.id }}"
+                                                        name="decline_note"
+                                                        rows="3"
+                                                        placeholder="Please explain why you are declining this request..."
+                                                        maxlength="500"
+                                                        required></textarea>
+                                                    <div class="form-text">Maximum 500 characters. This note will be sent to the foodbank.</div>
+                                                </div>
+
+                                                <div class="border rounded p-3 bg-light">
+                                                    <h6 class="mb-2"><i class="fas fa-list me-1"></i>Request Details:</h6>
+                                                    <p class="mb-1"><strong>Type:</strong> {{ request.get_request_type_display }}</p>
+                                                    <p class="mb-1"><strong>Description:</strong> {{ request.description|truncatechars:100 }}</p>
+                                                    <p class="mb-1"><strong>Foodbank:</strong> {{ request.foodbank_name }}</p>
+                                                    <p class="mb-0"><strong>Quantity:</strong> {{ request.quantity }} {{ request.get_unit_display }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="fas fa-arrow-left me-1"></i>Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-times me-1"></i>Decline Request
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-list-alt"></i>
+                    </div>
+                    <h5>No requests yet</h5>
+                    <p>You haven't made any requests to food banks yet.</p>
+                    <a href="{% url 'create_request' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Your First Request
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Available Donations Section (Organization Recipients Only) -->
+        <div class="section-card" data-tab-panel="unspecified" style="margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-gift" style="color: #f59e0b;"></i>
+                    Unspecified Donations
+                    {% if my_accepted_count > 0 %}
+                        <span class="badge" style="background: #dcfce7; color: #166534; font-size: 0.75rem; margin-left: 0.5rem;">{{ my_accepted_count }} accepted</span>
+                    {% endif %}
+                    {% if available_unspecified_count > 0 %}
+                        <span class="badge" style="background: #fef3c7; color: #92400e; font-size: 0.75rem; margin-left: 0.25rem;">{{ available_unspecified_count }} available</span>
+                    {% endif %}
+                </h3>
+                {% if user.recipient_profile.is_organization %}
+                    <a href="{% url 'recipient_available_donations' %}" class="view-all-link">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                {% else %}
+                    <span class="badge bg-secondary" style="font-size: 0.75rem;">Organization only</span>
+                {% endif %}
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i>
+                {% if user.recipient_profile.is_organization %}
+                    Donations approved by food banks for your organization. Accept available donations and confirm when received.
+                {% else %}
+                    This section is available for organization recipients. Switch your account to organization to access unspecified donations.
+                {% endif %}
+            </p>
+            
+            {% if available_unspecified_donations or my_accepted_donations %}
+                <div class="preview-table-wrapper">
+                    <div class="preview-table-scroll unspecified-preview-scroll">
+                    <table class="unspecified-preview-table">
+                        <thead style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; text-transform: uppercase; letter-spacing: 0.04em;">
+                            <tr>
+                                <th style="padding: 0.5rem 0.75rem;">S/NO</th>
+                                <th style="padding: 0.5rem 0.75rem;">Type</th>
+                                <th style="padding: 0.5rem 0.75rem;">Category</th>
+                                <th style="padding: 0.5rem 0.75rem;">Description</th>
+                                <th style="padding: 0.5rem 0.75rem;">Food Bank</th>
+                                <th style="padding: 0.5rem 0.75rem;">Quantity</th>
+                                <th style="padding: 0.5rem 0.75rem;">Delivery</th>
+                                <th style="padding: 0.5rem 0.75rem;">Location</th>
+                                <th style="padding: 0.5rem 0.75rem;">Status</th>
+                                <th style="padding: 0.5rem 0.75rem;">Date</th>
+                                <th style="padding: 0.5rem 0.75rem;">Notes</th>
+                                <th style="padding: 0.5rem 0.75rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in available_unspecified_donations %}
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.5rem 0.75rem;">{{ forloop.counter }}</td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.donation_type == 'csr' or item.donation.donation_type == 'money' %}
+                                        <span class="badge bg-secondary">
+                                            {% if item.donation.donation_type == 'money' %}
+                                                Monetary
+                                            {% else %}
+                                                {{ item.donation.get_donation_type_display }}
+                                            {% endif %}
+                                        </span>
+                                    {% elif item.donation.donation_category in 'food non_food' %}
+                                        <span class="badge
+                                            {% if item.donation.donation_category == 'food' %} bg-success
+                                            {% else %} bg-info{% endif %}">
+                                            {{ item.category_display }}
+                                        </span>
+                                    {% else %}
+                                        {% if item.donation.donation_type == 'item' %}
+                                            {% if item.donation.donation_mode == 'free' %}
+                                                <span class="badge bg-success">Free</span>
+                                            {% elif item.donation.donation_mode == 'subsidized' %}
+                                                <span class="badge bg-warning text-dark">Subsidized</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ item.donation.get_donation_type_display }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.donation_type == 'csr' or item.donation.donation_type == 'money' %}
+                                        <span class="badge
+                                            {% if item.donation.donation_category == 'monetary' %} bg-warning text-dark
+                                            {% elif item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %} bg-purple
+                                            {% else %} bg-secondary{% endif %}">
+                                            {% if item.donation.donation_type == 'csr' %}
+                                                CSR
+                                            {% else %}
+                                                {{ item.category_display }}
+                                            {% endif %}
+                                        </span>
+                                        {% if item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %}
+                                            <span class="csr-type-label">
+                                                {% if item.donation.csr_subcategory == 'other' and item.donation.csr_custom_subcategory %}
+                                                    {{ item.donation.csr_custom_subcategory }}
+                                                {% elif item.donation.csr_subcategory %}
+                                                    {{ item.donation.get_csr_subcategory_display }}
+                                                {% else %}
+                                                    CSR Initiative
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    {% elif item.donation.donation_category in 'food non_food' %}
+                                        {% if item.donation.donation_mode == 'free' %}
+                                            <span class="badge bg-success">Free</span>
+                                        {% elif item.donation.donation_mode == 'subsidized' %}
+                                            <span class="badge bg-warning text-dark">Subsidized</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge
+                                            {% if item.donation.donation_category == 'monetary' %} bg-warning text-dark
+                                            {% elif item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %} bg-purple
+                                            {% else %} bg-secondary{% endif %}">
+                                            {{ item.category_display }}
+                                        </span>
+                                        {% if item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %}
+                                            <span class="csr-type-label">
+                                                {% if item.donation.csr_subcategory == 'other' and item.donation.csr_custom_subcategory %}
+                                                    {{ item.donation.csr_custom_subcategory }}
+                                                {% elif item.donation.csr_subcategory %}
+                                                    {{ item.donation.get_csr_subcategory_display }}
+                                                {% else %}
+                                                    CSR Initiative
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="text-wrap-cell">
+                                    {% if item.effective_description and item.effective_description != 'No description' %}
+                                        {{ item.effective_description }}
+                                    {% else %}
+                                        <span class="text-muted">No description</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    <strong>{{ item.donation.foodbank.foodbank_name|truncatechars:24 }}</strong>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.donation_type == 'item' %}
+                                        <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit }}
+                                    {% elif item.donation.donation_type == 'money' %}
+                                        <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                    {% elif item.donation.donation_type == 'csr' or item.donation.donation_type == 'other' %}
+                                        {% if item.donation.amount and item.donation.quantity %}
+                                            <strong>KES {{ item.donation.amount|floatformat:0 }} for {{ item.donation.quantity }} {{ item.donation.quantity_unit|default:"units" }}</strong>
+                                        {% elif item.donation.amount %}
+                                            <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                        {% elif item.donation.quantity %}
+                                            <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.delivery_method == 'dropoff' or item.donation.delivery_method == 'delivery' %}
+                                        <span class="fw-semibold">Delivery</span>
+                                    {% elif item.donation.delivery_method %}
+                                        <span class="fw-semibold text-capitalize">{{ item.donation.get_delivery_method_display|default:item.donation.delivery_method }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    
+                                    {{ item.donation.foodbank.address|default:"Location not provided" }}
+                                 
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.effective_recipient_status|default:item.recipient_status == 'pending_recipient' %}
+                                        <span class="badge bg-warning text-dark">Available for recipients</span>
+                                    {% elif item.effective_recipient_status|default:item.recipient_status == 'declined_by_recipient' %}
+                                        <span class="badge bg-danger">Declined by recipient-broadcasted</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ item.effective_recipient_status_display|default:item.get_recipient_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    <div>{{ item.foodbank_reviewed_at|date:"M d, Y" }}</div>
+                                    <small class="text-muted">{{ item.foodbank_reviewed_at|timesince }} ago</small>
+                                </td>
+                               
+                                <td style="padding: 0.5rem 0.75rem;" class="notes-cell">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm view-unspecified-notes-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#dashboardUnspecifiedNotesModal"
+                                            data-donor-note="{% if item.donation.message %}{{ item.donation.message|escapejs }}{% elif item.donation.other_description %}{{ item.donation.other_description|escapejs }}{% elif item.donation.csr_description %}{{ item.donation.csr_description|escapejs }}{% else %}No note{% endif %}"
+                                            data-recipient-note="{% if item.effective_recipient_note %}{{ item.effective_recipient_note|escapejs }}{% else %}No note{% endif %}"
+                                            data-recipient-status="{{ item.effective_recipient_status|default:item.recipient_status }}"
+                                            data-decline-note="{% if item.effective_decline_note %}{{ item.effective_decline_note|escapejs }}{% else %}No note{% endif %}">
+                                        <i class="fas fa-eye me-1"></i>View Notes
+                                    </button>
+                                </td>
+                                
+                                <td>
+                                    {% if item.effective_recipient_status|default:item.recipient_status == 'pending_recipient' %}
+                                        <div class="d-flex flex-column gap-2">
+                                            <button type="button"
+                                                    class="btn btn-primary btn-sm accept-unspecified-donation-btn"
+                                                    data-accept-url="{% url 'recipient_accept_unspecified_donation' item.id %}"
+                                                    data-dashboard-tab="unspecified"
+                                                    data-modal-type="{{ item.donation.get_donation_type_display|escapejs }}"
+                                                    data-modal-details="{% if item.donation.donation_type == 'item' %}{{ item.donation.quantity }} {{ item.donation.quantity_unit|default:'units'|escapejs }} of {{ item.donation.item_name|default:'General items'|escapejs }}{% elif item.donation.donation_type == 'money' %}KES {{ item.donation.amount|floatformat:0 }}{% elif item.donation.donation_type == 'csr' %}{{ item.donation.get_csr_subcategory_display|default:'CSR'|escapejs }} - {{ item.donation.csr_description|default:'CSR Initiative'|escapejs }}{% elif item.donation.donation_type == 'other' %}{{ item.donation.other_description|default:'Special donation'|escapejs }}{% else %}{{ item.donation.message|default:'General donation'|escapejs }}{% endif %}"
+                                                    data-modal-foodbank="{{ item.donation.foodbank.foodbank_name|escapejs }}">
+                                                <i class="fas fa-check me-1"></i>Accept
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-outline-danger btn-sm decline-donation-btn"
+                                                    data-decline-url="{% url 'recipient_decline_unspecified_donation' item.id %}"
+                                                    data-dashboard-tab="unspecified"
+                                                    data-modal-type="{{ item.donation.get_donation_type_display|escapejs }}"
+                                                    data-modal-details="{% if item.donation.donation_type == 'item' %}{{ item.donation.quantity }} {{ item.donation.quantity_unit|default:'units'|escapejs }} of {{ item.donation.item_name|default:'General items'|escapejs }}{% elif item.donation.donation_type == 'money' %}KES {{ item.donation.amount|floatformat:0 }}{% elif item.donation.donation_type == 'csr' %}{{ item.donation.get_csr_subcategory_display|default:'CSR'|escapejs }} - {{ item.donation.csr_description|default:'CSR Initiative'|escapejs }}{% elif item.donation.donation_type == 'other' %}{{ item.donation.other_description|default:'Special donation'|escapejs }}{% else %}{{ item.donation.message|default:'General donation'|escapejs }}{% endif %}"
+                                                    data-modal-foodbank="{{ item.donation.foodbank.foodbank_name|escapejs }}">
+                                                <i class="fas fa-times me-1"></i>Decline
+                                            </button>
+                                        </div>
+                                    {% elif item.effective_recipient_status|default:item.recipient_status == 'accepted_by_recipient' %}
+                                        <form method="POST" action="{% url 'recipient_confirm_unspecified_received' item.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'dashboard' %}?tab=unspecified">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-box-open me-1"></i>Confirm Received
+                                            </button>
+                                        </form>
+                                    {% elif item.effective_recipient_status|default:item.recipient_status == 'received' %}
+                                        <span class="text-success">
+                                            <i class="fas fa-check-double"></i> Completed
+                                        </span>
+                                        {% if item.received_at %}
+                                            <br><small class="text-muted">{{ item.received_at|date:"M d, Y" }}</small>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                            {% with available_unspecified_donations|length as available_preview_count %}
+                            {% for item in my_accepted_donations %}
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.5rem 0.75rem;">{{ available_preview_count|add:forloop.counter }}</td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.donation_type == 'csr' or item.donation.donation_type == 'money' %}
+                                        <span class="badge bg-secondary">
+                                            {% if item.donation.donation_type == 'money' %}
+                                                Monetary
+                                            {% else %}
+                                                {{ item.donation.get_donation_type_display }}
+                                            {% endif %}
+                                        </span>
+                                    {% elif item.donation.donation_category in 'food non_food' %}
+                                        <span class="badge
+                                            {% if item.donation.donation_category == 'food' %} bg-success
+                                            {% else %} bg-info{% endif %}">
+                                            {{ item.category_display }}
+                                        </span>
+                                    {% else %}
+                                        {% if item.donation.donation_type == 'item' %}
+                                            {% if item.donation.donation_mode == 'free' %}
+                                                <span class="badge bg-success">Free</span>
+                                            {% elif item.donation.donation_mode == 'subsidized' %}
+                                                <span class="badge bg-warning text-dark">Subsidized</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ item.donation.get_donation_type_display }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.donation_type == 'csr' or item.donation.donation_type == 'money' %}
+                                        <span class="badge
+                                            {% if item.donation.donation_category == 'monetary' %} bg-warning text-dark
+                                            {% elif item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %} bg-purple
+                                            {% else %} bg-secondary{% endif %}">
+                                            {% if item.donation.donation_type == 'csr' %}
+                                                CSR
+                                            {% else %}
+                                                {{ item.category_display }}
+                                            {% endif %}
+                                        </span>
+                                        {% if item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %}
+                                            <span class="csr-type-label">
+                                                {% if item.donation.csr_subcategory == 'other' and item.donation.csr_custom_subcategory %}
+                                                    {{ item.donation.csr_custom_subcategory }}
+                                                {% elif item.donation.csr_subcategory %}
+                                                    {{ item.donation.get_csr_subcategory_display }}
+                                                {% else %}
+                                                    CSR Initiative
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    {% elif item.donation.donation_category in 'food non_food' %}
+                                        {% if item.donation.donation_mode == 'free' %}
+                                            <span class="badge bg-success">Free</span>
+                                        {% elif item.donation.donation_mode == 'subsidized' %}
+                                            <span class="badge bg-warning text-dark">Subsidized</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge
+                                            {% if item.donation.donation_category == 'monetary' %} bg-warning text-dark
+                                            {% elif item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %} bg-purple
+                                            {% else %} bg-secondary{% endif %}">
+                                            {{ item.category_display }}
+                                        </span>
+                                        {% if item.donation.donation_category == 'csr' or item.donation.donation_type == 'csr' or item.donation.donation_mode == 'csr' %}
+                                            <span class="csr-type-label">
+                                                {% if item.donation.csr_subcategory == 'other' and item.donation.csr_custom_subcategory %}
+                                                    {{ item.donation.csr_custom_subcategory }}
+                                                {% elif item.donation.csr_subcategory %}
+                                                    {{ item.donation.get_csr_subcategory_display }}
+                                                {% else %}
+                                                    CSR Initiative
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="text-wrap-cell">
+                                    {% if item.effective_description and item.effective_description != 'No description' %}
+                                        {{ item.effective_description }}
+                                    {% else %}
+                                        <span class="text-muted">No description</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    <strong>{{ item.donation.foodbank.foodbank_name|truncatechars:24 }}</strong>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.donation_type == 'item' %}
+                                        <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit }}
+                                    {% elif item.donation.donation_type == 'money' %}
+                                        <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                    {% elif item.donation.donation_type == 'csr' or item.donation.donation_type == 'other' %}
+                                        {% if item.donation.amount and item.donation.quantity %}
+                                            <strong>KES {{ item.donation.amount|floatformat:0 }} for {{ item.donation.quantity }} {{ item.donation.quantity_unit|default:"units" }}</strong>
+                                        {% elif item.donation.amount %}
+                                            <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                        {% elif item.donation.quantity %}
+                                            <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.donation.delivery_method == 'dropoff' or item.donation.delivery_method == 'delivery' %}
+                                        <span class="fw-semibold">Delivery</span>
+                                    {% elif item.donation.delivery_method %}
+                                        <span class="fw-semibold text-capitalize">{{ item.donation.get_delivery_method_display|default:item.donation.delivery_method }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    
+                                    {{ item.donation.foodbank.address|default:"Location not provided" }}
+                                 
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.recipient_status == 'received' %}
+                                        <span class="badge bg-success"><i class="fas fa-check-double"></i> Received by recipient</span>
+                                    {% else %}
+                                        <span class="badge bg-info text-dark"><i class="fas fa-clock"></i> Accepted by recipient</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    <div>{{ item.recipient_accepted_at|date:"M d, Y" }}</div>
+                                    <small class="text-muted">{{ item.recipient_accepted_at|timesince }} ago</small>
+                                </td>
+                               
+                                <td style="padding: 0.5rem 0.75rem;" class="notes-cell">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm view-unspecified-notes-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#dashboardUnspecifiedNotesModal"
+                                            data-donor-note="{% if item.donation.message %}{{ item.donation.message|escapejs }}{% elif item.donation.other_description %}{{ item.donation.other_description|escapejs }}{% elif item.donation.csr_description %}{{ item.donation.csr_description|escapejs }}{% else %}No note{% endif %}"
+                                            data-recipient-note="{% if item.effective_recipient_note %}{{ item.effective_recipient_note|escapejs }}{% else %}No note{% endif %}"
+                                            data-recipient-status="{{ item.recipient_status }}"
+                                            data-decline-note="{% if item.effective_decline_note %}{{ item.effective_decline_note|escapejs }}{% else %}No note{% endif %}">
+                                        <i class="fas fa-eye me-1"></i>View Notes
+                                    </button>
+                                </td>
+                                
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    {% if item.recipient_status == 'accepted_by_recipient' %}
+                                        <form method="POST" action="{% url 'recipient_confirm_unspecified_received' item.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'dashboard' %}?tab=unspecified">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-box-open me-1"></i>Confirm
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted" style="font-size: 0.75rem;"><i class="fas fa-check-double"></i> Completed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endwith %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Subsidized Donations Section -->
+        <div class="section-card" data-tab-panel="subsidized" style="margin-bottom: 1.5rem; margin-top: 1rem;">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <span class="section-icon" style="background: #dbeafe;">
+                        <i class="fas fa-tags" style="color: #3b82f6;"></i>
+                    </span>
+                    Subsidized Donations
+                    {% if available_subsidized_count > 0 %}
+                        <span class="badge bg-success" style="font-size: 0.75rem; margin-left: 0.5rem;">{{ available_subsidized_count }} available</span>
+                    {% endif %}
+                    {% if my_subsidized_count > 0 %}
+                        <span class="badge bg-info" style="font-size: 0.75rem; margin-left: 0.25rem;">{{ my_subsidized_count }} accepted</span>
+                    {% endif %}
+                </h3>
+                <a href="{% url 'recipient_subsidized_donations' %}" class="view-all-link">
+                    View All <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i> Discounted goods from donors at reduced prices. Accept to claim and confirm when received.
+            </p>
+            
+            <div class="preview-table-wrapper">
+                <div class="table-responsive preview-table-scroll subsidized-dashboard-scroll">
+                <table class="table table-hover dashboard-subsidized-table" style="font-size: 0.7rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">S/NO</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Date</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Food Bank</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Donor</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Type</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Category</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Product</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Quantity</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Market Price</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Subsidy</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">New Price</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Status</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Delivery</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Notes</th>
+                            
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if available_subsidized_donations or my_subsidized_donations %}
+                            <!-- Available subsidized donations -->
+                            {% for donation in available_subsidized_donations %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; background-color: {% cycle 'white' '#f9fafb' %};">
+                                <td style="padding: 0.5rem 0.75rem;">{{ forloop.counter }}</td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.62rem; color: #6b7280; white-space: nowrap;" title="{{ donation.donated_at|date:'M j, Y H:i' }}">{{ donation.donated_at|date:"M j" }}</td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                        <i class="fas fa-warehouse text-primary"></i>
+                                        <span>{{ donation.foodbank.foodbank_name }}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.donor and donation.donor.donor_profile %}
+                                        {% if donation.donor.donor_profile.is_organization and donation.donor.donor_profile.organization_name %}
+                                            {{ donation.donor.donor_profile.organization_name }}
+                                        {% elif donation.donor.donor_profile.full_name %}
+                                            {{ donation.donor.donor_profile.full_name }}
+                                        {% else %}
+                                            {{ donation.donor.email }}
+                                        {% endif %}
+                                    {% elif donation.donor %}
+                                        {{ donation.donor.get_full_name|default:donation.donor.email }}
+                                    {% else %}
+                                        <span class="text-muted">Unknown donor</span>
+                                    {% endif %}
+                                </td>
+                                 <td class="column-type">
+                                    {% if donation.donation_category == 'food' %}
+                                        <span class="badge bg-success">Food</span>
+                                    {% elif donation.donation_category == 'non_food' %}
+                                        <span class="badge bg-info">Non-Food</span>
+                                    {% elif donation.donation_category == 'monetary' %}
+                                        <span class="badge bg-warning text-dark">Monetary</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Other</span>
+                                    {% endif %}
+                                </td>
+                                <td class="column-category">
+                                    {% if donation.donation_type == 'subsidized' %}
+                                        <span class="badge bg-success text-white">Subsidized</span>
+                                    {% elif donation.donation_type == 'csr' %}
+                                        <span class="badge bg-info text-dark">CSR</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Other</span>
+                                    {% endif %}
+                                </td>
+                                <td class="description-cell">
+                                    {% if donation.donation_type == 'subsidized' %}
+                                        {{ donation.subsidized_product_type|default:donation.csr_description|default:donation.message|default:"No description" }}
+                                    {% else %}
+                                        {{ donation.csr_description|default:donation.other_description|default:donation.message|default:"No description" }}
+                                    {% endif %}
+                                </td>
+                                <td class="column-quantity">
+                                    {% if donation.donation_type == 'subsidized' and donation.subsidized_quantity %}
+                                        {{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit|default:"units" }}
+                                    {% elif donation.quantity %}
+                                        {{ donation.quantity }} {{ donation.quantity_unit|default:"units" }}
+                                    {% else %}
+                                        <span class="empty-cell">-</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_initial_amount %}
+                                        <strong>KES {{ donation.subsidized_initial_amount|floatformat:0 }}</strong>
+                                    {% elif donation.subsidized_market_price %}
+                                        <strong>KES {{ donation.subsidized_market_price|floatformat:0 }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_subsidy_amount %}
+                                        <span style="color: #dc2626;">KES {{ donation.subsidized_subsidy_amount|floatformat:0 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_price %}
+                                        <span style="color: #059669; font-weight: 600;">KES {{ donation.subsidized_price|floatformat:0 }}</span>
+                                    {% elif donation.amount %}
+                                        <span style="color: #059669; font-weight: 600;">KES {{ donation.amount|floatformat:0 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                               <td>
+                                    {% if donation.accepted_by_recipient %}
+                                        {% if donation.accepted_by_recipient == request.user.recipient_profile %}
+                                            {% if donation.delivery_status == 'delivered' %}
+                                                <span class="badge" style="background: #059669; color: white;">
+                                                    <i class="fas fa-box-open me-1"></i>Received by recipient
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-info text-dark"><i class="fas fa-clock"></i> Accepted by recipient</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if donation.delivery_status == 'delivered' %}
+                                                <span class="badge" style="background: #059669; color: white;">
+                                                    <i class="fas fa-box-open me-1"></i>Delivered
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-info text-dark"><i class="fas fa-clock"></i> Accepted by recipient</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% elif donation.declined_by_recipient == request.user.recipient_profile %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Declined by recipient
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Available for recipients</span>
+                                    {% endif %}
+                               </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                        <div style="font-size: 0.7rem; color: #6b7280; margin-top: 0.2rem;">
+                                            {{ donation.get_delivery_method_display|default:donation.delivery_method|capfirst|default:"Not specified" }}
+                                        </div>
+                                    
+                                </td>
+                                
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm view-subsidized-notes-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#dashboardSubsidizedNotesModal"
+                                            data-donor-note="{% if donation.message %}{{ donation.message|escapejs }}{% elif donation.csr_description %}{{ donation.csr_description|escapejs }}{% elif donation.other_description %}{{ donation.other_description|escapejs }}{% else %}No note{% endif %}"
+                                            data-recipient-note="{% if donation.latest_recipient_note %}{{ donation.latest_recipient_note|escapejs }}{% else %}No note{% endif %}"
+                                            data-decline-note="{% if donation.recipient_decline_reason %}{{ donation.recipient_decline_reason|escapejs }}{% elif donation.decline_message %}{{ donation.decline_message|escapejs }}{% else %}No note{% endif %}"
+                                            data-is-declined="{% if donation.declined_by_recipient == recipient_profile %}true{% else %}false{% endif %}">
+                                        <i class="fas fa-eye me-1"></i>View Notes
+                                    </button>
+                                </td>
+                                <td class="subsidized-preview-actions-cell" style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    {% if donation.declined_by_recipient == recipient_profile %}
+                                        <span class="text-muted">-</span>
+                                    {% else %}
+                                        <div class="subsidized-preview-actions-wrap">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-success accept-donation-btn"
+                                                    style="border: none; border-radius: 4px; cursor: pointer;"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#dashboardAcceptDonationModal"
+                                                    data-accept-url="{% url 'recipient_accept_subsidized_donation' donation.id %}"
+                                                    data-dashboard-tab="subsidized"
+                                                    data-modal-type="{{ donation.subsidized_product_type|default:'Subsidized Goods'|escapejs }}"
+                                                    data-modal-details="{{ donation.subsidized_price|floatformat:0 }}{% if donation.subsidized_market_price %} (Market {{ donation.subsidized_market_price|floatformat:0 }}){% endif %}|escapejs"
+                                                    data-modal-foodbank="{{ donation.foodbank.foodbank_name|escapejs }}">
+                                                <i class="fas fa-check"></i> Accept
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm action-btn decline-donation-btn"
+                                                    data-decline-url="{% url 'respond_to_subsidized' donation.id %}"
+                                                    data-dashboard-tab="subsidized"
+                                                    data-modal-type="{{ donation.get_donation_type_display|escapejs }}"
+                                                    data-modal-details="{{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit|default:'units'|escapejs }} of {{ donation.subsidized_product_type|default:'Subsidized Goods'|escapejs }}"
+                                                    data-modal-foodbank="{{ donation.foodbank.foodbank_name|escapejs }}">
+                                                <i class="fas fa-times fa-xs"></i> Decline
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- My accepted subsidized donations -->
+                            {% with available_subsidized_donations|length as subsidized_preview_count %}
+                            {% for donation in my_subsidized_donations %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; background-color: {% cycle 'white' '#f9fafb' %};">
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">{{ subsidized_preview_count|add:forloop.counter }}</td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.62rem; color: #6b7280; white-space: nowrap;" title="{{ donation.donated_at|date:'M j, Y H:i' }}">{{ donation.donated_at|date:"M j" }}</td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                        <i class="fas fa-warehouse text-primary"></i>
+                                        <span>{{ donation.foodbank.foodbank_name }}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.donor and donation.donor.donor_profile %}
+                                        {% if donation.donor.donor_profile.is_organization and donation.donor.donor_profile.organization_name %}
+                                            {{ donation.donor.donor_profile.organization_name }}
+                                        {% elif donation.donor.donor_profile.full_name %}
+                                            {{ donation.donor.donor_profile.full_name }}
+                                        {% else %}
+                                            {{ donation.donor.email }}
+                                        {% endif %}
+                                    {% elif donation.donor %}
+                                        {{ donation.donor.get_full_name|default:donation.donor.email }}
+                                    {% else %}
+                                        <span class="text-muted">Unknown donor</span>
+                                    {% endif %}
+                                </td>
+                                <td class="column-type">
+                                    {% if donation.donation_category == 'food' %}
+                                        <span class="badge bg-success">Food</span>
+                                    {% elif donation.donation_category == 'non_food' %}
+                                        <span class="badge bg-info">Non-Food</span>
+                                    {% elif donation.donation_category == 'monetary' %}
+                                        <span class="badge bg-warning text-dark">Monetary</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Other</span>
+                                    {% endif %}
+                                </td>
+                                <td class="column-category">
+                                    {% if donation.donation_type == 'subsidized' %}
+                                        <span class="badge bg-success text-white">Subsidized</span>
+                                    {% elif donation.donation_type == 'csr' %}
+                                        <span class="badge bg-info text-dark">CSR</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Other</span>
+                                    {% endif %}
+                                </td>
+                                <td class="description-cell">
+                                    {% if donation.donation_type == 'subsidized' %}
+                                        {{ donation.subsidized_product_type|default:donation.csr_description|default:donation.message|default:"No description" }}
+                                    {% else %}
+                                        {{ donation.csr_description|default:donation.other_description|default:donation.message|default:"No description" }}
+                                    {% endif %}
+                                </td>
+                                <td class="column-quantity">
+                                    {% if donation.subsidized_quantity %}
+                                        {{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit|default:"units" }}
+                                    {% elif donation.quantity %}
+                                        {{ donation.quantity }} {{ donation.quantity_unit|default:"units" }}
+                                    {% else %}
+                                        <span class="empty-cell">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_initial_amount %}
+                                        <strong>KES {{ donation.subsidized_initial_amount|floatformat:0 }}</strong>
+                                    {% elif donation.subsidized_market_price %}
+                                        <strong>KES {{ donation.subsidized_market_price|floatformat:0 }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_subsidy_amount %}
+                                        <span style="color: #dc2626;">KES {{ donation.subsidized_subsidy_amount|floatformat:0 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_price %}
+                                        <span style="color: #059669; font-weight: 600;">KES {{ donation.subsidized_price|floatformat:0 }}</span>
+                                    {% elif donation.amount %}
+                                        <span style="color: #059669; font-weight: 600;">KES {{ donation.amount|floatformat:0 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if donation.accepted_by_recipient %}
+                                        {% if donation.delivery_status == 'delivered' %}
+                                            <span class="badge" style="background: #059669; color: white;">
+                                                <i class="fas fa-box-open me-1"></i>Received by recipient
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-info text-dark"><i class="fas fa-clock"></i> Accepted by recipient</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Awaiting recipient</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    {% if donation.delivery_method %}
+                                        {{ donation.get_delivery_method_display|default:donation.delivery_method|capfirst }}
+                                    {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm view-subsidized-notes-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#dashboardSubsidizedNotesModal"
+                                            data-donor-note="{% if donation.message %}{{ donation.message|escapejs }}{% elif donation.csr_description %}{{ donation.csr_description|escapejs }}{% elif donation.other_description %}{{ donation.other_description|escapejs }}{% else %}No note{% endif %}"
+                                            data-recipient-note="{% if donation.latest_recipient_note %}{{ donation.latest_recipient_note|escapejs }}{% else %}No note{% endif %}"
+                                            data-decline-note="{% if donation.recipient_decline_reason %}{{ donation.recipient_decline_reason|escapejs }}{% elif donation.decline_message %}{{ donation.decline_message|escapejs }}{% else %}No note{% endif %}"
+                                            data-is-declined="{% if donation.declined_by_recipient == recipient_profile %}true{% else %}false{% endif %}">
+                                        <i class="fas fa-eye me-1"></i>View Notes
+                                    </button>
+                                </td>
+                                <td class="subsidized-preview-actions-cell" style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    {% if donation.delivery_status != 'delivered' %}
+                                        <form method="POST" action="{% url 'recipient_confirm_subsidized_received' donation.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'dashboard' %}?tab=subsidized">
+                                            <button type="submit" class="btn btn-sm" style="background: #8b5cf6; color: white; padding: 0.25rem 0.5rem; font-size: 0.7rem; border: none; border-radius: 4px; cursor: pointer;" title="Confirm received">
+                                                <i class="fas fa-check-double"></i> Confirm Received
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-success" style="font-size: 0.7rem;">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endwith %}
+                        {% else %}
+                            <tr>
+                                <td colspan="15" style="padding: 2rem 1rem; text-align: center; color: var(--gray-600); font-size: 0.875rem;">
+                                    <i class="fas fa-tags" style="font-size: 1.25rem; color: #94a3b8; margin-bottom: 0.5rem;"></i><br>
+                                    No subsidized donations at the moment. When food banks accept subsidized goods from donors, they will appear here. Use <a href="{% url 'recipient_subsidized_donations' %}">View All</a> to see the full list.
+                                </td>
+                            </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Global Accept Donation Modal -->
+        <div class="modal fade" id="dashboardAcceptDonationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Accept Donation</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="dashboardAcceptDonationForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" id="dashboardModalNext" value="">
+                        <div class="modal-body">
+                            <div class="alert alert-info accept-donation-summary">
+                                <strong id="dashboardModalDonationType">Donation</strong>
+                                <div class="mt-1 small text-muted accept-donation-details" id="dashboardModalDonationDetails"></div>
+                                <small class="d-block mt-2 accept-donation-source">From: <span id="dashboardModalFoodbankName"></span></small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dashboardModalNotes" class="form-label">Notes (optional)</label>
+                                <textarea name="notes" id="dashboardModalNotes" class="form-control" rows="3" placeholder="Add any notes about this donation..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>Accept Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Accept Donation Modal -->
+        <div class="modal fade" id="acceptDonationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-check me-2"></i>Accept Donation</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="acceptDonationForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" id="modalNext" value="">
+                        <div class="modal-body">
+                            <p>You are about to accept this donation:</p>
+                            <div class="alert alert-info accept-donation-summary">
+                                <strong id="modalDonationType">Donation</strong>
+                                <div id="modalDonationDetails" class="mt-1 small text-muted accept-donation-details"></div>
+                                <small class="d-block mt-2 accept-donation-source">From: <span id="modalFoodbankName"></span></small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalNotes" class="form-label">Notes (optional)</label>
+                                <textarea name="notes" id="modalNotes" class="form-control" rows="3" placeholder="Any notes about accepting this donation..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-1"></i>Accept Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="dashboardSubsidizedNotesModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-sticky-note me-2"></i>Donation Notes</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <h6 class="mb-1 text-muted">Donor Note</h6>
+                            <div id="dashboardSubsidizedDonorNote" class="border rounded p-2 bg-light dashboard-note-box">No note</div>
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="mb-1 text-muted">Recipient Note</h6>
+                            <div id="dashboardSubsidizedRecipientNote" class="border rounded p-2 bg-light dashboard-note-box">No note</div>
+                        </div>
+                        <div id="dashboardSubsidizedDeclineWrap" class="mt-3" style="display: none;">
+                            <h6 class="mb-1 text-muted">Decline Note</h6>
+                            <div id="dashboardSubsidizedDeclineNote" class="border rounded p-2 bg-light dashboard-note-box">No note</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decline Donation Modal -->
+        <div class="modal fade" id="declineDonationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="fas fa-times me-2"></i>Decline Donation</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="declineDonationForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="response_type" value="decline">
+                        <input type="hidden" name="next" id="declineModalNext" value="">
+                        <div class="modal-body">
+                            <p>Please confirm you want to decline this donation:</p>
+                            <div class="alert alert-warning decline-donation-summary">
+                                <strong id="declineModalDonationType">Donation</strong>
+                                <div id="declineModalDonationDetails" class="mt-1 small text-muted decline-donation-details"></div>
+                                <small class="d-block mt-2 decline-donation-source">From: <span id="declineModalFoodbankName"></span></small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="declineModalReason" class="form-label">Reason (optional)</label>
+                                <textarea name="decline_reason" id="declineModalReason" class="form-control" rows="3" placeholder="Let the food bank know why you are declining..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times me-1"></i>Decline Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="dashboardUnspecifiedNotesModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-sticky-note me-2"></i>Donation Notes</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <h6 class="mb-1 text-muted">Donor Note</h6>
+                            <div id="dashboardUnspecifiedDonorNote" class="border rounded p-2 bg-light dashboard-note-box">No note</div>
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="mb-1 text-muted">My Note</h6>
+                            <div id="dashboardUnspecifiedRecipientNote" class="border rounded p-2 bg-light dashboard-note-box">No note</div>
+                        </div>
+                        <div id="dashboardUnspecifiedDeclineWrap" class="mt-3" style="display: none;">
+                            <h6 class="mb-1 text-muted">Decline Note</h6>
+                            <div id="dashboardUnspecifiedDeclineNote" class="border rounded p-2 bg-light dashboard-note-box">No note</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Request Notes Modal -->
+        <div class="modal fade" id="requestNotesModal" tabindex="-1" aria-labelledby="requestNotesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="requestNotesModalLabel">Request Notes</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body dashboard-note-box" id="requestNotesModalBody" style="line-height: 1.5;"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{% url 'recipient_contact_support' %}" class="btn btn-primary">
+                    <i class="fas fa-envelope"></i> Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add loading states to buttons
+    document.querySelectorAll('form button[type="submit"]').forEach(button => {
+        button.closest('form').addEventListener('submit', function() {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabsContainer = document.getElementById('recipientDashboardTabs');
+        const requestsPanel = document.querySelector('[data-tab-panel="requests"]');
+        const unspecifiedPanel = document.querySelector('[data-tab-panel="unspecified"]');
+        const subsidizedPanel = document.querySelector('[data-tab-panel="subsidized"]');
+        const TAB_STORAGE_KEY = 'recipientDashboardActiveTab';
+        const validTabs = Array.from(document.querySelectorAll('#recipientDashboardTabs button[data-tab]')).map(btn => btn.getAttribute('data-tab'));
+
+        function persistTab(tabKey) {
+            try {
+                localStorage.setItem(TAB_STORAGE_KEY, tabKey);
+            } catch (err) {
+                // Ignore storage errors (private mode, etc.)
+            }
+        }
+
+        function getStoredTab() {
+            const params = new URLSearchParams(window.location.search);
+            const urlTab = params.get('tab');
+            if (urlTab && validTabs.includes(urlTab)) {
+                return urlTab;
+            }
+            try {
+                const stored = localStorage.getItem(TAB_STORAGE_KEY);
+                if (stored && validTabs.includes(stored)) {
+                    return stored;
+                }
+            } catch (err) {
+                // Ignore storage errors
+            }
+            return null;
+        }
+
+        function setActiveTab(tabKey, persist = true) {
+            if (!validTabs.includes(tabKey)) {
+                tabKey = 'requests';
+            }
+
+            if (tabsContainer) {
+                tabsContainer.querySelectorAll('button[data-tab]').forEach(btn => {
+                    const isActive = btn.getAttribute('data-tab') === tabKey;
+                    btn.classList.toggle('btn-primary', isActive);
+                    btn.classList.toggle('btn-outline', !isActive);
+                });
+            }
+
+            if (requestsPanel) requestsPanel.style.display = tabKey === 'requests' ? '' : 'none';
+            if (unspecifiedPanel) unspecifiedPanel.style.display = tabKey === 'unspecified' ? '' : 'none';
+            if (subsidizedPanel) subsidizedPanel.style.display = tabKey === 'subsidized' ? '' : 'none';
+
+            if (persist) {
+                persistTab(tabKey);
+            }
+
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('tab', tabKey);
+            window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+
+            const activePanel = tabKey === 'requests'
+                ? requestsPanel
+                : (tabKey === 'unspecified' ? unspecifiedPanel : subsidizedPanel);
+
+            if (activePanel) {
+                setTimeout(() => {
+                    activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 0);
+            }
+        }
+
+        if (tabsContainer) {
+            tabsContainer.querySelectorAll('button[data-tab]').forEach(btn => {
+                btn.addEventListener('click', () => setActiveTab(btn.getAttribute('data-tab')));
+            });
+
+            const initialTab = getStoredTab() || 'requests';
+            setActiveTab(initialTab, false);
+        }
+    });
+
+    // Add smooth scroll behavior
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+    const dateRange = document.getElementById('date_range');
+    if (dateRange) {
+        toggleCustomDateInputs(dateRange.value);
+    }
+
+    const acceptModalEl = document.getElementById('acceptDonationModal');
+    const acceptModal = acceptModalEl ? new bootstrap.Modal(acceptModalEl) : null;
+    const modalTypeEl = document.getElementById('modalDonationType');
+    const modalDetailsEl = document.getElementById('modalDonationDetails');
+    const modalFoodbankEl = document.getElementById('modalFoodbankName');
+    const acceptForm = document.getElementById('acceptDonationForm');
+    const notesField = document.getElementById('modalNotes');
+    const acceptNextField = document.getElementById('modalNext');
+
+    const declineModalEl = document.getElementById('declineDonationModal');
+    const declineModal = declineModalEl ? new bootstrap.Modal(declineModalEl) : null;
+    const declineTypeEl = document.getElementById('declineModalDonationType');
+    const declineDetailsEl = document.getElementById('declineModalDonationDetails');
+    const declineFoodbankEl = document.getElementById('declineModalFoodbankName');
+    const declineForm = document.getElementById('declineDonationForm');
+    const declineReasonField = document.getElementById('declineModalReason');
+    const declineNextField = document.getElementById('declineModalNext');
+    const subsidizedNotesModalEl = document.getElementById('dashboardSubsidizedNotesModal');
+    const subsidizedDonorNoteEl = document.getElementById('dashboardSubsidizedDonorNote');
+    const subsidizedRecipientNoteEl = document.getElementById('dashboardSubsidizedRecipientNote');
+    const subsidizedDeclineWrapEl = document.getElementById('dashboardSubsidizedDeclineWrap');
+    const subsidizedDeclineNoteEl = document.getElementById('dashboardSubsidizedDeclineNote');
+    const unspecifiedNotesModalEl = document.getElementById('dashboardUnspecifiedNotesModal');
+    const unspecifiedDonorNoteEl = document.getElementById('dashboardUnspecifiedDonorNote');
+    const unspecifiedRecipientNoteEl = document.getElementById('dashboardUnspecifiedRecipientNote');
+    const unspecifiedDeclineWrapEl = document.getElementById('dashboardUnspecifiedDeclineWrap');
+    const unspecifiedDeclineNoteEl = document.getElementById('dashboardUnspecifiedDeclineNote');
+
+    const decodeAttrText = (rawValue, fallback = 'No note') => {
+        const raw = rawValue || '';
+        if (!raw.trim()) return fallback;
+        try {
+            return JSON.parse(`"${raw}"`);
+        } catch (err) {
+            return raw;
+        }
+    };
+
+    document.querySelectorAll('.accept-unspecified-donation-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!acceptModal) return;
+            modalTypeEl.textContent = btn.getAttribute('data-modal-type') || 'Donation';
+            modalDetailsEl.textContent = btn.getAttribute('data-modal-details') || '';
+            modalFoodbankEl.textContent = btn.getAttribute('data-modal-foodbank') || '';
+            acceptForm.action = btn.getAttribute('data-accept-url');
+            if (acceptNextField) acceptNextField.value = "{% url 'dashboard' %}?tab=unspecified";
+            notesField.value = '';
+            acceptModal.show();
+        });
+    });
+
+    document.querySelectorAll('.decline-donation-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!declineModal) return;
+            declineTypeEl.textContent = btn.getAttribute('data-modal-type') || 'Donation';
+            declineDetailsEl.textContent = btn.getAttribute('data-modal-details') || '';
+            declineFoodbankEl.textContent = btn.getAttribute('data-modal-foodbank') || '';
+            declineForm.action = btn.getAttribute('data-decline-url');
+            const declineTab = btn.getAttribute('data-dashboard-tab') || 'unspecified';
+            if (declineNextField) declineNextField.value = `{% url 'dashboard' %}?tab=${declineTab}`;
+            declineReasonField.value = '';
+            declineModal.show();
+        });
+    });
+
+    if (subsidizedNotesModalEl && subsidizedDonorNoteEl && subsidizedRecipientNoteEl && subsidizedDeclineWrapEl && subsidizedDeclineNoteEl) {
+        subsidizedNotesModalEl.addEventListener('show.bs.modal', function (event) {
+            const btn = event.relatedTarget;
+            const donorNote = decodeAttrText(btn && btn.getAttribute('data-donor-note'));
+            const recipientNote = decodeAttrText(btn && btn.getAttribute('data-recipient-note'));
+            const declineNote = decodeAttrText(btn && btn.getAttribute('data-decline-note'));
+            const isDeclined = ((btn && btn.getAttribute('data-is-declined')) || '').toLowerCase() === 'true';
+
+            subsidizedDonorNoteEl.textContent = donorNote;
+            subsidizedRecipientNoteEl.textContent = recipientNote;
+
+            if (isDeclined) {
+                subsidizedDeclineWrapEl.style.display = 'block';
+                subsidizedDeclineNoteEl.textContent = declineNote;
+            } else {
+                subsidizedDeclineWrapEl.style.display = 'none';
+                subsidizedDeclineNoteEl.textContent = 'No note';
+            }
+        });
+
+        subsidizedNotesModalEl.addEventListener('hidden.bs.modal', function () {
+            subsidizedDonorNoteEl.textContent = 'No note';
+            subsidizedRecipientNoteEl.textContent = 'No note';
+            subsidizedDeclineWrapEl.style.display = 'none';
+            subsidizedDeclineNoteEl.textContent = 'No note';
+        });
+    }
+
+    if (unspecifiedNotesModalEl && unspecifiedDonorNoteEl && unspecifiedRecipientNoteEl && unspecifiedDeclineWrapEl && unspecifiedDeclineNoteEl) {
+        unspecifiedNotesModalEl.addEventListener('show.bs.modal', function (event) {
+            const btn = event.relatedTarget;
+            const donorNote = decodeAttrText(btn && btn.getAttribute('data-donor-note'));
+            const recipientNote = decodeAttrText(btn && btn.getAttribute('data-recipient-note'));
+            const declineNote = decodeAttrText(btn && btn.getAttribute('data-decline-note'));
+            const recipientStatus = (btn && btn.getAttribute('data-recipient-status')) || '';
+
+            unspecifiedDonorNoteEl.textContent = donorNote;
+            unspecifiedRecipientNoteEl.textContent = recipientNote;
+
+            if (recipientStatus === 'declined_by_recipient') {
+                unspecifiedDeclineWrapEl.style.display = 'block';
+                unspecifiedDeclineNoteEl.textContent = declineNote;
+            } else {
+                unspecifiedDeclineWrapEl.style.display = 'none';
+                unspecifiedDeclineNoteEl.textContent = 'No note';
+            }
+        });
+
+        unspecifiedNotesModalEl.addEventListener('hidden.bs.modal', function () {
+            unspecifiedDonorNoteEl.textContent = 'No note';
+            unspecifiedRecipientNoteEl.textContent = 'No note';
+            unspecifiedDeclineWrapEl.style.display = 'none';
+            unspecifiedDeclineNoteEl.textContent = 'No note';
+        });
+    }
+
+    const viewTermsModalEl = document.getElementById('recipientDashboardViewTermsModal');
+    const viewTermsModalBodyEl = document.getElementById('recipientDashboardViewTermsModalBody');
+    if (viewTermsModalEl && viewTermsModalBodyEl) {
+        viewTermsModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const termsText = (button && button.getAttribute('data-terms-text')) || '';
+            viewTermsModalBodyEl.textContent = termsText || 'No description provided.';
+        });
+        viewTermsModalEl.addEventListener('hidden.bs.modal', function () {
+            viewTermsModalBodyEl.textContent = 'No description provided.';
+        });
+    }
+});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('dashboardAcceptDonationModal');
+        const form = document.getElementById('dashboardAcceptDonationForm');
+        const typeEl = document.getElementById('dashboardModalDonationType');
+        const detailsEl = document.getElementById('dashboardModalDonationDetails');
+        const foodbankEl = document.getElementById('dashboardModalFoodbankName');
+        const notesEl = document.getElementById('dashboardModalNotes');
+        const dashboardModalNextField = document.getElementById('dashboardModalNext');
+        const acceptModal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+        document.querySelectorAll('.accept-donation-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!acceptModal) return;
+                typeEl.textContent = btn.getAttribute('data-modal-type') || 'Donation';
+                detailsEl.textContent = btn.getAttribute('data-modal-details') || '';
+                foodbankEl.textContent = btn.getAttribute('data-modal-foodbank') || '';
+                form.action = btn.getAttribute('data-accept-url') || '#';
+                const acceptTab = btn.getAttribute('data-dashboard-tab') || 'subsidized';
+                if (dashboardModalNextField) dashboardModalNextField.value = `{% url 'dashboard' %}?tab=${acceptTab}`;
+                notesEl.value = '';
+                acceptModal.show();
+            });
+        });
+
+        const notesModalEl = document.getElementById('requestNotesModal');
+        const notesModal = notesModalEl ? new bootstrap.Modal(notesModalEl) : null;
+        const notesModalTitle = document.getElementById('requestNotesModalLabel');
+        const notesModalBody = document.getElementById('requestNotesModalBody');
+
+        document.querySelectorAll('.view-notes-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!notesModal) return;
+                notesModalTitle.textContent = btn.getAttribute('data-note-title') || 'Request Notes';
+
+                let raw = btn.getAttribute('data-note-body') || '';
+                let decoded = raw;
+                try {
+                    decoded = JSON.parse(`"${raw}"`);
+                } catch (e) {
+                    decoded = raw;
+                }
+
+                if (btn.getAttribute('data-note-ack') === 'true') {
+                    const ackTime = btn.getAttribute('data-note-ack-time');
+                    const ackLines = [];
+                    ackLines.push(`Recipient acknowledged this request${ackTime ? ` on ${ackTime}` : ''}.`);
+                    const ackSection = `--- Acknowledgment ---\n${ackLines.join('\n')}`;
+                    decoded = decoded ? `${decoded}\n\n${ackSection}` : ackSection;
+                }
+
+                notesModalBody.innerHTML = decoded
+                    .split('\n')
+                    .map(line => line.trim().length ? line : '&nbsp;')
+                    .join('<br>');
+
+                notesModal.show();
+            });
+        });
+    });
+</script>
+
+{% endblock %}
+

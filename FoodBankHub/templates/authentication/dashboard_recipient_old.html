@@ -1,0 +1,560 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recipient Dashboard - FoodBank Hub{% endblock %}
+
+{% block content %}
+
+<style>
+/* Override any base template styles that might cause conflicts */
+.container, .container-fluid { 
+    padding: 0 !important; 
+    margin: 0 !important;
+    max-width: none !important;
+}
+body { 
+    margin: 0; 
+    padding: 0; 
+    background-color: #f8f9fa;
+}
+/* Ensure no navbar from base template interferes */
+.navbar, nav { 
+    position: relative !important; 
+}
+</style>
+<div class="dashboard-container">
+    <!-- Top Navigation Bar -->
+    <!--<nav class="top-nav">-->
+        <div class="nav-content">
+            <div class="nav-left">
+                <div class="user-greeting">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="greeting-text">
+                        <h5 class="user-name">
+                            {% if user.recipient_profile.is_organization %}
+                                {{ user.recipient_profile.organization_name|default:user.email }}
+                            {% else %}
+                                {{ user.recipient_profile.full_name|default:user.email }}
+                            {% endif %}
+                        </h5>
+                        <span class="user-role">Recipient</span>
+                    </div>
+
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ total_recipient_requests|default:"0" }}</span>
+                        <span class="stat-label">Requests</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ total_donations|default:"0" }}</span>
+                        <span class="stat-label">Donations</span>
+                    </div>
+                </div>
+                <div class="nav-actions">
+                    <a href="{% url 'select_foodbank_for_request' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Request
+                    </a>
+                </div>
+            </div>
+        </div>
+    
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-grid">
+            <!-- My Requests Section -->
+            <div class="requests-section">
+                <div class="section-header">
+                    <h3 class="section-title">Donations to Acknowledge</h3>
+                    <a href="{% url 'all_donations_to_acknowledge' %}" class="btn btn-outline">View All</a>
+                </div>
+
+                <div class="requests-grid">
+                    {% for allocation in unacknowledged_allocations|slice:":3" %}
+                    <div class="donation-item">
+                        <div class="donation-info">
+                            <h6 class="donation-title">
+                                {{ allocation.donation.item_name|default:allocation.donation.get_donation_type_display }}
+                            </h6>
+                            
+                            <p class="donation-details">
+                                {% if allocation.quantity %}
+                                    {{ allocation.quantity }} {{ allocation.donation.quantity_unit }}
+                                {% elif allocation.amount %}
+                                    Ksh {{ allocation.amount }}
+                                {% else %}
+                                    (Details not provided)
+                                {% endif %}
+                            </p>
+                            
+                            {% if allocation.donation.subsidized_price %}
+                                <p class="donation-subsidized">
+                                    Subsidized: Ksh {{ allocation.donation.subsidized_price }}  
+                                    (Market: Ksh {{ allocation.donation.subsidized_market_price }})
+                                    Discount: {{ allocation.donation.subsidized_discount_percentage }}%
+                                </p>
+                            {% endif %}
+                            
+                            <p class="donation-donor">
+                                Donor: {{ allocation.donation.donor.email }}
+                            </p>
+                            <p class="donation-delivery">
+                                Delivery: {{ allocation.donation.get_delivery_status_display }}
+                            </p>
+                        </div>
+                        <div class="donation-actions">
+                            <form method="post" action="{% url 'acknowledge_donation' allocation.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    Acknowledge
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-gift"></i>
+                        <h5>No donations to acknowledge</h5>
+                        <p>You'll see donations here when they're allocated to you</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Available Food Banks -->
+            <div class="foodbanks-section">
+                <div class="section-header">
+                    <h3 class="section-title">Available Food Banks</h3>
+                    <a href="{% url 'recipient_foodbanks_list' %}" class="btn btn-outline">View All</a>
+                </div>
+                <div class="foodbanks-list">
+                    {% for foodbank in foodbanks %}
+                    <div class="foodbank-item">
+                        <div class="foodbank-info">
+                            <h6 class="foodbank-name">{{ foodbank.foodbank_name }}</h6>
+                            <p class="foodbank-location">
+                                <i class="fas fa-map-marker-alt me-1"></i> 
+                                {{ foodbank.address|default:"Location not specified" }}
+                            </p>
+                            <!--<p class="foodbank-description">{{ foodbank.about_text|truncatewords:20|default:"No description available" }}</p>-->
+                        </div>
+                        <div class="foodbank-actions">
+                            <a href="{% url 'foodbank_public_profile' foodbank.id %}" class="btn btn-outline btn-sm">
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-building"></i>
+                        <h5>No food banks available</h5>
+                        <p>Check back later for available food banks</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+
+                        <!-- Quick Actions -->
+            <div class="quick-actions-section">
+                <div class="section-header">
+                    <h3 class="section-title">Quick Actions</h3>
+                </div>
+                <div class="actions-grid">
+                    <a href="{% url 'select_foodbank_for_request' %}" class="action-card">
+                        <i class="fas fa-plus"></i>
+                        <span>Create Request</span>
+                    </a>
+                    <a href="{% url 'available_random_donations' %}" class="action-card">
+                        <i class="fas fa-search"></i>
+                        <span>Browse Donations</span>
+                    </a>
+                    <a href="{% url 'recipient_testimonials_list' %}" class="action-card">
+                        <i class="fas fa-comments"></i>
+                        <span>My Testimonials</span>
+                    </a>
+                    <a href="{% url 'my_support_messages' %}" class="action-card">
+                        <i class="fas fa-headset"></i>
+                        <span>Support Messages</span>
+                    </a>
+                    <a href="{% url 'recipient_contact_support' %}" class="action-card">
+                        <i class="fas fa-envelope"></i>
+                        <span>Contact Support</span>
+                    </a>
+                    <a href="{% url 'recipient_settings' %}" class="action-card">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<style>
+/* Minimalistic Dashboard Styles */
+.dashboard-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.top-nav {
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.nav-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-greeting {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #6c757d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.greeting-text h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #212529;
+    font-size: 1.1rem;
+}
+
+.user-role {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+.quick-stats {
+    display: flex;
+    gap: 2rem;
+    margin-right: 2rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background: #212529;
+    color: white;
+    border-color: #212529;
+}
+
+.btn-primary:hover {
+    background: #495057;
+    border-color: #495057;
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #6c757d;
+    border-color: #dee2e6;
+}
+
+.btn-outline:hover {
+    background: #f8f9fa;
+    color: #495057;
+    border-color: #adb5bd;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.main-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    grid-template-areas: 
+        "requests foodbanks"
+        "donations actions";
+}
+
+.requests-section {
+    grid-area: requests;
+}
+
+.foodbanks-section {
+    grid-area: foodbanks;
+}
+
+.donations-section {
+    grid-area: donations;
+}
+
+.quick-actions-section {
+    grid-area: actions;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.requests-grid, .foodbanks-list, .donations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.request-card, .foodbank-item, .donation-item {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.request-card:hover, .foodbank-item:hover, .donation-item:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.request-header, .donation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.request-header h6, .foodbank-name, .donation-title {
+    margin: 0;
+    font-weight: 600;
+    color: #212529;
+    font-size: 1rem;
+}
+
+.foodbank-location {
+    margin: 0.25rem 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.foodbank-description, .request-description, .donation-details, .donation-donor {
+    margin: 0.5rem 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-active {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.request-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.75rem;
+}
+
+.request-type {
+    font-weight: 500;
+}
+
+.foodbank-actions, .donation-actions {
+    margin-top: 0.75rem;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.action-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    text-decoration: none;
+    color: #212529;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.action-card:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    color: #212529;
+}
+
+.action-card i {
+    font-size: 1.5rem;
+    color: #6c757d;
+}
+
+.action-card span {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #dee2e6;
+}
+
+.empty-state h5 {
+    margin: 1rem 0 0.5rem 0;
+    color: #495057;
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+            "requests"
+            "foodbanks"
+            "donations"
+            "actions";
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+    
+    .quick-stats {
+        margin-right: 0;
+        gap: 1.5rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .request-header, .donation-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+}
+</style>
+{% endblock %}
+

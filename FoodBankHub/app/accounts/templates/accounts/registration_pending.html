@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Application Submitted - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pending-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .pending-card {
+        max-width: 600px;
+        width: 100%;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 3rem rgba(0, 0, 0, 0.1);
+        padding: 3rem;
+        text-align: center;
+        margin: 2rem;
+    }
+    
+    .pending-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        animation: pulse 2s infinite;
+    }
+    
+    .pending-icon i {
+        font-size: 3rem;
+        color: white;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .pending-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 1rem;
+    }
+    
+    .pending-subtitle {
+        font-size: 1.25rem;
+        color: #28a745;
+        margin-bottom: 2rem;
+        font-weight: 500;
+    }
+    
+    .pending-description {
+        font-size: 1.1rem;
+        color: #6c757d;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+    
+    .next-steps {
+        background: #f8f9fc;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        text-align: left;
+    }
+    
+    .next-steps h5 {
+        color: #495057;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .next-steps ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .next-steps li {
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+    
+    .contact-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 1.5rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+        margin: 2rem 0;
+        text-align: left;
+    }
+    
+    .contact-info h6 {
+        color: #1976d2;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .contact-info p {
+        color: #424242;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: #28a745;
+        color: white;
+        border: 2px solid #28a745;
+    }
+    
+    .btn-primary:hover {
+        background: #218838;
+        border-color: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 0.25rem 1rem rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: #6c757d;
+        border: 2px solid #dee2e6;
+    }
+    
+    .btn-outline:hover {
+        background: #f8f9fa;
+        color: #495057;
+        border-color: #adb5bd;
+    }
+    
+    @media (max-width: 768px) {
+        .pending-card {
+            padding: 2rem 1.5rem;
+            margin: 1rem;
+        }
+        
+        .pending-title {
+            font-size: 1.75rem;
+        }
+        
+        .pending-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pending-container">
+    <div class="pending-card">
+        <div class="pending-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        
+        <h1 class="pending-title">Application Submitted!</h1>
+        <p class="pending-subtitle">Thank you for registering with FoodBank Hub</p>
+        
+        <p class="pending-description">
+            Your food bank registration has been successfully submitted and is now under review by our administrative team. 
+            We carefully review each application to ensure the quality and authenticity of our partner food banks.
+        </p>
+        
+        <div class="next-steps">
+            <h5><i class="fas fa-list-check me-2"></i>What happens next?</h5>
+            <ul>
+                <li><strong>Review Process:</strong> Our team will review your application and uploaded documents within 2-3 business days</li>
+                <li><strong>Verification:</strong> We may contact you if additional information or documentation is needed</li>
+                <li><strong>Notification:</strong> You'll receive an email notification once your application is approved or if any issues arise</li>
+                <li><strong>Account Activation:</strong> Upon approval, your account will be activated and you can start using the platform</li>
+            </ul>
+        </div>
+        
+        <div class="contact-info">
+            <h6><i class="fas fa-headset me-2"></i>Need Help?</h6>
+            <p>
+                If you have any questions about your application or need assistance, 
+                please contact our support team at <strong>support@foodbankhub.com</strong> 
+                or call us at <strong>+254 700 123 456</strong>
+            </p>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="fas fa-home"></i>
+                Back to Home
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-outline">
+                <i class="fas fa-sign-in-alt"></i>
+                Try Login Later
+            </a>
+        </div>
+        
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+            <p style="color: #6c757d; font-size: 0.9rem; margin: 0;">
+                <i class="fas fa-shield-alt me-1"></i>
+                Your information is secure and will only be used for verification purposes.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

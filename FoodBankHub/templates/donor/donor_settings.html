@@ -1,0 +1,585 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Donor Settings - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header with Animation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3 animate-fade-in">
+                <div class="profile-avatar me-4">
+                    <div class="avatar-circle">
+                        <i class="fas fa-user fa-2x text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-1 text-gradient">Profile Settings</h2>
+                    <p class="text-muted mb-0">Manage your personal information and preferences</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    {% if messages %}
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate-slide-down" role="alert">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'success' %}
+                                <i class="fas fa-check-circle me-2 text-success"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle me-2 text-danger"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle me-2 text-info"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Profile Form Section -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 animate-slide-up">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="profileForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Personal Information Section -->
+                        <div class="form-section mb-4">
+                            <h6 class="section-title">
+                                <i class="fas fa-user me-2 text-primary"></i>Personal Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-envelope me-1 text-muted"></i>Email Address
+                                    </label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>{{ form.email.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">This will be used for login and notifications</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-phone me-1 text-muted"></i>Phone Number
+                                    </label>
+                                    {{ form.phone_number }}
+                                    {% if form.phone_number.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>{{ form.phone_number.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">For delivery coordination and updates</small>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.full_name.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-id-card me-1 text-muted"></i>Full Name
+                                    </label>
+                                    {{ form.full_name }}
+                                    {% if form.full_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>{{ form.full_name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">Your display name on the platform</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-building me-1 text-muted"></i>Account Type
+                                    </label>
+                                    <div class="form-check custom-checkbox">
+                                        {{ form.is_organization }}
+                                        <label class="form-check-label" for="{{ form.is_organization.id_for_label }}">
+                                            Organization Account
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Check if representing an organization</small>
+                                </div>
+                            </div>
+
+                            <!-- Organization Name Field (Conditional) -->
+                            <div class="mb-3" id="organizationField" style="display: {% if donor_profile.is_organization %}block{% else %}none{% endif %};">
+                                <label for="{{ form.organization_name.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-building me-1 text-muted"></i>Organization Name
+                                </label>
+                                {{ form.organization_name }}
+                                {% if form.organization_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ form.organization_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Official name of your organization</small>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmChanges" required>
+                                <label class="form-check-label" for="confirmChanges">
+                                    I confirm that the information provided is accurate
+                                </label>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                    <i class="fas fa-undo me-2"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-gradient" id="saveBtn">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-lg-4">
+            <!-- Profile Summary Card -->
+            <div class="card shadow-lg border-0 mb-4 animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Profile Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="profile-stats">
+                        <div class="stat-item mb-3">
+                            <div class="stat-label text-muted">Member Since</div>
+                            <div class="stat-value fw-bold">{{ user.date_joined|date:"F d, Y" }}</div>
+                        </div>
+                        <div class="stat-item mb-3">
+                            <div class="stat-label text-muted">Account Status</div>
+                            <div class="stat-value">
+                                {% if user.is_active %}
+                                    <span class="badge bg-success rounded-pill">
+                                        <i class="fas fa-check-circle me-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        <i class="fas fa-times-circle me-1"></i>Inactive
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="stat-item mb-3">
+                            <div class="stat-label text-muted">Last Login</div>
+                            <div class="stat-value fw-bold">{{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label text-muted">User Type</div>
+                            <div class="stat-value">
+                                <span class="badge bg-primary rounded-pill">{{ user.user_type|title }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="card shadow-lg border-0 mb-4 animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <a href="{% url 'change_password' %}" class="btn btn-warning btn-gradient w-100 mb-2 animate-hover">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                        <a href="{% url 'request_account_deletion' %}" class="btn btn-outline-danger w-100 mb-2 animate-hover">
+                            <i class="fas fa-user-times me-2"></i>Delete My Account
+                        </a>
+                        <a href="{% url 'donation_history' %}" class="btn btn-outline-primary w-100 mb-2 animate-hover">
+                            <i class="fas fa-history me-2"></i>View Donation History
+                        </a>
+                        <a href="{% url 'notifications_acknowledgements' %}" class="btn btn-outline-info w-100 mb-2 animate-hover">
+                            <i class="fas fa-bell me-2"></i>View Notifications
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-100 animate-hover">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tips Card -->
+            <div class="card shadow-lg border-0 animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>Security Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="security-tips list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Keep your contact information updated
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Use a strong, unique password
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Enable two-factor authentication
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Review your account regularly
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS for enhanced UI -->
+<style>
+/* Gradient Backgrounds */
+.bg-gradient-primary,
+.bg-gradient-info,
+.bg-gradient-warning,
+.bg-gradient-success { background: transparent; }
+
+/* Text Gradient */
+.text-gradient {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+/* Button Gradients */
+.btn-gradient {
+    background: #16a34a;
+    border: none;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+/* Profile Avatar */
+.profile-avatar {
+    position: relative;
+}
+
+.avatar-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+}
+
+.avatar-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* Form Styling */
+.form-section {
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.section-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* Custom Checkbox */
+.custom-checkbox .form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.25em;
+    border: 2px solid #667eea;
+    border-radius: 0.25em;
+}
+
+.custom-checkbox .form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+/* Profile Stats */
+.profile-stats .stat-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.profile-stats .stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1rem;
+}
+
+/* Quick Actions */
+.quick-actions .btn {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.quick-actions .btn:hover {
+    transform: translateX(5px);
+}
+
+/* Security Tips */
+.security-tips li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.security-tips li:last-child {
+    border-bottom: none;
+}
+
+/* Animations */
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.6s ease-out;
+}
+
+.animate-hover {
+    transition: all 0.3s ease;
+}
+
+.animate-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from { 
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form Validation Styling */
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-avatar {
+        margin-bottom: 1rem;
+    }
+    
+    .avatar-circle {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn-group {
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide organization name field based on checkbox
+    const orgCheckbox = document.getElementById('{{ form.is_organization.id_for_label }}');
+    const orgField = document.getElementById('organizationField');
+    
+    if (orgCheckbox && orgField) {
+        function toggleOrgField() {
+            if (orgCheckbox.checked) {
+                orgField.style.display = 'block';
+                orgField.style.animation = 'slideDown 0.3s ease-out';
+            } else {
+                orgField.style.display = 'none';
+            }
+        }
+        
+        orgCheckbox.addEventListener('change', toggleOrgField);
+        toggleOrgField(); // Initial state
+    }
+
+    // Form validation
+    const form = document.getElementById('profileForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const confirmCheckbox = document.getElementById('confirmChanges');
+
+    function updateSaveButton() {
+        if (confirmCheckbox.checked) {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('btn-secondary');
+            saveBtn.classList.add('btn-primary', 'btn-gradient');
+        } else {
+            saveBtn.disabled = true;
+            saveBtn.classList.remove('btn-primary', 'btn-gradient');
+            saveBtn.classList.add('btn-secondary');
+        }
+    }
+
+    confirmCheckbox.addEventListener('change', updateSaveButton);
+    updateSaveButton(); // Initial state
+
+    // Form submission with loading state
+    form.addEventListener('submit', function(e) {
+        if (!confirmCheckbox.checked) {
+            e.preventDefault();
+            alert('Please confirm that the information provided is accurate.');
+            return false;
+        }
+
+        // Show loading state
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        saveBtn.disabled = true;
+    });
+
+    // Add floating labels effect
+    const formControls = document.querySelectorAll('.form-control');
+    formControls.forEach(control => {
+        control.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        control.addEventListener('blur', function() {
+            if (!this.value) {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+    });
+
+    // Smooth scroll to form sections
+    const sectionTitles = document.querySelectorAll('.section-title');
+    sectionTitles.forEach(title => {
+        title.style.cursor = 'pointer';
+        title.addEventListener('click', function() {
+            this.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+});
+
+// Reset form function
+function resetForm() {
+    if (confirm('Are you sure you want to reset all changes? This action cannot be undone.')) {
+        document.getElementById('profileForm').reset();
+        
+        // Reset organization field display
+        const orgCheckbox = document.getElementById('{{ form.is_organization.id_for_label }}');
+        const orgField = document.getElementById('organizationField');
+        if (orgCheckbox && orgField) {
+            orgField.style.display = 'none';
+        }
+        
+        // Reset confirmation checkbox
+        document.getElementById('confirmChanges').checked = false;
+        
+        // Update save button
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        saveBtn.classList.remove('btn-primary', 'btn-gradient');
+        saveBtn.classList.add('btn-secondary');
+        saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-info alert-dismissible fade show animate-slide-down';
+        alertDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-2 text-info"></i>
+                Form has been reset to original values.
+</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+    }
+}
+</script>
+{% endblock %}

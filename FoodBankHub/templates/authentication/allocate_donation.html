@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Allocate Donation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Allocate Donation</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Donation Details -->
+                    <div class="alert alert-info">
+                        <h6>Donation Details:</h6>
+                        <p class="mb-1"><strong>Type:</strong> {{ donation.get_donation_type_display }}</p>
+                        <p class="mb-1"><strong>Donor:</strong> {{ donation.donor.email }}</p>
+                        {% if donation.donation_type == 'item' %}
+                            <p class="mb-1"><strong>Item:</strong> {{ donation.item_name }}</p>
+                            <p class="mb-1"><strong>Quantity:</strong> {{ donation.quantity }} {{ donation.quantity_unit }}</p>
+                            <p class="mb-1"><strong>Remaining:</strong> {{ remaining }} {{ donation.quantity_unit }}</p>
+                        {% elif donation.donation_type == 'money' %}
+                            <p class="mb-1"><strong>Amount:</strong> ${{ donation.amount }}</p>
+                            <p class="mb-1"><strong>Remaining:</strong> ${{ remaining }}</p>
+                        {% elif donation.donation_type == 'subsidized' %}
+                            <p class="mb-1"><strong>Item:</strong> {{ donation.item_name }}</p>
+                            <p class="mb-1"><strong>Subsidized Price:</strong> ${{ donation.subsidized_price }}</p>
+                            <p class="mb-1"><strong>Remaining:</strong> ${{ remaining }}</p>
+                        {% endif %}
+                        <p class="mb-0"><strong>Date:</strong> {{ donation.donated_at|date:"M d, Y" }}</p>
+                    </div>
+
+                    <!-- Allocation Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.recipient.id_for_label }}" class="form-label">Recipient</label>
+                            {{ form.recipient }}
+                            {% if form.recipient.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.recipient.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if donation.donation_type == 'item' %}
+                            <div class="mb-3">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label">{{ form.quantity.label }}</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.quantity.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.amount.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'foodbank_donations' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Allocate Donation</button>
+                        </div>
+                    </form>
+
+                    <!-- Previous Allocations -->
+                    {% if allocations %}
+                        <hr>
+                        <h6>Previous Allocations:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Recipient</th>
+                                        <th>Quantity/Amount</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for allocation in allocations %}
+                                        <tr>
+                                            <td>{{ allocation.recipient.full_name }}</td>
+                                            <td>
+                                                {% if allocation.quantity %}
+                                                    {{ allocation.quantity }} {{ donation.quantity_unit }}
+                                                {% else %}
+                                                    ${{ allocation.amount }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ allocation.allocated_at|date:"M d, Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

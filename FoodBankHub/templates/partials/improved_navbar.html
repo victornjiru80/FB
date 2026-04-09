@@ -1,0 +1,188 @@
+<!-- Improved Public Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+    <div class="container">
+        <!-- Consistent Brand -->
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+            <div class="brand-icon me-2">
+                <i class="fas fa-heart text-primary"></i>
+            </div>
+            <span class="brand-text">
+                <strong>FoodBank</strong><span class="text-primary">Hub</span>
+            </span>
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPublic">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navigation Menu -->
+        <div class="collapse navbar-collapse" id="navbarPublic">
+            <!-- Main Navigation -->
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#how-it-works">
+                        <i class="fas fa-info-circle me-1"></i>How It Works
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#impact">
+                        <i class="fas fa-chart-line me-1"></i>Our Impact
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-search me-1"></i>Find Help
+                    </a>
+                    <ul class="dropdown-menu shadow border-0">
+                        <li><a class="dropdown-item" href="{% url 'home' %}?donation_type=food">
+                            <i class="fas fa-utensils me-2 text-success"></i>Food Assistance
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'home' %}?donation_type=non_food">
+                            <i class="fas fa-box me-2 text-info"></i>Non-Food Items
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#emergency">
+                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Emergency Help
+                        </a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#stories">
+                        <i class="fas fa-users me-1"></i>Success Stories
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Action Buttons -->
+            <div class="navbar-actions d-flex gap-2">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-plus me-1"></i>Get Started
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li class="dropdown-header fw-bold text-primary">Join Our Community</li>
+                            <li><a class="dropdown-item py-2" href="{% url 'register_donor' %}">
+                                <i class="fas fa-hand-holding-heart me-2 text-success"></i>
+                                <div>
+                                    <strong>Donate & Help</strong>
+                                    <small class="d-block text-muted">Give food, funds, or time</small>
+                                </div>
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'register_foodbank' %}">
+                                <i class="fas fa-warehouse me-2 text-info"></i>
+                                <div>
+                                    <strong>Food Bank</strong>
+                                    <small class="d-block text-muted">Manage distributions</small>
+                                </div>
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'register_recipient' %}">
+                                <i class="fas fa-users me-2 text-warning"></i>
+                                <div>
+                                    <strong>Get Assistance</strong>
+                                    <small class="d-block text-muted">Find food resources</small>
+                                </div>
+                            </a></li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<style>
+/* Enhanced Navbar Styles */
+.navbar {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.navbar.scrolled {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.brand-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.nav-link {
+    color: #4a5568 !important;
+    font-weight: 500;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #2b6cb0 !important;
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.dropdown-item {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateX(3px);
+}
+
+.navbar-actions .btn {
+    font-weight: 600;
+    border-radius: 2rem;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+@media (max-width: 991.98px) {
+    .navbar-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .navbar-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>

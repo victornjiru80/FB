@@ -1,0 +1,568 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscription Status - {{ user.foodbank_profile.foodbank_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-dark: #059669;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #16a34a;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+    }
+
+    body { background: var(--gray-50); }
+
+    .subscription-wrapper {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    /* Status Card - Minimalistic */
+    .status-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #6b7280;
+    }
+
+    .status-card.trial {
+        border-left-color: #16a34a;
+    }
+
+    .status-card.active {
+        border-left-color: #10b981;
+    }
+
+    .status-card.expired {
+        border-left-color: #ef4444;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f3f4f6;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #6b7280;
+    }
+
+    .status-card.trial .status-badge {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .status-card.active .status-badge {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-card.expired .status-badge {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #111827;
+    }
+
+    .status-subtitle {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .days-remaining {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        background: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .days-number {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #111827;
+    }
+
+    .status-card.trial .days-number {
+        color: #16a34a;
+    }
+
+    .status-card.active .days-number {
+        color: #10b981;
+    }
+
+    .status-card.expired .days-number {
+        color: #ef4444;
+    }
+
+    .days-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .status-dates {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .date-item {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .date-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+
+    .date-value {
+        font-weight: 600;
+        color: #111827;
+        font-size: 0.95rem;
+    }
+
+    /* Info Cards */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-card-icon.primary {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .info-card-icon.success {
+        background: #d1fae5;
+        color: #10b981;
+    }
+
+    .info-card-icon.warning {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .info-card-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-card-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    /* Section Card */
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    /* Payment History Table */
+    .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .payment-table th {
+        text-align: left;
+        padding: 0.75rem;
+        background: var(--gray-50);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6b7280;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .payment-table td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .payment-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-monthly {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-yearly {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-text {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-warning {
+        background: var(--warning);
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+    }
+
+    @media (max-width: 768px) {
+        .status-dates {
+            grid-template-columns: 1fr;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscription-wrapper">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-credit-card"></i> Subscription Status
+                    </h1>
+                    <p class="page-subtitle">Manage your subscription and view payment history</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <a href="{% url 'subscription_requests' %}" class="btn btn-outline">
+                        <i class="fas fa-history"></i> Open Payment Requests
+                    </a>
+                    <a href="{% url 'subscribe' %}" class="btn btn-primary">
+                        <i class="fas fa-sliders-h"></i> Manage Subscription
+                    </a>
+                    {% comment %}
+                    <a href="{% url 'subscription_info' %}" class="btn btn-outline">
+                        <i class="fas fa-info-circle"></i> View Plans & Pricing
+                    </a>
+                    {% endcomment %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Status Card -->
+        <div class="status-card {% if subscription.status == 'trial' %}trial{% elif subscription.status == 'active' %}active{% elif subscription.status == 'expired' %}expired{% endif %}">
+            <div class="status-badge">
+                {% if subscription.status == 'trial' %}
+                    <i class="fas fa-clock"></i> Trial Period
+                {% elif subscription.status == 'active' %}
+                    <i class="fas fa-check-circle"></i> Active Subscription
+                {% elif subscription.status == 'expired' %}
+                    <i class="fas fa-exclamation-circle"></i> Expired
+                {% else %}
+                    {{ subscription.get_status_display }}
+                {% endif %}
+            </div>
+
+            <h2 class="status-title">{{ subscription.get_plan_display }}</h2>
+            <p class="status-subtitle">
+                {% if subscription.status == 'trial' %}
+                    You're currently in your 3-month free trial period
+                {% elif subscription.status == 'active' %}
+                    Your subscription is active and all features are enabled
+                {% elif subscription.status == 'expired' %}
+                    Your subscription has expired. Subscribe to continue using the platform
+                {% endif %}
+            </p>
+
+            {% if subscription.can_access_features %}
+            <div class="days-remaining">
+                <div>
+                    <div class="days-number">{{ subscription.days_remaining }}</div>
+                    <div class="days-label">Days Remaining</div>
+                </div>
+                <div style="flex: 1;">
+                    <div class="days-label">
+                        {% if subscription.status == 'trial' %}
+                            Your trial expires on {{ subscription.trial_end_date|date:"F d, Y" }}
+                        {% else %}
+                            Your subscription renews on {{ subscription.subscription_end_date|date:"F d, Y" }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="status-dates">
+                {% if subscription.status == 'trial' %}
+                <div class="date-item">
+                    <div class="date-label">Trial Started</div>
+                    <div class="date-value">{{ subscription.trial_start_date|date:"M d, Y" }}</div>
+                </div>
+                <div class="date-item">
+                    <div class="date-label">Trial Ends</div>
+                    <div class="date-value">{{ subscription.trial_end_date|date:"M d, Y" }}</div>
+                </div>
+                {% else %}
+                <div class="date-item">
+                    <div class="date-label">Subscription Started</div>
+                    <div class="date-value">
+                        {% if subscription.subscription_start_date %}
+                            {{ subscription.subscription_start_date|date:"M d, Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="date-item">
+                    <div class="date-label">Subscription Ends</div>
+                    <div class="date-value">
+                        {% if subscription.subscription_end_date %}
+                            {{ subscription.subscription_end_date|date:"M d, Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                {% if not subscription.can_access_features %}
+                <a href="{% url 'subscribe' %}" class="btn btn-warning">
+                    <i class="fas fa-shopping-cart"></i> Subscribe Now
+                </a>
+                {% endif %}
+                <a href="{% url 'subscription_info' %}" class="btn btn-outline">
+                    <i class="fas fa-info-circle"></i> View Plans & Pricing
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-card-icon primary">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="info-card-title">Current Plan</div>
+                <div class="info-card-value">{{ subscription.get_plan_display }}</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-icon success">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="info-card-title">Total Payments</div>
+                <div class="info-card-value">{{ payment_history.count }}</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-icon warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="info-card-title">Pending Verification</div>
+                <div class="info-card-value">{{ pending_payments_count }}</div>
+            </div>
+        </div>
+
+        <!-- Pending Payments -->
+        {% if pending_payments %}
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-hourglass-half"></i> Pending Verification
+                </h3>
+                <span class="badge badge-pending">{{ pending_payments.count }} pending</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in pending_payments %}
+                        <tr>
+                            <td><span class="badge {% if payment.plan_type == 'monthly' %}badge-monthly{% else %}badge-yearly{% endif %}">{{ payment.get_plan_type_display }}</span></td>
+                            <td><strong>{{ payment.amount|floatformat:0 }}</strong></td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                            <td>{{ payment.submitted_at|date:"M d, Y" }}</td>
+                            <td><span class="badge badge-pending">Pending</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-radius: 8px;">
+                <p style="margin: 0; color: #92400e; font-size: 0.875rem;">
+                    <i class="fas fa-info-circle"></i> Your payment is being verified by our admin team. This usually takes up to 24 hours.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

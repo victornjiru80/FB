@@ -1,0 +1,54 @@
+<!-- templates/admin/custom/deletion_requests.html -->
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Account Deletion Requests</h2>
+    
+    {% if requests %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Requested</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req.user.email }}</td>
+                        <td>
+                            {% if req.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif req.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ req.requested_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if req.status == 'pending' %}
+                                <form method="POST" action="{% url 'approve_deletion' req.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <form method="POST" action="{% url 'reject_deletion' req.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">No deletion requests found.</p>
+    {% endif %}
+</div>
+{% endblock %}

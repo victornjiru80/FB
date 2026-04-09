@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Subscription{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2>Manage Subscription</h2>
+    <p>Your current subscription status: <strong>{{ subscription.payment_status }}</strong></p>
+    <p>Subscription valid until: <strong>{{ subscription.end_date|date:"M d, Y" }}</strong></p>
+
+    {% if not subscription.is_active %}
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Subscribe Now</button>
+        </form>
+    {% else %}
+        <p class="text-success">Your subscription is active!</p>
+    {% endif %}
+</div>
+{% endblock %}

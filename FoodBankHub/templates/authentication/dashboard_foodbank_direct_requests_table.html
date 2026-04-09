@@ -1,0 +1,483 @@
+{% if direct_foodbank_requests %}
+<div id="direct-requests-table-wrap">
+<div class="card direct-requests-table-card" style="border: 1px solid #e9ecef; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+    <div class="card-body" style="padding: 1.5rem;">
+        <div class="table-responsive" style="border: none;">
+            <table class="table table-hover table-bordered-full direct-requests-table">
+                <thead>
+                    <tr>
+                        <th>S/No</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Qty/Amount</th>
+                        <th>Donor</th>
+                        <th>Delivery</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for direct_request in direct_foodbank_requests %}
+                    <tr>
+                        <td class="text-center">{{ forloop.counter }}</td>
+                        <td>
+                            {% if direct_request.deadline %}
+                                {{ direct_request.deadline|date:"M d, Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ direct_request.get_donation_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if direct_request.donation_type == 'money' or direct_request.category_display|lower == 'money' %}
+                                <span class="badge bg-info text-dark">Monetary</span>
+                            {% else %}
+                                <span class="badge bg-info text-dark">{{ direct_request.category_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ direct_request.title|default:"Untitled Request" }}</strong>
+                                <br>
+                                <small class="text-muted">{{ direct_request.description|truncatewords:10 }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if direct_request.status_label == 'Donation Made' or direct_request.get_foodbank_requests_status_label == 'Donation Made' %}
+                            {% with requested_unit_label=direct_request.custom_unit|default:direct_request.get_quantity_unit_display|default:direct_request.quantity_unit|default:'' %}
+                            {% for donation in direct_request.donations.all %}
+                                {% if donation.status == 'pending' %}
+                                    <div style="line-height: 1.3;">
+                                        {% if donation.donation_type == 'item' %}
+                                            <span class="text-primary fw-semibold">{{ donation.quantity|default:0 }} (of {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)</span>
+                                        {% elif donation.donation_type == 'money' %}
+                                            <span class="text-primary fw-semibold">KES {{ donation.amount|floatformat:0 }} (for {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)</span>
+                                        {% elif donation.donation_type == 'subsidized' %}
+                                            <span class="text-primary fw-semibold">
+                                                KES {{ donation.subsidized_price|default:0|floatformat:2 }}
+                                                {% if donation.subsidized_market_price or donation.subsidized_initial_amount %}
+                                                    (Market KES {{ donation.subsidized_market_price|default:donation.subsidized_initial_amount|floatformat:2 }})
+                                                {% endif %}
+                                                (for {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)
+                                            </span>
+                                        {% else %}
+                                            <span class="text-primary fw-semibold">{{ donation.quantity|default:donation.amount|default:0 }} (of {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                            {% elif direct_request.status_label == 'Declined' or direct_request.get_foodbank_requests_status_label == 'Declined' %}
+                            {% with requested_unit_label=direct_request.custom_unit|default:direct_request.get_quantity_unit_display|default:direct_request.quantity_unit|default:'' %}
+                            {% for donation in direct_request.donations.all %}
+                                {% if donation.status == 'declined' %}
+                                    <div style="line-height: 1.3;">
+                                        {% if donation.donation_type == 'item' %}
+                                            <span class="text-muted">{{ donation.quantity|default:0 }} (of {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)</span>
+                                        {% elif donation.donation_type == 'money' %}
+                                            <span class="text-muted">KES {{ donation.amount|floatformat:0 }} (for {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)</span>
+                                        {% elif donation.donation_type == 'subsidized' %}
+                                            <span class="text-muted">
+                                                KES {{ donation.subsidized_price|default:0|floatformat:2 }}
+                                                {% if donation.subsidized_market_price or donation.subsidized_initial_amount %}
+                                                    (Market KES {{ donation.subsidized_market_price|default:donation.subsidized_initial_amount|floatformat:2 }})
+                                                {% endif %}
+                                                (for {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">{{ donation.quantity|default:donation.amount|default:0 }} (of {{ direct_request.quantity_needed|default:0 }} {{ requested_unit_label }} requested)</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                            {% else %}
+                            <div style="white-space: pre-line;">
+                                {% if direct_request.get_fulfillment_qty_amount_display and direct_request.get_fulfillment_qty_amount_display != '-' %}
+                                    {{ direct_request.get_fulfillment_qty_amount_display }}
+                                {% else %}
+                                    {{ direct_request.quantity_needed }}
+                                    {% if direct_request.quantity_unit == 'other' and direct_request.custom_unit %}
+                                        {{ direct_request.custom_unit }}
+                                    {% else %}
+                                        {{ direct_request.quantity_unit }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% if direct_request.total_received and direct_request.quantity_needed or direct_request.total_received and direct_request.stock_is_monetary %}
+                                {% with used=direct_request.stock_used|default:0 required=direct_request.stock_required|default:0 remaining=direct_request.stock_remaining|default:0 is_money=direct_request.stock_is_monetary|default:False %}
+                                    {% if required and used >= required %}
+                                        <span class="badge bg-danger mt-2" style="font-size: 0.7rem;">
+                                            <i class="fas fa-box-open me-1"></i> Out of Stock
+                                        </span>
+                                    {% elif used > 0 %}
+                                        <div class="mt-2" style="font-size: 0.75rem; line-height: 1.2;">
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">
+                                                <i class="fas fa-chart-line me-1"></i> Used Stock: {% if is_money %}KES {% endif %}{{ used|floatformat:"-2" }}{% if not is_money %}{% if direct_request.quantity_unit == 'other' and direct_request.custom_unit %} {{ direct_request.custom_unit }}{% else %} {{ direct_request.quantity_unit|default:"pieces" }}{% endif %}{% endif %} / {% if is_money %}KES {% endif %}{{ required|floatformat:"-2" }}{% if not is_money %}{% if direct_request.quantity_unit == 'other' and direct_request.custom_unit %} {{ direct_request.custom_unit }}{% else %} {{ direct_request.quantity_unit|default:"pieces" }}{% endif %}{% endif %}
+                                            </span>
+                                            <div class="text-muted mt-1">
+                                                Remaining Stock: {% if is_money %}KES {% endif %}{{ remaining|floatformat:"-2" }}{% if not is_money %}{% if direct_request.quantity_unit == 'other' and direct_request.custom_unit %} {{ direct_request.custom_unit }}{% else %} {{ direct_request.quantity_unit|default:"pieces" }}{% endif %}{% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-success mt-2" style="font-size: 0.7rem;">
+                                            <i class="fas fa-check-circle me-1"></i> In Stock
+                                        </span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% with donations=direct_request.donations.all %}
+                                {% if donations %}
+                                    {% for donation in donations %}
+                                        <div class="small">
+                                            {% if donation.donor %}
+                                                {% if donation.donor.donor_profile %}
+                                                    {{ donation.donor.donor_profile.full_name|default:donation.donor.email }}
+                                                {% else %}
+                                                    {{ donation.donor.email }}
+                                                {% endif %}
+                                            {% else %}
+                                                Not donated
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">Not donated</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {{ direct_request.delivery_display }}
+                        </td>
+                        <td>
+                            {% with status_label=direct_request.status_label|default:direct_request.get_foodbank_requests_status_label %}
+                                {% if status_label == 'Sent to Donors' %}
+                                    <span class="badge bg-info">{{ status_label }}</span>
+                                {% elif status_label == 'Donation Made' %}
+                                    <span class="badge bg-warning text-dark">{{ status_label }}</span>
+                                {% elif status_label == 'Fulfilled' %}
+                                    <span class="badge bg-success">{{ status_label }}</span>
+                                {% elif status_label == 'Partially Fulfilled' %}
+                                    <span class="badge bg-warning text-dark">{{ status_label }}</span>
+                                {% elif status_label == 'Declined' %}
+                                    <span class="badge bg-danger">{{ status_label }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ status_label|default:direct_request.get_status_display }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% with donations=direct_request.donations.all %}
+                                {% if donations %}
+                                    {% for donation in donations %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary mb-1 view-request-note-direct"
+                                                data-request-title="{{ direct_request.title|default:'Request'|escapejs }}"
+                                                data-donor-name="{% if donation.donor %}{% if donation.donor.donor_profile %}{{ donation.donor.donor_profile.full_name|default:donation.donor.email|escapejs }}{% else %}{{ donation.donor.email|escapejs }}{% endif %}{% else %}Not donated{% endif %}"
+                                                data-donor-note="{% if donation.message %}{{ donation.message|escapejs }}{% elif donation.other_description %}{{ donation.other_description|escapejs }}{% elif donation.csr_description %}{{ donation.csr_description|escapejs }}{% endif %}"
+                                                data-decision-note="{{ donation.decline_message|default_if_none:''|escapejs }}"
+                                                data-decision-label="{% if donation.status == 'accepted' %}Acceptance Note{% elif donation.status == 'declined' %}Rejection Note{% else %}Decision Note{% endif %}">
+                                            <i class="fas fa-sticky-note me-1"></i>View
+                                        </button>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">No notes</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {{ direct_request.created_at|date:"M d, Y" }}
+                        </td>
+                        <td>
+                            {% with pending_donations=direct_request.donations.all %}
+                                {% for donation in pending_donations %}
+                                    {% if donation.status == 'pending' %}
+                                        <div class="mt-1 p-1" style="border: 1px solid rgba(15,23,42,0.08); border-radius: 6px; background: rgba(245,158,11,0.08);">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'accept_request_donation' donation.id %}?next={% url 'dashboard' %}?tab=direct" class="btn btn-success" title="Accept">
+                                                    <i class="fas fa-check"></i> Accept
+                                                </a>
+                                                <a href="{% url 'reject_request_donation' donation.id %}?next={% url 'dashboard' %}?tab=direct" class="btn btn-danger" title="Reject">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="padding: 0.75rem 0; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; margin: 0 -1.5rem -1.5rem; padding: 0.75rem 1.5rem;">
+            <div style="color: #475569; font-weight: 500;">
+                Showing {{ direct_foodbank_requests|length }} of {{ direct_foodbank_requests_count }} direct requests
+            </div>
+            <a href="{% url 'foodbank_requests' %}" class="btn btn-outline-primary btn-sm">
+                View All
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Request Notes Modal (shared for direct requests table) -->
+<div class="modal fade" id="requestNotesModalDirectRequests" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-sticky-note me-2"></i>Notes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Donor Note:</strong>
+                    <div id="requestNotesDonorBodyDirect" class="mt-1" style="white-space: pre-wrap;"></div>
+                </div>
+                <div>
+                    <strong id="requestNotesDecisionLabelDirect">Decision Note:</strong>
+                    <div id="requestNotesDecisionBodyDirect" class="mt-1" style="white-space: pre-wrap;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.direct-requests-table-card .table-bordered-full {
+    border: 1px solid #dee2e6 !important;
+}
+.direct-requests-table-card .table-bordered-full th,
+.direct-requests-table-card .table-bordered-full td {
+    border: 1px solid #dee2e6 !important;
+}
+.direct-requests-table-card .table-bordered-full thead th {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+.direct-requests-table-card .table {
+    border: none;
+    font-size: 0.85rem;
+    line-height: 1.15;
+    table-layout: fixed;
+    width: 100%;
+    min-width: 0;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(1),
+.direct-requests-table-card .direct-requests-table td:nth-child(1) { width: 44px; }
+.direct-requests-table-card .direct-requests-table th:nth-child(2),
+.direct-requests-table-card .direct-requests-table td:nth-child(2) { width: 92px; }
+.direct-requests-table-card .direct-requests-table th:nth-child(3),
+.direct-requests-table-card .direct-requests-table td:nth-child(3) {
+    width: 96px;
+    min-width: 96px;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(4),
+.direct-requests-table-card .direct-requests-table td:nth-child(4) {
+    width: 124px;
+    min-width: 124px;
+}
+.direct-requests-table-card .table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    padding: 0.5rem 0.6rem;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+}
+.direct-requests-table-card .table tbody tr {
+    border-bottom: 1px solid #f1f3f5;
+    transition: background-color 0.2s ease;
+}
+.direct-requests-table-card .table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+.direct-requests-table-card .table tbody td {
+    padding: 0.5rem 0.6rem;
+    vertical-align: middle;
+    border-top: none;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(5),
+.direct-requests-table-card .direct-requests-table td:nth-child(5) {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(6),
+.direct-requests-table-card .direct-requests-table td:nth-child(6) {
+    width: 160px;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow: hidden;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(7),
+.direct-requests-table-card .direct-requests-table td:nth-child(7) {
+    width: 120px;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(8),
+.direct-requests-table-card .direct-requests-table td:nth-child(8) { width: 86px; }
+.direct-requests-table-card .direct-requests-table th:nth-child(9),
+.direct-requests-table-card .direct-requests-table td:nth-child(9) {
+    width: 130px;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+.direct-requests-table-card .direct-requests-table td:nth-child(3),
+.direct-requests-table-card .direct-requests-table td:nth-child(4),
+.direct-requests-table-card .direct-requests-table td:nth-child(9) {
+    overflow: hidden;
+}
+.direct-requests-table-card .direct-requests-table td:nth-child(3) .badge,
+.direct-requests-table-card .direct-requests-table td:nth-child(4) .badge {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap !important;
+    word-break: normal;
+    overflow-wrap: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    text-align: left;
+}
+.direct-requests-table-card .direct-requests-table td:nth-child(9) .badge {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal !important;
+    word-break: normal;
+    overflow-wrap: normal;
+    line-height: 1.2;
+    text-align: left;
+}
+.direct-requests-table-card .direct-requests-table td:nth-child(6) .badge {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    text-align: left;
+}
+.direct-requests-table-card .direct-requests-table th:nth-child(10),
+.direct-requests-table-card .direct-requests-table td:nth-child(10) { width: 86px; }
+.direct-requests-table-card .direct-requests-table th:nth-child(11),
+.direct-requests-table-card .direct-requests-table td:nth-child(11) { width: 96px; }
+.direct-requests-table-card .direct-requests-table th:nth-child(12),
+.direct-requests-table-card .direct-requests-table td:nth-child(12) { width: 110px; }
+.direct-requests-table-card .direct-requests-table td:nth-child(5) strong,
+.direct-requests-table-card .direct-requests-table td:nth-child(5) small {
+    display: block;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+}
+.direct-requests-table-card .badge {
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+}
+.direct-requests-table-card .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+.direct-requests-table-card .direct-requests-table td:nth-child(12) .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+.direct-requests-table-card .direct-requests-table td:nth-child(12) .btn-group .btn {
+    width: 100%;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+}
+#requestNotesModalDirectRequests .modal-body {
+    overflow-x: hidden;
+}
+#requestNotesModalDirectRequests .modal-content {
+    overflow: hidden;
+}
+#requestNotesDonorBodyDirect,
+#requestNotesDecisionBodyDirect {
+    white-space: pre-wrap;
+    word-break: break-word;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    display: block;
+}
+</style>
+
+<script>
+(function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        var wrap = document.getElementById('direct-requests-table-wrap');
+        if (!wrap) return;
+        var modalEl = document.getElementById('requestNotesModalDirectRequests');
+        var modal = modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
+        if (!modal) return;
+        var donorBody = document.getElementById('requestNotesDonorBodyDirect');
+        var decisionLabel = document.getElementById('requestNotesDecisionLabelDirect');
+        var decisionBody = document.getElementById('requestNotesDecisionBodyDirect');
+        wrap.querySelectorAll('.view-request-note-direct').forEach(function(button) {
+            button.addEventListener('click', function () {
+                var donorNote = this.getAttribute('data-donor-note') || 'No donor note';
+                var decisionNote = this.getAttribute('data-decision-note') || 'No note';
+                var decisionNoteLabel = this.getAttribute('data-decision-label') || 'Decision Note';
+                if (donorBody) donorBody.textContent = donorNote;
+                if (decisionLabel) decisionLabel.textContent = decisionNoteLabel + ':';
+                if (decisionBody) decisionBody.textContent = decisionNote;
+                modal.show();
+            });
+        });
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (donorBody) donorBody.textContent = '';
+                if (decisionLabel) decisionLabel.textContent = 'Decision Note:';
+                if (decisionBody) decisionBody.textContent = '';
+            });
+        }
+    });
+})();
+</script>
+{% else %}
+<div class="empty-state" style="text-align: center; padding: 3rem 1rem; border: 2px dashed #e2e8f0; border-radius: 12px; background: #f8fafc;">
+    <div style="width: 64px; height: 64px; margin: 0 auto 1rem; border-radius: 50%; background: #e0f2fe; display: flex; align-items: center; justify-content: center; color: #0369a1;">
+        <i class="fas fa-bullhorn" style="font-size: 1.5rem;"></i>
+    </div>
+    <h4 style="color: #0f172a; font-weight: 600;">No Direct Requests Yet</h4>
+    <p style="color: #64748b; max-width: 460px; margin: 0.5rem auto 1.5rem;">
+        Create a direct request to broadcast your needs to donors without waiting for recipient submissions.
+    </p>
+    <a href="{% url 'create_foodbank_request' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>Create Direct Request
+    </a>
+</div>
+{% endif %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Request - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background-color: #1e1e1e; min-height: 100vh;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Edit Request</h4>
+                        <a href="{% url 'recipient_requests_view' %}" class="btn btn-sm btn-secondary">Back</a>
+                    </div>
+                    <div class="card-body bg-secondary text-light">
+                        <form method="POST" novalidate>
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <div class="text-end mt-4">
+                                <button type="submit" class="btn btn-success px-4">Save Changes</button>
+                                <a href="{% url 'recipient_requests_view' %}" class="btn btn-outline-light px-4">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Make form inputs blend better with dark theme */
+    input, select, textarea {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        border-radius: 8px !important;
+        border: 1px solid #ced4da !important;
+        padding: 10px !important;
+        width: 100%;
+    }
+
+    label {
+        font-weight: 500;
+        color: #ffffff;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        border: none;
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+    }
+</style>
+{% endblock %}

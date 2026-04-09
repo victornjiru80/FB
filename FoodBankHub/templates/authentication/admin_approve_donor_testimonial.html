@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approve Donor Testimonial - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header Section -->
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h2 class="h3 mb-1">Approve Donor Testimonial</h2>
+                <p class="text-muted">Review and approve this testimonial for public display</p>
+            </div>
+
+            <!-- Testimonial Preview Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">
+                                <i class="fas fa-user text-primary me-2"></i>
+                                {{ testimonial.donor.full_name|default:testimonial.donor.user.email }}
+                            </h6>
+                            <small class="text-muted">{{ testimonial.donor.user.email }}</small>
+                        </div>
+                        <span class="badge bg-warning">
+                            <i class="fas fa-clock me-1"></i>Pending Review
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if testimonial.impact_image %}
+                    <div class="text-center mb-4">
+                        <img src="{{ testimonial.impact_image.url }}" alt="Impact Image" 
+                             class="img-fluid rounded" style="max-height: 300px;">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Testimonial Message:</h6>
+                        <p class="lead">{{ testimonial.message }}</p>
+                    </div>
+                    
+                    <div class="row text-muted small">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <i class="fas fa-calendar me-2"></i>
+                                <strong>Submitted:</strong> {{ testimonial.created_at|date:"M d, Y H:i" }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <i class="fas fa-eye me-2"></i>
+                                <strong>Public Display:</strong> 
+                                {% if testimonial.display_on_public %}
+                                    <span class="text-success">Yes</span>
+                                {% else %}
+                                    <span class="text-warning">No (Private)</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval Info -->
+            <div class="alert alert-success">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>Approval Process
+                </h6>
+                <p class="mb-0">
+                    By approving this testimonial, it will be marked as approved and 
+                    {% if testimonial.display_on_public %}
+                        will be displayed publicly for 1 week by default.
+                    {% else %}
+                        will remain private as requested by the donor.
+                    {% endif %}
+                    The donor will be able to toggle public visibility if approved.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{% url 'admin_donor_testimonials_pending' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Pending
+                </a>
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Approve Testimonial
+                    </button>
+                </form>
+                <a href="{% url 'admin_reject_donor_testimonial' testimonial.id %}" class="btn btn-outline-danger">
+                    <i class="fas fa-times me-2"></i>Reject Instead
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-success {
+    border-left: 4px solid #198754;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.lead {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+</style>
+{% endblock %}

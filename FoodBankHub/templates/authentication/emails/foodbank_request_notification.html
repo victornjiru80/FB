@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Food Bank Request - FoodBank Hub</title>
+</head>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; margin: 0; padding: 2rem;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 1rem; box-shadow: 0 4px 24px rgba(102,126,234,0.08); overflow: hidden;">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 2rem; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 1.8rem; font-weight: 700;">
+                <span style="display: inline-block; margin-right: 0.5rem;">🚨</span>
+                Help Needed in Your Community
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1rem;">
+                A local food bank needs your support
+            </p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 2rem;">
+            <p style="color: #374151; font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                Dear {{ donor.get_full_name|default:donor.email }},
+            </p>
+            
+            <p style="color: #374151; font-size: 1rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                A food bank in your area has posted a new request for assistance. Your past generosity has made a real difference, and we thought you'd want to know about this opportunity to help again.
+            </p>
+
+            <!-- Request Details Card -->
+            <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 0.75rem; padding: 1.5rem; margin: 1.5rem 0;">
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <span style="color: white; font-size: 1.5rem;">🏪</span>
+                    </div>
+                    <div>
+                        <h3 style="color: #92400e; margin: 0; font-size: 1.3rem; font-weight: 700;">
+                            {{ request.foodbank.foodbank_name }}
+                        </h3>
+                        <p style="color: #92400e; margin: 0; font-size: 0.9rem;">
+                            📍 {{ request.foodbank.address|truncatechars:50 }}
+                        </p>
+                    </div>
+                </div>
+                
+                <h4 style="color: #92400e; margin: 0 0 0.75rem 0; font-size: 1.2rem; font-weight: 600;">
+                    "{{ request.title }}"
+                </h4>
+                
+                <p style="color: #92400e; margin: 0 0 1rem 0; line-height: 1.5;">
+                    {{ request.description|truncatewords:30 }}
+                </p>
+
+                <!-- Request Meta Info -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    {% if request.quantity_needed %}
+                    <div>
+                        <strong style="color: #92400e; font-size: 0.9rem;">Quantity Needed:</strong><br>
+                        <span style="color: #92400e; font-size: 1.1rem; font-weight: 600;">
+                            {{ request.quantity_needed }} {{ request.quantity_unit|default:"items" }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if request.deadline %}
+                    <div>
+                        <strong style="color: #92400e; font-size: 0.9rem;">Deadline:</strong><br>
+                        <span style="color: #dc2626; font-size: 1.1rem; font-weight: 600;">
+                            {{ request.deadline|date:"M d, Y" }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Priority Badge -->
+                <div style="margin-top: 1rem;">
+                    <span style="
+                        {% if request.priority == 'urgent' %}
+                            background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+                        {% elif request.priority == 'high' %}
+                            background: #fffbeb; color: #d97706; border: 1px solid #fed7aa;
+                        {% elif request.priority == 'medium' %}
+                            background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;
+                        {% else %}
+                            background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;
+                        {% endif %}
+                        padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        {% if request.priority == 'urgent' %}🚨{% elif request.priority == 'high' %}⬆️{% elif request.priority == 'medium' %}➖{% else %}⬇️{% endif %}
+                        {{ request.priority|title }} Priority
+                    </span>
+                </div>
+            </div>
+
+            <!-- Why This Matters -->
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.75rem; padding: 1.5rem; margin: 1.5rem 0;">
+                <h4 style="color: #1e40af; margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">
+                    💙 Why Your Help Matters
+                </h4>
+                <p style="color: #1e40af; margin: 0; line-height: 1.6;">
+                    {% if request.priority == 'urgent' %}
+                        This is an urgent request that requires immediate attention. Families are counting on donations like yours to meet their basic needs.
+                    {% elif request.priority == 'high' %}
+                        This high-priority request addresses critical food shortages in the community. Your contribution can make an immediate impact.
+                    {% else %}
+                        This request helps maintain consistent food supplies for ongoing community support programs.
+                    {% endif %}
+                    Every donation, no matter the size, brings hope to families facing food insecurity.
+                </p>
+            </div>
+
+            <!-- How You Can Help -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 1.5rem; margin: 1.5rem 0;">
+                <h4 style="color: #166534; margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">
+                    🤝 How You Can Help
+                </h4>
+                <ul style="color: #166534; margin: 0; padding-left: 1.5rem; line-height: 1.6;">
+                    <li>Donate the specific items requested</li>
+                    <li>Make a monetary contribution for purchasing needed items</li>
+                    <li>Share this request with friends and family</li>
+                    <li>Volunteer your time to help with distribution</li>
+                </ul>
+            </div>
+
+            <!-- Call to Action Buttons -->
+            <div style="text-align: center; margin: 2rem 0;">
+                <a href="{{ site_url }}/donate/{{ request.id }}/" 
+                   style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; text-decoration: none; padding: 0.75rem 2rem; border-radius: 2rem; font-weight: 600; display: inline-block; margin: 0.5rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                    🎁 Donate Now
+                </a>
+                
+                <a href="{{ site_url }}/foodbank-requests/" 
+                   style="background: transparent; color: #3b82f6; text-decoration: none; padding: 0.75rem 2rem; border-radius: 2rem; font-weight: 600; display: inline-block; margin: 0.5rem; border: 2px solid #3b82f6;">
+                    📋 View All Requests
+                </a>
+            </div>
+
+            <!-- Your Impact Reminder -->
+            {% if donor.donorprofile.total_donations_count > 0 %}
+            <div style="background: #fef7ff; border: 1px solid #e879f9; border-radius: 0.75rem; padding: 1.5rem; margin: 1.5rem 0; text-align: center;">
+                <h4 style="color: #a21caf; margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 600;">
+                    🌟 Your Amazing Impact So Far
+                </h4>
+                <p style="color: #a21caf; margin: 0; font-size: 1.1rem; line-height: 1.5;">
+                    You've made <strong>{{ donor.donorprofile.total_donations_count }}</strong> donation{{ donor.donorprofile.total_donations_count|pluralize }} 
+                    and helped feed families in our community. Thank you for your continued generosity!
+                </p>
+            </div>
+            {% endif %}
+
+            <p style="color: #6b7280; font-size: 0.9rem; line-height: 1.5; margin: 2rem 0 0 0; text-align: center;">
+                Thank you for being a champion in the fight against hunger. 
+                Your compassion and generosity continue to transform lives in our community.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f9fafb; padding: 1.5rem; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; margin: 0; font-size: 0.875rem;">
+                Don't want to receive these notifications? 
+                <a href="{{ site_url }}/donor/settings/" style="color: #3b82f6; text-decoration: none;">Update your preferences</a>
+            </p>
+            <p style="color: #9ca3af; margin: 0.5rem 0 0 0; font-size: 0.8rem;">
+                With gratitude,<br>
+                <strong>The FoodBank Hub Team</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

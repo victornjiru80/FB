@@ -1,0 +1,391 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard | FoodBankHub{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard-bg">
+<div class="container-fluid mt-4">
+    <!-- Custom Header/Banner -->
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="display-5 fw-bold text-primary mb-0">Admin Dashboard</h1>
+            <div class="text-muted">System administration and analytics</div>
+        </div>
+    </div>
+    <hr class="mb-4">
+    <!-- Quick Actions Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <span class="fw-bold text-secondary me-2"><i class="fas fa-bolt me-1 text-warning"></i>Quick Actions:</span>
+                <a href="/admin/authentication/customuser/add/" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-plus me-1"></i>Add User</a>
+                <a href="/admin/authentication/donation/" class="btn btn-outline-success btn-sm"><i class="fas fa-gift me-1"></i>View All Donations</a>
+                <a href="/admin/authentication/foodbankprofile/" class="btn btn-outline-info btn-sm"><i class="fas fa-warehouse me-1"></i>View All Foodbanks</a>
+                <a href="{% url 'admin_testimonials_pending' %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-clock me-1"></i>Pending Testimonials</a>
+                <a href="{% url 'admin_all_testimonials' %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-comments me-1"></i>All Testimonials</a>
+            </div>
+        </div>
+    </div>
+    <!-- Collapsible KPI Cards Section -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="admin-dashboard-section-title mb-0">Key Metrics</h2>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#kpiSection" aria-expanded="true" aria-controls="kpiSection">
+            <i class="fas fa-chevron-down"></i> Toggle
+        </button>
+    </div>
+    <div class="collapse show" id="kpiSection">
+        <div class="row mb-4 g-3">
+            <div class="col-md-2 col-6">
+                <div class="card text-white bg-primary shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="h2"><i class="fas fa-users me-2"></i>{{ total_users }}</div>
+                        <div class="small">Total Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <div class="card text-white bg-success shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="h2"><i class="fas fa-hand-holding-heart me-2"></i>{{ total_donors }}</div>
+                        <div class="small">Donors</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <div class="card text-white bg-info shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="h2"><i class="fas fa-warehouse me-2"></i>{{ total_foodbanks }}</div>
+                        <div class="small">Foodbanks</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <div class="card text-white bg-warning shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="h2"><i class="fas fa-users me-2"></i>{{ total_recipients }}</div>
+                        <div class="small">Recipients</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <div class="card text-white bg-secondary shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="h2"><i class="fas fa-gift me-2"></i>{{ total_donations }}</div>
+                        <div class="small">Donations</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <div class="card text-white bg-dark shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="h2"><i class="fas fa-coins me-2"></i>${{ total_donated_amount }}</div>
+                        <div class="small">Total Donated</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr class="mb-4">
+    <!-- Collapsible Charts Section -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="admin-dashboard-section-title mb-0">Charts & Trends</h2>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#chartsSection" aria-expanded="true" aria-controls="chartsSection">
+            <i class="fas fa-chevron-down"></i> Toggle
+        </button>
+    </div>
+    <div class="collapse show" id="chartsSection">
+        <div class="row mb-4 g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-pie me-2 text-primary"></i>User Types</h5>
+                        <canvas id="userTypePie"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-line me-2 text-success"></i>Registrations (Last 12 Months)</h5>
+                        <canvas id="registrationLine"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-bar me-2 text-warning"></i>Donations by Type</h5>
+                        <canvas id="donationBar"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr class="mb-4">
+    <!-- Reports Filters -->
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <select id="reportTypeFilter" class="form-select form-select-sm">
+                <option value="">All Report Types</option>
+                <option>User Summary</option>
+                <option>Donations Summary</option>
+                <option>Top Donors</option>
+                <option>Top Foodbanks</option>
+                <option>Monthly Registration</option>
+                <option>Donation Trends</option>
+                <option>Active vs. Inactive Users</option>
+                <option>Pending Deliveries</option>
+                <option>Recipient Impact</option>
+                <option>Urgent Requests</option>
+            </select>
+        </div>
+        <div class="col-md-4 mb-2">
+            <input type="text" id="dateRangeFilter" class="form-control form-control-sm" placeholder="Date Range (coming soon)" disabled>
+        </div>
+    </div>
+    <!-- Collapsible Reports Section -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="admin-dashboard-section-title mb-0">Reports</h2>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reportsSection" aria-expanded="true" aria-controls="reportsSection">
+            <i class="fas fa-chevron-down"></i> Toggle
+        </button>
+    </div>
+    <div class="collapse show" id="reportsSection">
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Reports</h4>
+                        <div class="table-responsive">
+                            <table id="reportsTable" class="table table-bordered table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Report Name</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>User Summary</td>
+                                        <td>Summary of all users by type and registration date.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/user_summary/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Donations Summary</td>
+                                        <td>Summary of all donations by type and amount.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/donations_summary/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Top Donors</td>
+                                        <td>Top donors by total amount and number of donations.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/top_donors/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Top Foodbanks</td>
+                                        <td>Top foodbanks by total amount and number of donations received.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/top_foodbanks/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monthly Registration</td>
+                                        <td>Registrations by user type for each of the last 12 months.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/monthly_registration/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Donation Trends</td>
+                                        <td>Monthly donation counts and totals by type for the last 12 months.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/donation_trends/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Active vs. Inactive Users</td>
+                                        <td>List of users with status, last login, and registration date.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/active_inactive_users/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pending Deliveries</td>
+                                        <td>All donations with pending, scheduled, or in-transit delivery status.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/pending_deliveries/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Recipient Impact</td>
+                                        <td>Summary of recipients, their location, and donations received.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/recipient_impact/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Urgent Requests</td>
+                                        <td>Recent urgent donation requests from foodbanks or users.</td>
+                                        <td><a class="btn btn-outline-primary btn-sm" href="/admin/dashboard/export_report/urgent_requests/" target="_blank">Export as PDF</a></td>
+                                    </tr>
+                                    <!-- Add more reports here as implemented -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner Overlay -->
+<div id="dashboardLoading" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2000;background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;">
+    <div class="text-center">
+        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+        <div class="fw-bold text-primary">Loading dashboard...</div>
+    </div>
+</div>
+
+<!-- Fallback loading spinner hide -->
+<script>
+// Fallback to hide loading spinner if jQuery fails
+setTimeout(function() {
+    var loadingSpinner = document.getElementById('dashboardLoading');
+    if (loadingSpinner && loadingSpinner.style.display !== 'none') {
+        loadingSpinner.style.display = 'none';
+    }
+}, 1500); // Hide after 1.5 seconds as fallback
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // User Types Pie Chart
+    const userTypePie = new Chart(document.getElementById('userTypePie'), {
+        type: 'pie',
+        data: {
+            labels: JSON.parse('{{ user_type_labels|escapejs }}'),
+            datasets: [{
+                data: JSON.parse('{{ user_type_data|escapejs }}'),
+                backgroundColor: [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
+                ],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 14 } } },
+                title: { display: true, text: 'User Types', font: { size: 18 } },
+                tooltip: { enabled: true, callbacks: { label: function(context) { return context.label + ': ' + context.parsed + ' users'; } } }
+            }
+        }
+    });
+
+    // Registrations Line Chart
+    const registrationLine = new Chart(document.getElementById('registrationLine'), {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ registration_months|escapejs }}'),
+            datasets: [{
+                label: 'Registrations',
+                data: JSON.parse('{{ registration_counts|escapejs }}'),
+                fill: true,
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                pointBackgroundColor: '#4e73df',
+                pointBorderColor: '#fff',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top', labels: { font: { size: 14 } } },
+                title: { display: true, text: 'Registrations (Last 12 Months)', font: { size: 18 } },
+                tooltip: { enabled: true, callbacks: { label: function(context) { return 'Registrations: ' + context.parsed.y; } } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Donations Bar Chart
+    const donationBar = new Chart(document.getElementById('donationBar'), {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ donation_type_labels|escapejs }}'),
+            datasets: [{
+                label: 'Donations',
+                data: JSON.parse('{{ donation_type_data|escapejs }}'),
+                backgroundColor: [
+                    '#1cc88a', '#4e73df', '#f6c23e', '#e74a3b', '#36b9cc', '#858796'
+                ],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top', labels: { font: { size: 14 } } },
+                title: { display: true, text: 'Donations by Type', font: { size: 18 } },
+                tooltip: { enabled: true, callbacks: { label: function(context) { return context.label + ': ' + context.parsed.y + ' donations'; } } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// Remove the exportReport JS function since we now use direct links
+</script>
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script>
+// Use Django's jQuery instance to avoid conflicts
+(function($) {
+    $(document).ready(function() {
+        // Hide loading spinner after everything is ready
+        setTimeout(function() {
+            $('#dashboardLoading').fadeOut(150);
+        }, 300);
+        
+        var table = $('#reportsTable').DataTable({
+            paging: false,
+            info: false,
+            searching: true,
+            ordering: true,
+            columnDefs: [ { orderable: false, targets: 2 } ],
+            language: { search: "Filter reports:" },
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'csvHtml5',
+                    text: '<i class="fas fa-file-csv me-1"></i>Export CSV',
+                    className: 'btn btn-outline-secondary btn-sm mb-2'
+                },
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel me-1"></i>Export Excel',
+                    className: 'btn btn-outline-success btn-sm mb-2'
+                }
+            ]
+        });
+        
+        $('#reportTypeFilter').on('change', function() {
+            var val = $(this).val();
+            table.column(0).search(val, true, false).draw();
+        });
+    });
+})(django.jQuery);
+</script>
+{% endblock %} 

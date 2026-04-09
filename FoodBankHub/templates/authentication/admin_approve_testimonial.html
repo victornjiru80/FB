@@ -1,0 +1,82 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Approve Testimonial - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Approve Testimonial
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Approving this testimonial will make it visible on the public portal for <strong>1 week</strong> 
+                        (from today until {{ testimonial.display_start_date|date:"M d, Y"|default:"7 days from now" }}).
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <strong>Testimonial Details</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Submitted by:</strong>
+                                {% if testimonial.recipient.is_organization %}
+                                    {{ testimonial.recipient.organization_name }}
+                                {% else %}
+                                    {{ testimonial.recipient.full_name }}
+                                {% endif %}
+                                ({{ testimonial.recipient.user.email }})
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Submitted on:</strong> {{ testimonial.created_at|date:"F d, Y H:i" }}
+                            </div>
+
+                            {% if testimonial.impact_image %}
+                                <div class="mb-3">
+                                    <strong>Impact Photo:</strong><br>
+                                    <img src="{{ testimonial.impact_image.url }}" alt="Impact photo" class="img-fluid rounded mt-2" style="max-height: 300px;">
+                                </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <strong>Message:</strong>
+                                <p class="mt-2 p-3 bg-light rounded">{{ testimonial.message }}</p>
+                            </div>
+
+                            <div>
+                                <strong>Public Display:</strong>
+                                {% if testimonial.display_on_public %}
+                                    <span class="badge bg-success">Enabled</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Disabled</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'admin_testimonials_pending' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check me-1"></i>Approve & Publish
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

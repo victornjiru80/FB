@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Received Donations - {{ user.foodbank_profile.foodbank_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --gray-50: #f9fafb;
+    }
+
+    body { background: var(--gray-50); }
+
+    .donations-wrapper {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        padding: 0.5rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: #f9fafb;
+    }
+
+    th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        color: #6b7280;
+    }
+
+    tr:hover {
+        background: #f9fafb;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-food { background: #dbeafe; color: #1e40af; }
+    .badge-non-food { background: #fef3c7; color: #92400e; }
+    .badge-monetary { background: #d1fae5; color: #065f46; }
+    .badge-csr { background: #e9d5ff; color: #6b21a8; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-delivered { background: #d1fae5; color: #065f46; }
+    .badge-in-transit { background: #dbeafe; color: #1e40af; }
+    .badge-allocated { background: #d1fae5; color: #065f46; }
+    .badge-unallocated { background: #fee2e2; color: #991b1b; }
+
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #059669;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1.5rem;
+    }
+
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+    }
+
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="donations-wrapper">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-gifts"></i> Received Donations
+            </h1>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_donations }}</div>
+                <div class="stat-label">Total Donations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total_items|floatformat:0 }}</div>
+                <div class="stat-label">Items Received</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total_money|floatformat:0 }}</div>
+                <div class="stat-label">Money Received</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ unallocated_count }}</div>
+                <div class="stat-label">Unallocated</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-card">
+            <form method="get">
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label class="form-label">Donation Type</label>
+                        <select name="type" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="item" {% if selected_type == 'item' %}selected{% endif %}>Item</option>
+                            <option value="money" {% if selected_type == 'money' %}selected{% endif %}>Money</option>
+                            <option value="subsidized" {% if selected_type == 'subsidized' %}selected{% endif %}>Subsidized</option>
+                            <option value="csr" {% if selected_type == 'csr' %}selected{% endif %}>CSR</option>
+                            <option value="other" {% if selected_type == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            <option value="food" {% if selected_category == 'food' %}selected{% endif %}>Food</option>
+                            <option value="non_food" {% if selected_category == 'non_food' %}selected{% endif %}>Non-Food</option>
+                            <option value="monetary" {% if selected_category == 'monetary' %}selected{% endif %}>Monetary</option>
+                            <option value="csr" {% if selected_category == 'csr' %}selected{% endif %}>CSR</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Donor</label>
+                        <select name="donor" class="form-select">
+                            <option value="">All Donors</option>
+                            {% for donor in donors %}
+                            <option value="{{ donor.id }}" {% if selected_donor == donor.id|stringformat:"s" %}selected{% endif %}>
+                                {{ donor.donor_profile.full_name|default:donor.email }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Delivery Status</label>
+                        <select name="delivery_status" class="form-select">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {% if selected_delivery_status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="scheduled" {% if selected_delivery_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                            <option value="in_transit" {% if selected_delivery_status == 'in_transit' %}selected{% endif %}>In Transit</option>
+                            <option value="delivered" {% if selected_delivery_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Allocation Status</label>
+                        <select name="allocation_status" class="form-select">
+                            <option value="">All</option>
+                            <option value="allocated" {% if selected_allocation_status == 'allocated' %}selected{% endif %}>Allocated</option>
+                            <option value="unallocated" {% if selected_allocation_status == 'unallocated' %}selected{% endif %}>Unallocated</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search donations..." value="{{ search_query }}">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'foodbank_donations_list' %}" class="btn btn-outline">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Donations Table -->
+        <div class="table-card">
+            {% if donations %}
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Donor</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Quantity/Amount</th>
+                            <th>Status</th>
+                            <th>Allocated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donations %}
+                        <tr>
+                            <td>{{ donation.donated_at|date:"M d, Y" }}</td>
+                            <td>{{ donation.donor.donor_profile.full_name|default:donation.donor.email }}</td>
+                            <td>{{ donation.get_donation_type_display }}</td>
+                            <td>
+                                <span class="badge badge-{{ donation.donation_category }}">
+                                    {{ donation.get_donation_category_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if donation.donation_type == 'item' %}
+                                    {{ donation.item_name }}
+                                {% elif donation.donation_type == 'money' %}
+                                    Monetary Donation
+                                {% elif donation.donation_type == 'subsidized' %}
+                                    {{ donation.subsidized_product_type }}
+                                {% elif donation.donation_type == 'csr' %}
+                                    CSR - {{ donation.get_csr_subcategory_display }}
+                                {% else %}
+                                    {{ donation.other_description|truncatewords:5 }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donation.donation_type == 'item' %}
+                                    {{ donation.quantity }} {{ donation.quantity_unit }}
+                                {% elif donation.donation_type == 'money' %}
+                                    {{ donation.amount|floatformat:0 }}
+                                {% elif donation.donation_type == 'subsidized' %}
+                                    {{ donation.subsidized_price|floatformat:0 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ donation.delivery_status }}">
+                                    {{ donation.get_delivery_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if donation.is_allocated %}
+                                    <span class="badge badge-allocated">Allocated</span>
+                                {% else %}
+                                    <span class="badge badge-unallocated">Unallocated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'donation_detail' donation.id %}" class="btn btn-outline btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if donations.has_other_pages %}
+            <div class="pagination">
+                {% if donations.has_previous %}
+                    <a href="?page=1{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_donor %}&donor={{ selected_donor }}{% endif %}{% if selected_delivery_status %}&delivery_status={{ selected_delivery_status }}{% endif %}{% if selected_allocation_status %}&allocation_status={{ selected_allocation_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ donations.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_donor %}&donor={{ selected_donor }}{% endif %}{% if selected_delivery_status %}&delivery_status={{ selected_delivery_status }}{% endif %}{% if selected_allocation_status %}&allocation_status={{ selected_allocation_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="current">Page {{ donations.number }} of {{ donations.paginator.num_pages }}</span>
+
+                {% if donations.has_next %}
+                    <a href="?page={{ donations.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_donor %}&donor={{ selected_donor }}{% endif %}{% if selected_delivery_status %}&delivery_status={{ selected_delivery_status }}{% endif %}{% if selected_allocation_status %}&allocation_status={{ selected_allocation_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ donations.paginator.num_pages }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_donor %}&donor={{ selected_donor }}{% endif %}{% if selected_delivery_status %}&delivery_status={{ selected_delivery_status }}{% endif %}{% if selected_allocation_status %}&allocation_status={{ selected_allocation_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-gifts"></i>
+                <h3>No Donations Found</h3>
+                <p>You haven't received any donations yet or no donations match your filters.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

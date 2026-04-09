@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accepted CSR & Other Donations{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-handshake text-primary me-2"></i>Accepted CSR & Other Donations</h2>
+            <p class="text-muted mb-0">View all accepted donations with agreed terms and clauses</p>
+        </div>
+        <a href="{% url 'my_donation_discussions' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Discussions
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-white-50">Total Accepted</h6>
+                            <h3 class="card-title mb-0">{{ total_count }}</h3>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-white-50">CSR Donations</h6>
+                            <h3 class="card-title mb-0">{{ csr_count }}</h3>
+                        </div>
+                        <i class="fas fa-building fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-white-50">Other Donations</h6>
+                            <h3 class="card-title mb-0">{{ other_count }}</h3>
+                        </div>
+                        <i class="fas fa-gift fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="mb-4">
+        <div class="btn-group" role="group">
+            <a href="?type=all" class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                All ({{ total_count }})
+            </a>
+            <a href="?type=csr" class="btn {% if current_filter == 'csr' %}btn-success{% else %}btn-outline-success{% endif %}">
+                CSR ({{ csr_count }})
+            </a>
+            <a href="?type=other" class="btn {% if current_filter == 'other' %}btn-info{% else %}btn-outline-info{% endif %}">
+                Other ({{ other_count }})
+            </a>
+        </div>
+    </div>
+
+    <!-- Donations Table -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Accepted Donations</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if donations %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Donor Details</th>
+                            <th>Description</th>
+                            <th>Agreed Clause</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donations %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">{{ donation.donated_at|date:"M d, Y" }}</small>
+                                <br>
+                                <small class="text-muted">{{ donation.donated_at|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if donation.donation_type == 'csr' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-building me-1"></i>CSR
+                                    </span>
+                                    {% if donation.csr_subcategory %}
+                                    <br>
+                                    <small class="text-muted">{{ donation.get_csr_subcategory_display }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-gift me-1"></i>Other
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-primary text-white me-2">
+                                        {{ donation.donor.email|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ donation.donor.email }}</strong>
+                                        {% if donation.donor.donor_profile %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if donation.donor.donor_profile.organization_name %}
+                                                <i class="fas fa-building me-1"></i>{{ donation.donor.donor_profile.organization_name }}
+                                            {% else %}
+                                                <i class="fas fa-user me-1"></i>{{ donation.donor.donor_profile.full_name|default:"Individual Donor" }}
+                                            {% endif %}
+                                        </small>
+                                        {% if donation.donor.donor_profile.phone_number %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone me-1"></i>{{ donation.donor.donor_profile.phone_number }}
+                                        </small>
+                                        {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if donation.donation_type == 'csr' %}
+                                    <p class="mb-0 text-truncate" style="max-width: 200px;" title="{{ donation.csr_description }}">
+                                        {{ donation.csr_description|default:"No description"|truncatewords:15 }}
+                                    </p>
+                                {% else %}
+                                    <p class="mb-0 text-truncate" style="max-width: 200px;" title="{{ donation.other_description }}">
+                                        {{ donation.other_description|default:"No description"|truncatewords:15 }}
+                                    </p>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donation.agreed_clause %}
+                                <div class="agreed-clause-preview">
+                                    <p class="mb-0 text-truncate" style="max-width: 250px;" title="{{ donation.agreed_clause }}">
+                                        {{ donation.agreed_clause|truncatewords:20 }}
+                                    </p>
+                                    <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="modal" data-bs-target="#clauseModal{{ donation.id }}">
+                                        <i class="fas fa-expand-alt me-1"></i>View Full
+                                    </button>
+                                </div>
+                                {% else %}
+                                <span class="text-muted"><i class="fas fa-minus"></i> No clause recorded</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if donation.discussion %}
+                                    <a href="{% url 'donation_discussion_detail' donation.discussion.id %}" class="btn btn-outline-primary" title="View Discussion">
+                                        <i class="fas fa-comments"></i>
+                                    </a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailModal{{ donation.id }}" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Accepted Donations Yet</h5>
+                <p class="text-muted">When you accept CSR or Other donations through discussions, they will appear here.</p>
+                <a href="{% url 'available_other_donations' %}" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>View Available Donations
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals for Full Clause View -->
+{% for donation in donations %}
+<!-- Clause Modal -->
+<div class="modal fade" id="clauseModal{{ donation.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-contract me-2"></i>Agreed Terms & Clause
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <small class="text-muted">Donation from:</small>
+                    <p class="mb-0"><strong>{{ donation.donor.email }}</strong></p>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Accepted on:</small>
+                    <p class="mb-0">{{ donation.donated_at|date:"F d, Y" }} at {{ donation.donated_at|time:"H:i" }}</p>
+                </div>
+                <hr>
+                <div class="p-3 bg-light rounded border">
+                    {{ donation.agreed_clause|linebreaks }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if donation.discussion %}
+                <a href="{% url 'donation_discussion_detail' donation.discussion.id %}" class="btn btn-primary">
+                    <i class="fas fa-comments me-2"></i>View Discussion
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal{{ donation.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>Donation Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Donation Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Type:</strong></td>
+                                <td>
+                                    {% if donation.donation_type == 'csr' %}
+                                        <span class="badge bg-success">CSR</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Other</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if donation.donation_type == 'csr' and donation.csr_subcategory %}
+                            <tr>
+                                <td><strong>CSR Category:</strong></td>
+                                <td>{{ donation.get_csr_subcategory_display }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td><strong>Date:</strong></td>
+                                <td>{{ donation.donated_at|date:"F d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td><span class="badge bg-success">Accepted</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Donor Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>{{ donation.donor.email }}</td>
+                            </tr>
+                            {% if donation.donor.donor_profile %}
+                            {% if donation.donor.donor_profile.organization_name %}
+                            <tr>
+                                <td><strong>Organization:</strong></td>
+                                <td>{{ donation.donor.donor_profile.organization_name }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if donation.donor.donor_profile.full_name %}
+                            <tr>
+                                <td><strong>Contact:</strong></td>
+                                <td>{{ donation.donor.donor_profile.full_name }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if donation.donor.donor_profile.phone_number %}
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td>{{ donation.donor.donor_profile.phone_number }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if donation.donor.donor_profile.location %}
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td>{{ donation.donor.donor_profile.location }}</td>
+                            </tr>
+                            {% endif %}
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="text-muted mb-3">Description</h6>
+                <div class="p-3 bg-light rounded">
+                    {% if donation.donation_type == 'csr' %}
+                        {{ donation.csr_description|default:"No description provided"|linebreaks }}
+                    {% else %}
+                        {{ donation.other_description|default:"No description provided"|linebreaks }}
+                    {% endif %}
+                </div>
+                
+                {% if donation.agreed_clause %}
+                <hr>
+                <h6 class="text-muted mb-3"><i class="fas fa-file-contract me-2"></i>Agreed Terms & Clause</h6>
+                <div class="p-3 bg-success bg-opacity-10 rounded border border-success">
+                    {{ donation.agreed_clause|linebreaks }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if donation.discussion %}
+                <a href="{% url 'donation_discussion_detail' donation.discussion.id %}" class="btn btn-primary">
+                    <i class="fas fa-comments me-2"></i>View Discussion
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.agreed-clause-preview {
+    max-width: 250px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+</style>
+{% endblock %}

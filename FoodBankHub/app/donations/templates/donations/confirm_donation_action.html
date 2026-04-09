@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action|title }} Donation - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header {% if action == 'accept' %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-{% if action == 'accept' %}check-circle{% else %}times-circle{% endif %} me-2"></i>
+                        {{ action|title }} Donation
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Donation Details -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">Donation Details</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Donor:</div>
+                            <div class="col-md-8">
+                                {% if donation.donor.donor_profile %}
+                                    {{ donation.donor.donor_profile.full_name|default:donation.donor.email }}
+                                {% else %}
+                                    {{ donation.donor.email }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Request:</div>
+                            <div class="col-md-8">{{ donation.foodbank_request.title }}</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Donation Type:</div>
+                            <div class="col-md-8">
+                                <span class="badge bg-secondary">{{ donation.get_donation_type_display }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Details:</div>
+                            <div class="col-md-8">
+                                {% if donation.donation_type == 'item' %}
+                                    <strong>{{ donation.item_name }}</strong><br>
+                                    Quantity: {{ donation.quantity }} {{ donation.quantity_unit }}
+                                {% elif donation.donation_type == 'money' %}
+                                    <strong>{{ donation.amount|floatformat:0 }}</strong>
+                                {% elif donation.donation_type == 'subsidized' %}
+                                    <strong>{{ donation.subsidized_product_type }}</strong><br>
+                                    Price: {{ donation.subsidized_price|floatformat:0 }}<br>
+                                    Quantity: {{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit }}
+                                {% elif donation.donation_type == 'csr' %}
+                                    <strong>{{ donation.get_csr_subcategory_display }}</strong><br>
+                                    {{ donation.csr_description }}
+                                {% elif donation.donation_type == 'other' %}
+                                    {{ donation.other_description }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if donation.message %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Donor Message:</div>
+                            <div class="col-md-8">
+                                <div class="alert alert-info mb-0">
+                                    {{ donation.message }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Submitted:</div>
+                            <div class="col-md-8">{{ donation.donated_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+                        
+                        <div class="mb-4">
+                            <label for="comment" class="form-label fw-bold">
+                                {% if action == 'accept' %}
+                                    Comment (Optional)
+                                {% else %}
+                                    Reason for Rejection (Required)
+                                {% endif %}
+                            </label>
+                            <textarea 
+                                name="comment" 
+                                id="comment" 
+                                class="form-control" 
+                                rows="4" 
+                                {% if action == 'reject' %}required{% endif %}
+                                placeholder="{% if action == 'accept' %}Add any notes about this donation...{% else %}Please explain why you are rejecting this donation...{% endif %}"></textarea>
+                            {% if action == 'reject' %}
+                                <small class="text-muted">The donor will receive this reason.</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            {% if next %}
+                            <a href="{{ next }}" class="btn btn-secondary">
+                            {% else %}
+                            <a href="{% url 'foodbank_requests' %}" class="btn btn-secondary">
+                            {% endif %}
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn {% if action == 'accept' %}btn-success{% else %}btn-danger{% endif %}">
+                                <i class="fas fa-{% if action == 'accept' %}check{% else %}times{% endif %} me-2"></i>
+                                Confirm {{ action|title }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

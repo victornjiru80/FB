@@ -1,0 +1,742 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ foodbank.foodbank_name }} - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Header Section -->
+    <div class="profile-header">
+        {% if foodbank.header_photo %}
+            <div class="header-image" style="background-image: url('{{ foodbank.header_photo.url }}');">
+                <div class="header-overlay">
+                    <div class="header-content">
+                        <div class="foodbank-title">
+                            <h1>{{ foodbank.foodbank_name }}</h1>
+                            {% if foodbank.established_year %}
+                                <p class="established">Established {{ foodbank.established_year }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="header-actions">
+                            <a href="{% url 'donate' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-hand-holding-heart"></i> Support Us
+                            </a>
+                            {% if is_profile_owner %}
+                                <a href="{% url 'manage_foodbank_profile' %}" class="btn btn-outline-light">
+                                    <i class="fas fa-edit"></i> Edit Profile
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="header-fallback">
+                <div class="header-content">
+                    <div class="foodbank-title">
+                        <h1>{{ foodbank.foodbank_name }}</h1>
+                        {% if foodbank.established_year %}
+                            <p class="established">Established {{ foodbank.established_year }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="header-actions">
+                        <a href="{% url 'donate' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-hand-holding-heart"></i> Support Us
+                        </a>
+                        {% if is_profile_owner %}
+                            <a href="{% url 'manage_foodbank_profile' %}" class="btn btn-outline">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- About Section -->
+                {% if foodbank.about_text %}
+                    <div class="content-section about-section">
+                        <div class="section-header">
+                            <h2>
+                                <i class="fas fa-info-circle"></i>
+                                About {{ foodbank.foodbank_name }}
+                            </h2>
+                        </div>
+                        <div class="section-content">
+                            <p class="about-text">{{ foodbank.about_text|linebreaks }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Mission Section -->
+                {% if foodbank.mission_statement %}
+                    <div class="content-section mission-section">
+                        <div class="section-header">
+                            <h2>
+                                <i class="fas fa-bullseye"></i>
+                                Our Mission
+                            </h2>
+                        </div>
+                        <div class="section-content">
+                            <blockquote class="mission-quote">
+                                "{{ foodbank.mission_statement }}"
+                            </blockquote>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Gallery Section -->
+                {% if featured_photos or regular_photos %}
+                    <div class="content-section gallery-section">
+                        <div class="section-header">
+                            <h2>
+                                <i class="fas fa-images"></i>
+                                Our Impact in Action
+                            </h2>
+                        </div>
+                        <div class="section-content">
+                            {% if featured_photos %}
+                                <div class="featured-gallery">
+                                    {% for photo in featured_photos %}
+                                        <div class="featured-photo">
+                                            <img src="{{ photo.photo.url }}" alt="{{ photo.caption|default:'Featured photo' }}">
+                                            {% if photo.caption %}
+                                                <div class="photo-caption">{{ photo.caption }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if regular_photos %}
+                                <div class="regular-gallery">
+                                    {% for photo in regular_photos %}
+                                        <div class="gallery-photo">
+                                            <img src="{{ photo.photo.url }}" alt="{{ photo.caption|default:'Gallery photo' }}">
+                                            {% if photo.caption %}
+                                                <div class="photo-caption">{{ photo.caption }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Recent Requests Section -->
+                {% if recent_requests %}
+                    <div class="content-section requests-section">
+                        <div class="section-header">
+                            <h2>
+                                <i class="fas fa-hands-helping"></i>
+                                Current Needs
+                            </h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="requests-list">
+                                {% for request in recent_requests %}
+                                    <div class="request-item">
+                                        <div class="request-priority priority-{{ request.priority }}">
+                                            {{ request.priority|title }}
+                                        </div>
+                                        <div class="request-details">
+                                            <h4>{{ request.title }}</h4>
+                                            <p>{{ request.description|truncatewords:20 }}</p>
+                                            {% if request.quantity_needed %}
+                                                <div class="quantity-needed">
+                                                    <i class="fas fa-weight"></i>
+                                                    {{ request.quantity_needed }} {{ request.quantity_unit }} needed
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="request-actions">
+                                            <a href="{% url 'donate_to_foodbank' request.id %}" class="btn btn-primary">
+                                                <i class="fas fa-hand-holding-heart"></i> Help Now
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Quick Stats -->
+                <div class="sidebar-widget stats-widget">
+                    <div class="widget-header">
+                        <h3>
+                            <i class="fas fa-chart-bar"></i>
+                            Impact Summary
+                        </h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ donations_received }}</div>
+                            <div class="stat-label">Donations Received</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ active_requests }}</div>
+                            <div class="stat-label">Active Requests</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ total_requests }}</div>
+                            <div class="stat-label">Total Requests</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="sidebar-widget contact-widget">
+                    <div class="widget-header">
+                        <h3>
+                            <i class="fas fa-address-card"></i>
+                            Contact Information
+                        </h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="contact-item">
+                            <i class="fas fa-user"></i>
+                            <span>{{ foodbank.contact_person }}</span>
+                        </div>
+                        {% if foodbank.address %}
+                            <div class="contact-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ foodbank.address }}</span>
+                            </div>
+                        {% endif %}
+                        {% if foodbank.contact_email %}
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <a href="mailto:{{ foodbank.contact_email }}">{{ foodbank.contact_email }}</a>
+                            </div>
+                        {% endif %}
+                        {% if foodbank.contact_phone %}
+                            <div class="contact-item">
+                                <i class="fas fa-phone"></i>
+                                <a href="tel:{{ foodbank.contact_phone }}">{{ foodbank.contact_phone }}</a>
+                            </div>
+                        {% endif %}
+                        {% if foodbank.website_url %}
+                            <div class="contact-item">
+                                <i class="fas fa-globe"></i>
+                                <a href="{{ foodbank.website_url }}" target="_blank" rel="noopener">Visit Website</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Support Actions -->
+                <div class="sidebar-widget support-widget">
+                    <div class="widget-header">
+                        <h3>
+                            <i class="fas fa-heart"></i>
+                            Support {{ foodbank.foodbank_name }}
+                        </h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="support-buttons">
+                            <a href="{% url 'donate' %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-hand-holding-heart"></i>
+                                Make a Donation
+                            </a>
+                            <a href="{% url 'view_foodbank_requests' %}" class="btn btn-outline btn-block">
+                                <i class="fas fa-list"></i>
+                                View All Requests
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --primary: #16a34a;
+    --primary-dark: #15803d;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.profile-container {
+    min-height: 100vh;
+    background: var(--gray-50);
+}
+
+/* Header Section */
+.profile-header {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+}
+
+.header-image {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #0f172a;
+}
+
+.header-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-content {
+    text-align: center;
+    color: white;
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.foodbank-title h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.established {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Profile Content */
+.profile-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 3rem;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.content-section {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 1.5rem 2rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-content {
+    padding: 2rem;
+}
+
+/* About Section */
+.about-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--gray-700);
+    margin: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Mission Section */
+.mission-quote {
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--gray-700);
+    border-left: 4px solid var(--primary);
+    padding-left: 2rem;
+    margin: 0;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.widget-content,
+.contact-item,
+.contact-item a,
+.request-details,
+.request-details p,
+.request-details h4 {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+}
+
+/* Gallery Section */
+.featured-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.featured-photo {
+    position: relative;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    background: #0f172a;
+}
+
+.featured-photo img {
+    width: 100%;
+    height: 250px;
+    object-fit: contain;
+    background: #0f172a;
+}
+
+.regular-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.gallery-photo {
+    position: relative;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.gallery-photo img {
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    background: #0f172a;
+}
+
+.photo-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Requests Section */
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.request-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    align-items: start;
+}
+
+.request-priority {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.request-priority.priority-urgent { background: var(--danger); color: white; }
+.request-priority.priority-high { background: var(--warning); color: white; }
+.request-priority.priority-medium { background: var(--primary); color: white; }
+.request-priority.priority-low { background: var(--success); color: white; }
+
+.request-details h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    color: var(--gray-800);
+}
+
+.request-details p {
+    margin: 0 0 1rem 0;
+    color: var(--gray-600);
+    line-height: 1.5;
+}
+
+.quantity-needed {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sidebar-widget {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.widget-header {
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.widget-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.widget-content {
+    padding: 1.5rem;
+}
+
+/* Stats Widget */
+.stats-widget .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.stats-widget .stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+/* Contact Widget */
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    color: var(--gray-700);
+}
+
+.contact-item:last-child {
+    margin-bottom: 0;
+}
+
+.contact-item i {
+    width: 20px;
+    color: var(--primary);
+}
+
+.contact-item a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.contact-item a:hover {
+    text-decoration: underline;
+}
+
+/* Support Widget */
+.support-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    color: var(--gray-800);
+    text-decoration: none;
+}
+
+.btn-outline-light {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .profile-content {
+        padding: 2rem 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        height: 300px;
+    }
+    
+    .header-content {
+        padding: 1rem;
+    }
+    
+    .foodbank-title h1 {
+        font-size: 2rem;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .request-item {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .featured-gallery {
+        grid-template-columns: 1fr;
+    }
+    
+    .regular-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+{% endblock %}

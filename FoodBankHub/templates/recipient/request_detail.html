@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Details - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{% url 'recipient_requests_view' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to My Requests
+                </a>
+            </div>
+
+            <!-- Main Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="mb-2">{{ request_obj.title }}</h3>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% if request_obj.is_anonymous %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user-secret me-1"></i> Anonymous
+                                </span>
+                                {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-user me-1"></i> Direct
+                                </span>
+                                {% endif %}
+                                <span class="badge status-{{ request_obj.status }}">
+                                    {{ request_obj.get_status_display }}
+                                </span>
+                                {% if request_obj.priority %}
+                                <span class="badge bg-secondary">
+                                    Priority: {{ request_obj.get_priority_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i> Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'edit_recipient_request' request_obj.id %}"><i class="fas fa-edit me-2"></i> Edit</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="fas fa-trash me-2"></i> Delete</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3"><i class="fas fa-align-left me-2"></i>Description</h5>
+                        <p class="lead request-description">{{ request_obj.description }}</p>
+                        {% if request_obj.description %}
+                        <div class="text-muted small mt-2">
+                            {{ request_obj.description|length }} characters
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Meta Information -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <i class="fas fa-calendar-alt text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Created Date</small>
+                                    <strong>{{ request_obj.created_at|date:"F d, Y" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <i class="fas fa-clock text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Time Ago</small>
+                                    <strong>{{ request_obj.created_at|timesince }} ago</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% if request_obj.updated_at %}
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <i class="fas fa-edit text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Last Updated</small>
+                                    <strong>{{ request_obj.updated_at|date:"F d, Y" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Info (customize based on your model) -->
+                    {% if request_obj.quantity %}
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3"><i class="fas fa-box me-2"></i>Quantity Needed</h5>
+                        <p>{{ request_obj.quantity }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if request_obj.urgency_notes %}
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3"><i class="fas fa-exclamation-circle me-2"></i>Urgency Notes</h5>
+                        <p>{{ request_obj.urgency_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i> Request ID: #{{ request_obj.id }}
+                        </span>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'edit_recipient_request' request_obj.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i> Edit Request
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the request "<strong>{{ request_obj.title }}</strong>"?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'delete_recipient_request' request_obj.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.request-description {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.detail-item i {
+    font-size: 1.5rem;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-active {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+</style>
+{% endblock %}

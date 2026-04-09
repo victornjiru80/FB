@@ -1,0 +1,688 @@
+<!-- Improved Foodbank Requests Section -->
+<section class="requests-section py-5">
+    <div class="container">
+        <!-- Section Header -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <div class="section-badge mb-3" data-aos="fade-up">
+                    <i class="fas fa-bullhorn text-warning"></i>
+                    <span>Urgent Needs • Make an Impact Today</span>
+                </div>
+                <h2 class="section-title mb-4" data-aos="fade-up" data-aos-delay="100">
+                    Food Banks Need Your Help
+                </h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">
+                    Browse current requests from verified food banks in your community. 
+                    Every donation, no matter the size, makes a meaningful difference.
+                </p>
+            </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="requests-filters mb-5" data-aos="fade-up" data-aos-delay="300">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="search-container">
+                        <div class="search-input-group">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="form-control search-input" 
+                                   placeholder="Search by location, food type, or organization...">
+                            <button class="btn btn-primary search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">
+                            <i class="fas fa-th-large"></i> All Requests
+                        </button>
+                        <button class="filter-tab" data-filter="urgent">
+                            <i class="fas fa-exclamation-triangle"></i> Urgent
+                        </button>
+                        <button class="filter-tab" data-filter="food">
+                            <i class="fas fa-utensils"></i> Food
+                        </button>
+                        <button class="filter-tab" data-filter="non_food">
+                            <i class="fas fa-box"></i> Non-Food
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requests Grid -->
+        <div class="requests-grid">
+            {% if foodbank_requests %}
+                <div class="row">
+                    {% for request in foodbank_requests %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="request-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:200 }}">
+                            <!-- Card Header -->
+                            <div class="card-header">
+                                <div class="organization-info">
+                                    <div class="org-avatar">
+                                        <i class="fas fa-warehouse"></i>
+                                    </div>
+                                    <div class="org-details">
+                                        <h4 class="org-name">{{ request.foodbank.foodbank_name }}</h4>
+                                        <div class="org-location">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>{{ request.foodbank.address|truncatechars:30 }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="priority-indicator">
+                                    <span class="priority-badge priority-{{ request.priority }}">
+                                        {% if request.priority == 'urgent' %}
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        {% elif request.priority == 'high' %}
+                                            <i class="fas fa-arrow-up"></i>
+                                        {% elif request.priority == 'medium' %}
+                                            <i class="fas fa-minus"></i>
+                                        {% else %}
+                                            <i class="fas fa-arrow-down"></i>
+                                        {% endif %}
+                                        {{ request.priority|title }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="card-body">
+                                <h5 class="request-title">{{ request.title }}</h5>
+                                <p class="request-description">{{ request.description|truncatewords:15 }}</p>
+                                
+                                <!-- Request Details -->
+                                <div class="request-meta">
+                                    {% if request.quantity_needed %}
+                                    <div class="meta-item">
+                                        <i class="fas fa-box text-primary"></i>
+                                        <span>{{ request.quantity_needed }} {{ request.quantity_unit }}</span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="meta-item">
+                                        <i class="fas fa-clock text-warning"></i>
+                                        <span>Posted {{ request.created_at|date:"M d" }}</span>
+                                    </div>
+                                    
+                                    <div class="meta-item">
+                                        <i class="fas fa-tag text-success"></i>
+                                        <span>{{ request.donation_type|title }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Progress Indicator -->
+                                <div class="request-progress">
+                                    <div class="progress-header">
+                                        <span class="progress-label">Fulfillment Progress</span>
+                                        <span class="progress-percentage">65%</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width: 65%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Footer -->
+                            <div class="card-footer">
+                                <div class="action-buttons">
+                                    {% if user.is_authenticated %}
+                                        <a href="{% url 'donate_to_foodbank' request.id %}" class="btn btn-primary btn-help">
+                                            <i class="fas fa-hand-holding-heart"></i>
+                                            Help Now
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-primary btn-help" onclick="showLoginPrompt('{{ request.foodbank.foodbank_name }}')">
+                                            <i class="fas fa-hand-holding-heart"></i>
+                                            Help Now
+                                        </button>
+                                    {% endif %}
+                                    
+                                    <button class="btn btn-outline-secondary btn-details" onclick="showRequestDetails({{ request.id }})">
+                                        <i class="fas fa-info-circle"></i>
+                                        Details
+                                    </button>
+                                    
+                                    <button class="btn btn-outline-primary btn-share" onclick="shareRequest({{ request.id }})">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Trust Indicators -->
+                                <div class="trust-badges">
+                                    <span class="trust-badge">
+                                        <i class="fas fa-shield-check text-success"></i>
+                                        Verified
+                                    </span>
+                                    <span class="trust-badge">
+                                        <i class="fas fa-users text-info"></i>
+                                        {{ request.foodbank.donations.count }}+ Donors
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Load More Button -->
+                <div class="text-center mt-5" data-aos="fade-up">
+                    <button class="btn btn-outline-primary btn-lg load-more-btn">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Load More Requests
+                    </button>
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state" data-aos="fade-up">
+                    <div class="empty-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="empty-title">No Requests Found</h3>
+                    <p class="empty-description">
+                        {% if search_query %}
+                            No food bank requests match your search criteria. Try adjusting your filters or search terms.
+                        {% else %}
+                            There are currently no active food bank requests. Check back soon for new opportunities to help!
+                        {% endif %}
+                    </p>
+                    {% if search_query %}
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            <i class="fas fa-refresh me-2"></i>Clear Filters
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<style>
+/* Requests Section Styles */
+.requests-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+}
+
+.requests-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23cbd5e1" opacity="0.4"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+    opacity: 0.5;
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 193, 7, 0.1);
+    color: #f59e0b;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #6b7280;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Search & Filters */
+.search-container {
+    position: relative;
+}
+
+.search-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    color: #9ca3af;
+    z-index: 2;
+}
+
+.search-input {
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 2rem;
+    font-size: 1rem;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn {
+    position: absolute;
+    right: 0.25rem;
+    border-radius: 2rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: #2563eb;
+    transform: scale(1.05);
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filter-tab {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 2rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.filter-tab:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.filter-tab.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Request Cards */
+.request-card {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid #f3f4f6;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.request-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+}
+
+.organization-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.org-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.org-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.org-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.priority-indicator {
+    text-align: right;
+}
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-urgent {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.priority-high {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fed7aa;
+}
+
+.priority-medium {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.priority-low {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.card-body {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.request-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+
+.request-description {
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.request-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.request-progress {
+    margin-bottom: 1rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.progress-label {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.progress-percentage {
+    font-size: 0.9rem;
+    color: #059669;
+    font-weight: 600;
+}
+
+.progress {
+    height: 6px;
+    background: #f3f4f6;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.card-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #f3f4f6;
+    background: #fafbfc;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-help {
+    flex: 1;
+    min-width: 120px;
+    font-weight: 600;
+    border-radius: 0.75rem;
+}
+
+.btn-details, .btn-share {
+    border-radius: 0.75rem;
+    font-weight: 500;
+}
+
+.trust-badges {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2.5rem;
+    color: #9ca3af;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.empty-description {
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+/* Load More Button */
+.load-more-btn {
+    border-radius: 2rem;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 2rem;
+    }
+    
+    .filter-tabs {
+        justify-content: flex-start;
+    }
+    
+    .filter-tab {
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .organization-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .priority-indicator {
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-help {
+        min-width: auto;
+    }
+}
+</style>
+
+<script>
+// Request Details Modal
+function showRequestDetails(requestId) {
+    // Implementation for showing detailed request information
+    console.log('Showing details for request:', requestId);
+}
+
+// Login Prompt for Non-authenticated Users
+function showLoginPrompt(organizationName) {
+    const modal = `
+        <div class="login-prompt-overlay" onclick="closeLoginPrompt()">
+            <div class="login-prompt-modal" onclick="event.stopPropagation()">
+                <button class="modal-close" onclick="closeLoginPrompt()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-content">
+                    <div class="modal-icon">
+                        <i class="fas fa-heart text-danger"></i>
+                    </div>
+                    <h3>Help ${organizationName}</h3>
+                    <p>Join our community to start making a difference. Sign up takes less than 2 minutes!</p>
+                    <div class="modal-actions">
+                        <a href="{% url 'register_donor' %}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up to Help
+                        </a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Already have an account?
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modal);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLoginPrompt() {
+    const modal = document.querySelector('.login-prompt-overlay');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+}
+
+// Share Request
+function shareRequest(requestId) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Help This Food Bank',
+            text: 'Check out this food bank request that needs your help!',
+            url: window.location.href
+        });
+    } else {
+        // Fallback
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+</script>

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reject Donor Testimonial - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header Section -->
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-times-circle text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h2 class="h3 mb-1">Reject Donor Testimonial</h2>
+                <p class="text-muted">Provide a reason for rejecting this testimonial</p>
+            </div>
+
+            <!-- Testimonial Preview Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">
+                                <i class="fas fa-user text-primary me-2"></i>
+                                {{ testimonial.donor.full_name|default:testimonial.donor.user.email }}
+                            </h6>
+                            <small class="text-muted">{{ testimonial.donor.user.email }}</small>
+                        </div>
+                        <span class="badge bg-warning">
+                            <i class="fas fa-clock me-1"></i>Pending Review
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if testimonial.impact_image %}
+                    <div class="text-center mb-4">
+                        <img src="{{ testimonial.impact_image.url }}" alt="Impact Image" 
+                             class="img-fluid rounded" style="max-height: 300px;">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Testimonial Message:</h6>
+                        <p class="lead">{{ testimonial.message }}</p>
+                    </div>
+                    
+                    <div class="text-muted small">
+                        <i class="fas fa-calendar me-2"></i>
+                        <strong>Submitted:</strong> {{ testimonial.created_at|date:"M d, Y H:i" }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejection Form -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Rejection Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="rejection_reason" class="form-label fw-bold">
+                                Reason for Rejection <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="rejection_reason" id="rejection_reason" 
+                                      class="form-control" rows="4" required
+                                      placeholder="Please provide a clear reason for rejecting this testimonial. This will help the donor understand what needs to be improved."></textarea>
+                            <div class="form-text">
+                                Be specific and constructive in your feedback. The donor will see this message.
+                            </div>
+                        </div>
+
+                        <!-- Common Rejection Reasons -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">Common Rejection Reasons (click to use):</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm reason-btn" 
+                                        data-reason="Content contains inappropriate language or tone.">
+                                    Inappropriate Content
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm reason-btn" 
+                                        data-reason="Testimonial lacks specific details about the giving experience.">
+                                    Lacks Detail
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm reason-btn" 
+                                        data-reason="Content appears to be promotional rather than a genuine testimonial.">
+                                    Too Promotional
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm reason-btn" 
+                                        data-reason="Image is not relevant to the donation experience or is inappropriate.">
+                                    Inappropriate Image
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm reason-btn" 
+                                        data-reason="Testimonial is too short and doesn't provide meaningful insight.">
+                                    Too Brief
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Warning Alert -->
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Important
+                            </h6>
+                            <p class="mb-0">
+                                The donor will receive your rejection reason and can edit and resubmit their testimonial. 
+                                Please provide constructive feedback to help them improve their submission.
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'admin_donor_testimonials_pending' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times me-2"></i>Reject Testimonial
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const reasonButtons = document.querySelectorAll('.reason-btn');
+    const textarea = document.getElementById('rejection_reason');
+    
+    reasonButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const reason = this.getAttribute('data-reason');
+            if (textarea.value.trim() === '') {
+                textarea.value = reason;
+            } else {
+                textarea.value += '\n\n' + reason;
+            }
+            textarea.focus();
+        });
+    });
+});
+</script>
+
+<style>
+.alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.lead {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.reason-btn {
+    font-size: 0.8rem;
+}
+
+.reason-btn:hover {
+    background-color: #e9ecef;
+}
+</style>
+{% endblock %}

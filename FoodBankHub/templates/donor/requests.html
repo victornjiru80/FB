@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Donation Requests</h3>
+<ul class="list-group">
+    {% for note in notifications %}
+        <li class="list-group-item">
+            {{ note.message }} <br>
+            <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
+        </li>
+    {% empty %}
+        <li class="list-group-item">No donation requests.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

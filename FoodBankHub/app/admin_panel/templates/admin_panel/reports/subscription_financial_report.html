@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Financial Summary Report - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root { --primary: #10b981; }
+    body { background: #f9fafb; }
+    .report-wrapper { padding: 2rem 0; min-height: 100vh; }
+    .report-header { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .report-title { font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-box { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
+    .stat-label { color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; }
+    .chart-card { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .chart-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
+    .subscription-card { background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+    .export-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .btn-export { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-pdf { background: #ef4444; color: white; }
+    .btn-pdf:hover { background: #dc2626; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-wrapper">
+    <div class="container">
+        <div class="report-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="report-title">
+                        <i class="fas fa-file-invoice-dollar me-3"></i>Financial Summary Report
+                    </h1>
+                    <p class="text-muted mb-0">Complete financial overview and subscription status</p>
+                </div>
+                <a href="{% url 'foodbank_reports_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+            </div>
+        </div>
+
+        <div class="export-buttons">
+            <a href="#" onclick="window.print(); return false;" class="btn-export btn-pdf">
+                <i class="fas fa-print"></i> Print Report
+            </a>
+        </div>
+
+        {% if subscription %}
+        <div class="subscription-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="mb-2"><i class="fas fa-crown me-2"></i>Subscription Status</h3>
+                    <p class="mb-1"><strong>Plan:</strong> {{ subscription.get_plan_display|title }}</p>
+                    <p class="mb-1"><strong>Status:</strong> {{ subscription.get_status_display }}</p>
+                    {% if subscription.subscription_end_date %}
+                    <p class="mb-0"><strong>Valid Until:</strong> {{ subscription.subscription_end_date|date:"F d, Y" }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{% url 'subscription_status' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-cog me-2"></i>Manage Subscription
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-value">KSH {{ total_paid|floatformat:0 }}</div>
+                <div class="stat-label">Total Subscription Paid</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">KSH {{ donation_revenue|floatformat:0 }}</div>
+                <div class="stat-label">Donation Revenue</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">KSH {{ subsidized_revenue|floatformat:0 }}</div>
+                <div class="stat-label">Subsidized Revenue</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">KSH {{ total_revenue|floatformat:0 }}</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">Revenue Breakdown</h3>
+                    <canvas id="revenueBreakdownChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">Payment Status</h3>
+                    <canvas id="paymentStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title">Monthly Subscription Payments</h3>
+            <canvas id="monthlyPaymentsChart" height="80"></canvas>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'subscription_status' %}" class="btn btn-lg btn-primary me-2">
+                <i class="fas fa-crown me-2"></i>View Subscription Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    new Chart(document.getElementById('revenueBreakdownChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Donations', 'Subsidized Sales'],
+            datasets: [{
+                data: [{{ donation_revenue }}, {{ subsidized_revenue }}],
+                backgroundColor: ['#10b981', '#3b82f6']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    new Chart(document.getElementById('paymentStatusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Approved', 'Pending', 'Rejected'],
+            datasets: [{
+                data: [{{ approved_payments }}, {{ pending_payments }}, {{ rejected_payments }}],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const monthlyPay = {{ monthly_payments|safe }};
+    new Chart(document.getElementById('monthlyPaymentsChart'), {
+        type: 'bar',
+        data: {
+            labels: monthlyPay.map(d => new Date(d.month).toLocaleDateString('en-US', {month: 'short', year: 'numeric'})),
+            datasets: [{
+                label: 'Amount (KSH)',
+                data: monthlyPay.map(d => d.total),
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
+{% endblock %}

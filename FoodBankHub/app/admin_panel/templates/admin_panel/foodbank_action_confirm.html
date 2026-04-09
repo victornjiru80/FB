@@ -1,0 +1,221 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header py-3 {% if action == 'approve' %}bg-success{% elif action == 'reopen' or action == 'reopen_approved' %}bg-warning{% else %}bg-danger{% endif %} text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas {% if action == 'approve' %}fa-check{% elif action == 'reopen' or action == 'reopen_approved' %}fa-redo{% else %}fa-times{% endif %} me-2"></i>
+                    {% if action == 'approve' %}Approve{% elif action == 'reopen' %}Reopen{% elif action == 'reopen_approved' %}Reopen for Review{% else %}Reject{% endif %} Food Bank Application
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Application Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Food Bank Details</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="fw-bold">Name:</td>
+                                <td>{{ foodbank_profile.foodbank_name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Contact:</td>
+                                <td>{{ foodbank_profile.contact_person }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Email:</td>
+                                <td>{{ foodbank_profile.user.email }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Service Type:</td>
+                                <td>{{ foodbank_profile.get_service_type_display }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Application Info</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="fw-bold">Applied:</td>
+                                <td>{{ foodbank_profile.application_date|date:"M d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Location:</td>
+                                <td>{{ foodbank_profile.address|default:"Not provided" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Documents:</td>
+                                <td>
+                                    {% if foodbank_profile.authority_picture %}✓ Authority Picture<br>{% endif %}
+                                    {% if foodbank_profile.urgent_request_picture %}✓ Urgent Request Picture<br>{% endif %}
+                                    {% if foodbank_profile.additional_documents %}✓ Additional Documents<br>{% endif %}
+                                    {% if not foodbank_profile.authority_picture and not foodbank_profile.urgent_request_picture and not foodbank_profile.additional_documents %}
+                                        None uploaded
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Confirmation Form -->
+                <form method="post" class="border-top pt-4">
+                    {% csrf_token %}
+                    
+                    {% if action == 'reject' %}
+                        <div class="mb-3">
+                            <label for="rejection_reason" class="form-label fw-bold">
+                                Reason for Rejection <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="rejection_reason" id="rejection_reason" 
+                                      class="form-control" rows="4" required
+                                      placeholder="Please provide a clear reason for rejecting this application. This will be sent to the applicant."></textarea>
+                            <div class="form-text">
+                                Be specific and constructive. This helps the applicant understand what they need to improve.
+                            </div>
+                        </div>
+                    {% elif action == 'reopen' %}
+                        <div class="mb-3">
+                            <label for="reopen_reason" class="form-label fw-bold">
+                                Reason for Reopening <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="reopen_reason" id="reopen_reason" 
+                                      class="form-control" rows="4" required
+                                      placeholder="Please provide a reason for reopening this rejected application. This will be logged for audit purposes."></textarea>
+                            <div class="form-text">
+                                Explain why this application should be reconsidered (e.g., new information provided, initial rejection was in error, etc.)
+                            </div>
+                        </div>
+                        
+                        {% if foodbank_profile.rejection_reason %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Previous Rejection Reason:</label>
+                            <div class="alert alert-light">
+                                <small>{{ foodbank_profile.rejection_reason|linebreaks }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% elif action == 'reopen_approved' %}
+                        <div class="mb-3">
+                            <label for="review_reason" class="form-label fw-bold">
+                                Reason for Reopening for Review <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="review_reason" id="review_reason" 
+                                      class="form-control" rows="4" required
+                                      placeholder="Please provide a reason for reopening this approved foodbank for further review. This will be sent to the foodbank."></textarea>
+                            <div class="form-text">
+                                Explain why this approved foodbank needs additional review (e.g., compliance check, verification needed, policy update, etc.)
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> This foodbank is currently approved and active. Reopening it will temporarily change its status to "Pending Review" which may affect its operations.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert {% if action == 'approve' %}alert-success{% elif action == 'reopen' or action == 'reopen_approved' %}alert-info{% else %}alert-warning{% endif %}">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-1"></i>
+                            What happens after {% if action == 'approve' %}approval{% elif action == 'reopen' %}reopening{% elif action == 'reopen_approved' %}reopening for review{% else %}rejection{% endif %}?
+                        </h6>
+                        {% if action == 'approve' %}
+                            <ul class="mb-0">
+                                <li>The food bank will receive an approval email notification</li>
+                                <li>Their account will be activated for immediate use</li>
+                                <li>They can start creating requests and managing donations</li>
+                                <li>Their profile will be visible to donors and recipients</li>
+                            </ul>
+                        {% elif action == 'reopen' %}
+                            <ul class="mb-0">
+                                <li>The application status will change from "Rejected" to "Pending"</li>
+                                <li>The food bank will receive an email notification about the reopening</li>
+                                <li>The application will be back in the review queue for admin processing</li>
+                                <li>Previous rejection reason will be preserved in the audit trail</li>
+                                <li>Your reopen reason will be logged for future reference</li>
+                            </ul>
+                        {% elif action == 'reopen_approved' %}
+                            <ul class="mb-0">
+                                <li>The food bank status will change from "Approved" to "Pending Review"</li>
+                                <li>The food bank will receive an email notification about the review</li>
+                                <li>Their services may be temporarily affected during the review period</li>
+                                <li>Previous approval information will be preserved in the audit trail</li>
+                                <li>Your review reason will be logged and sent to the foodbank</li>
+                                <li>The foodbank will be back in the review queue for re-approval</li>
+                            </ul>
+                        {% else %}
+                            <ul class="mb-0">
+                                <li>The applicant will receive a rejection email with your reason</li>
+                                <li>Their account will remain inactive</li>
+                                <li>They can contact support to address the issues and reapply</li>
+                                <li>The application will be marked as rejected in the system</li>
+                            </ul>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'custom_admin:foodbank_approvals' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn {% if action == 'approve' %}btn-success{% elif action == 'reopen' or action == 'reopen_approved' %}btn-warning{% else %}btn-danger{% endif %}">
+                            <i class="fas {% if action == 'approve' %}fa-check{% elif action == 'reopen' or action == 'reopen_approved' %}fa-redo{% else %}fa-times{% endif %} me-1"></i>
+                            Confirm {% if action == 'approve' %}Approval{% elif action == 'reopen' %}Reopening{% elif action == 'reopen_approved' %}Reopening for Review{% else %}Rejection{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const action = '{{ action|escapejs }}';
+        const foodbankName = '{{ foodbank_profile.foodbank_name|escapejs }}';
+        
+        // Form validation for rejection/reopen reason
+        if (action === 'reject' || action === 'reopen' || action === 'reopen_approved') {
+            form.addEventListener('submit', function(e) {
+                let fieldId;
+                if (action === 'reject') {
+                    fieldId = 'rejection_reason';
+                } else if (action === 'reopen') {
+                    fieldId = 'reopen_reason';
+                } else if (action === 'reopen_approved') {
+                    fieldId = 'review_reason';
+                }
+                
+                const reason = document.getElementById(fieldId).value.trim();
+                if (reason.length < 10) {
+                    e.preventDefault();
+                    alert('Please provide a more detailed reason (at least 10 characters).');
+                    return false;
+                }
+            });
+        }
+        
+        // Final confirmation dialog
+        form.addEventListener('submit', function(e) {
+            let message;
+            if (action === 'approve') {
+                message = `Are you sure you want to approve the application for "${foodbankName}"?`;
+            } else if (action === 'reopen') {
+                message = `Are you sure you want to reopen the rejected application for "${foodbankName}"? This will move it back to pending status.`;
+            } else if (action === 'reopen_approved') {
+                message = `Are you sure you want to reopen the approved foodbank "${foodbankName}" for further review? This will temporarily change its status to pending.`;
+            } else {
+                message = `Are you sure you want to reject the application for "${foodbankName}"?`;
+            }
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

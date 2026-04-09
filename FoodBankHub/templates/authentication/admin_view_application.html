@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Application - {{ foodbank_profile.foodbank_name }} - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .application-header {
+        background: linear-gradient(135deg, #6f42c1, #5a32a3);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-rejected { background-color: #f8d7da; color: #721c24; }
+    
+    .info-card {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        margin-bottom: 2rem;
+    }
+    
+    .info-card-header {
+        background: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 1.5rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .info-card-body {
+        padding: 1.5rem;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 150px;
+    }
+    
+    .info-value {
+        color: #6c757d;
+        flex: 1;
+        text-align: right;
+    }
+    
+    .document-preview {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .document-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #0d6efd;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border: 1px solid #0d6efd;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .document-link:hover {
+        background: #0d6efd;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .action-buttons {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    .timeline-item {
+        padding: 1rem;
+        border-left: 3px solid #e3e6f0;
+        margin-left: 1rem;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 1.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6c757d;
+    }
+    
+    .timeline-item.timeline-pending::before { background: #ffc107; }
+    .timeline-item.timeline-approved::before { background: #28a745; }
+    .timeline-item.timeline-rejected::before { background: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="application-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">{{ foodbank_profile.foodbank_name }}</h1>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="status-badge status-{{ foodbank_profile.is_approved }}">
+                        {{ foodbank_profile.get_is_approved_display }}
+                    </span>
+                    <span class="opacity-75">
+                        Applied {{ foodbank_profile.application_date|timesince }} ago
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'admin_pending_registrations' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Applications
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-row">
+                        <span class="info-label">Food Bank Name:</span>
+                        <span class="info-value">{{ foodbank_profile.foodbank_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Contact Person:</span>
+                        <span class="info-value">{{ foodbank_profile.contact_person }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email Address:</span>
+                        <span class="info-value">
+                            <a href="mailto:{{ foodbank_profile.user.email }}">{{ foodbank_profile.user.email }}</a>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phone Number:</span>
+                        <span class="info-value">{{ foodbank_profile.user.phone_number|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Address:</span>
+                        <span class="info-value">{{ foodbank_profile.address|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Service Type:</span>
+                        <span class="info-value">
+                            <span class="badge bg-primary">{{ foodbank_profile.get_service_type_display }}</span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Application Date:</span>
+                        <span class="info-value">{{ foodbank_profile.application_date|date:"F d, Y \a\t g:i A" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Uploaded Documents
+                    </h5>
+                </div>
+                <div class="info-card-body">
+                    <div class="row">
+                        <!-- Authority Picture -->
+                        <div class="col-md-4 mb-3">
+                            <h6>Authority Picture</h6>
+                            {% if foodbank_profile.authority_picture %}
+                                <div class="mb-2">
+                                    <img src="{{ foodbank_profile.authority_picture.url }}" 
+                                         alt="Authority Picture" class="document-preview img-fluid">
+                                </div>
+                                <a href="{{ foodbank_profile.authority_picture.url }}" 
+                                   target="_blank" class="document-link">
+                                    <i class="fas fa-external-link-alt"></i>View Full Size
+                                </a>
+                            {% else %}
+                                <p class="text-muted">Not uploaded</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Urgent Request Picture -->
+                        <div class="col-md-4 mb-3">
+                            <h6>Urgent Request Picture</h6>
+                            {% if foodbank_profile.urgent_request_picture %}
+                                <div class="mb-2">
+                                    <img src="{{ foodbank_profile.urgent_request_picture.url }}" 
+                                         alt="Urgent Request Picture" class="document-preview img-fluid">
+                                </div>
+                                <a href="{{ foodbank_profile.urgent_request_picture.url }}" 
+                                   target="_blank" class="document-link">
+                                    <i class="fas fa-external-link-alt"></i>View Full Size
+                                </a>
+                            {% else %}
+                                <p class="text-muted">Not uploaded</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Additional Documents -->
+                        <div class="col-md-4 mb-3">
+                            <h6>Additional Documents</h6>
+                            {% if foodbank_profile.additional_documents %}
+                                <div class="mb-2">
+                                    <i class="fas fa-file fa-3x text-primary"></i>
+                                </div>
+                                <a href="{{ foodbank_profile.additional_documents.url }}" 
+                                   target="_blank" class="document-link">
+                                    <i class="fas fa-download"></i>Download File
+                                </a>
+                            {% else %}
+                                <p class="text-muted">Not uploaded</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Timeline -->
+            {% if foodbank_profile.is_approved != 'pending' %}
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Application Timeline
+                        </h5>
+                    </div>
+                    <div class="info-card-body">
+                        <div class="timeline-item">
+                            <h6 class="mb-1">Application Submitted</h6>
+                            <p class="text-muted mb-0">{{ foodbank_profile.application_date|date:"F d, Y \a\t g:i A" }}</p>
+                        </div>
+                        
+                        {% if foodbank_profile.approval_date %}
+                            <div class="timeline-item timeline-{{ foodbank_profile.is_approved }}">
+                                <h6 class="mb-1">
+                                    Application {{ foodbank_profile.get_is_approved_display }}
+                                </h6>
+                                <p class="text-muted mb-1">{{ foodbank_profile.approval_date|date:"F d, Y \a\t g:i A" }}</p>
+                                {% if foodbank_profile.approved_by %}
+                                    <p class="text-muted mb-0">by {{ foodbank_profile.approved_by.email }}</p>
+                                {% endif %}
+                                {% if foodbank_profile.rejection_reason %}
+                                    <div class="mt-2 p-2 bg-light rounded">
+                                        <strong>Reason:</strong> {{ foodbank_profile.rejection_reason }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-lg-4">
+            <div class="action-buttons">
+                {% if foodbank_profile.is_approved == 'pending' %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-cogs me-2"></i>Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'approve_foodbank_registration' foodbank_profile.id %}" 
+                                   class="btn btn-success">
+                                    <i class="fas fa-check me-2"></i>Approve Application
+                                </a>
+                                <a href="{% url 'reject_foodbank_registration' foodbank_profile.id %}" 
+                                   class="btn btn-danger">
+                                    <i class="fas fa-times me-2"></i>Reject Application
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Application Status
+                            </h6>
+                        </div>
+                        <div class="card-body text-center">
+                            <span class="status-badge status-{{ foodbank_profile.is_approved }} mb-3 d-inline-block">
+                                {{ foodbank_profile.get_is_approved_display }}
+                            </span>
+                            <p class="text-muted mb-0">
+                                This application has been {{ foodbank_profile.get_is_approved_display|lower }}.
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Quick Info -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Quick Info
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary mb-1">
+                                        {{ foodbank_profile.application_date|timesince|truncatewords:1 }}
+                                    </h4>
+                                    <small class="text-muted">Days Pending</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-info mb-1">
+                                    {% if foodbank_profile.authority_picture and foodbank_profile.additional_documents %}3{% elif foodbank_profile.authority_picture or foodbank_profile.additional_documents %}1-2{% else %}0{% endif %}
+                                </h4>
+                                <small class="text-muted">Documents</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-envelope me-2"></i>Contact Applicant
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="mailto:{{ foodbank_profile.user.email }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-envelope me-1"></i>Send Email
+                            </a>
+                            {% if foodbank_profile.user.phone_number %}
+                                <a href="tel:{{ foodbank_profile.user.phone_number }}" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-phone me-1"></i>Call
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image modal for better viewing
+    document.querySelectorAll('.document-preview').forEach(function(img) {
+        img.addEventListener('click', function() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); z-index: 9999; display: flex;
+                align-items: center; justify-content: center; cursor: pointer;
+            `;
+            
+            const modalImg = document.createElement('img');
+            modalImg.src = this.src;
+            modalImg.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 0.5rem;';
+            
+            modal.appendChild(modalImg);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+        });
+    });
+</script>
+{% endblock %}

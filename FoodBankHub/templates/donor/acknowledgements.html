@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Acknowledgements - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #16a34a;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --text-color: #1f2937;
+        --light-text: #6b7280;
+        --border-color: #e5e7eb;
+        --bg-light: #f8fafc;
+    }
+
+
+
+    .notifications-container {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .notifications-header {
+        background: var(--bg-light);
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .notifications-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .notification-card {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.3s ease;
+        position: relative;
+    }
+
+    .notification-card:last-child {
+        border-bottom: none;
+    }
+
+    .notification-card:hover {
+        background-color: #fafbfc;
+    }
+
+    .notification-icon {
+        position: absolute;
+        top: 1.5rem;
+        left: 1.5rem;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--success-color), #059669);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+
+    .notification-content {
+        margin-left: 60px;
+    }
+
+    .notification-message {
+        font-size: 1rem;
+        color: var(--text-color);
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+
+    .notification-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .notification-date {
+        color: var(--light-text);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .notification-badge {
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 2.5rem;
+        color: #9ca3af;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+
+    .empty-description {
+        color: var(--light-text);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .cta-button {
+        background: linear-gradient(135deg, var(--primary-color), #15803d);
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 2rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 0.5rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 2rem;
+        background: white;
+        color: var(--light-text);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .filter-tab.active,
+    .filter-tab:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-color);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .stat-card {
+            padding: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+        }
+        
+        .notification-icon {
+            position: relative;
+            top: auto;
+            left: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-content {
+            margin-left: 0;
+        }
+        
+        .notification-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Animation for new notifications */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .notification-card {
+        animation: slideIn 0.5s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <!-- Notifications Container -->
+    <div class="notifications-container">
+        <div class="notifications-header">
+            <h2 class="notifications-title">
+                <i class="fas fa-bell text-success"></i>
+                Your Acknowledgements
+            </h2>
+        </div>
+
+        {% if notifications %}
+            <!-- Filter Tabs -->
+            <div class="p-3 border-bottom">
+                <div class="filter-tabs">
+                    <a href="#" class="filter-tab active" data-filter="all">
+                        <i class="fas fa-list me-1"></i>All Messages
+                    </a>
+                    <a href="#" class="filter-tab" data-filter="recent">
+                        <i class="fas fa-clock me-1"></i>Recent
+                    </a>
+                    <a href="#" class="filter-tab" data-filter="this-month">
+                        <i class="fas fa-calendar me-1"></i>This Month
+                    </a>
+                </div>
+            </div>
+
+            <!-- Notifications List -->
+            <div class="notifications-list">
+                {% for notification in notifications %}
+                <div class="notification-card" data-date="{{ notification.created_at|date:'Y-m-d' }}">
+                    <div class="notification-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    
+                    <div class="notification-content">
+                        <div class="notification-message">
+                            {{ notification.message }}
+                        </div>
+                        
+                        <div class="notification-meta">
+                            <div class="notification-date">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ notification.created_at|date:"F d, Y \a\t g:i A" }}
+                            </div>
+                            
+                            <div class="notification-badge">
+                                <i class="fas fa-check me-1"></i>
+                                Acknowledged
+                            </div>
+                            
+                            {% if notification.created_at|timesince|slice:":1" == "0" %}
+                            <div class="notification-badge" style="background: #fef3c7; color: #92400e;">
+                                <i class="fas fa-sparkles me-1"></i>
+                                New
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3 class="empty-title">No Acknowledgements Yet</h3>
+                <p class="empty-description">
+                    You haven't received any thank you messages yet. Start making donations to help food banks 
+                    in your community and receive heartfelt acknowledgements from those you've helped!
+                </p>
+                <a href="{% url 'donate' %}" class="cta-button">
+                    <i class="fas fa-hand-holding-heart me-2"></i>
+                    Make Your First Donation
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const notificationCards = document.querySelectorAll('.notification-card');
+    
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs
+            filterTabs.forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            const filter = this.getAttribute('data-filter');
+            const now = new Date();
+            const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            
+            notificationCards.forEach(card => {
+                const cardDate = card.getAttribute('data-date');
+                let show = true;
+                
+                if (filter === 'recent') {
+                    const cardDateObj = new Date(cardDate);
+                    show = cardDateObj >= sevenDaysAgo;
+                } else if (filter === 'this-month') {
+                    show = cardDate.startsWith(thisMonth);
+                }
+                
+                if (show) {
+                    card.style.display = 'block';
+                    card.style.animation = 'slideIn 0.3s ease-out';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Add hover effects to notification cards
+    notificationCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+    
+    // Auto-refresh notifications every 30 seconds
+    setInterval(function() {
+        // You can implement AJAX refresh here if needed
+        console.log('Checking for new acknowledgements...');
+    }, 30000);
+});
+</script>
+{% endblock %}

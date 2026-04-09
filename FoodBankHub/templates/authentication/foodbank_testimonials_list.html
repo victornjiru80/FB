@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Our Testimonials{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-comments me-2"></i>Our Testimonials</h2>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="toggleFoodbankTestimonialDisplayedTime">
+                <label class="form-check-label small" for="toggleFoodbankTestimonialDisplayedTime">
+                    Show time displayed on landing
+                </label>
+            </div>
+        </div>
+        <a href="{% url 'create_foodbank_testimonial' %}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>Add New Testimonial
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if pending_testimonials or displayed_testimonials or archived_testimonials or rejected_testimonials %}
+        <div class="accordion" id="foodbankTestimonialsAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="fbHeadingPending">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#fbCollapsePending" aria-expanded="true" aria-controls="fbCollapsePending">
+                        Pending ({{ pending_testimonials|length }})
+                    </button>
+                </h2>
+                <div id="fbCollapsePending" class="accordion-collapse collapse show" aria-labelledby="fbHeadingPending" data-bs-parent="#foodbankTestimonialsAccordion">
+                    <div class="accordion-body">
+                        {% if pending_testimonials %}
+                            <div class="row">
+                                {% for testimonial in pending_testimonials %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-warning text-dark">{{ testimonial.get_approval_status_display }}</span>
+                                            <small class="text-muted">{{ testimonial.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" alt="Impact photo" class="img-fluid rounded mb-3" style="max-height: 200px; width: 100%; object-fit: contain; background: #0f172a;">
+                                            {% endif %}
+                                            <p class="card-text">{{ testimonial.message|truncatewords:50 }}</p>
+                                            <div class="alert alert-warning small mb-2">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Awaiting admin review
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <div class="btn-group w-100" role="group">
+                                                <a href="{% url 'edit_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <a href="{% url 'delete_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">No pending testimonials.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="fbHeadingDisplayed">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fbCollapseDisplayed" aria-expanded="false" aria-controls="fbCollapseDisplayed">
+                        Displayed ({{ displayed_testimonials|length }})
+                    </button>
+                </h2>
+                <div id="fbCollapseDisplayed" class="accordion-collapse collapse" aria-labelledby="fbHeadingDisplayed" data-bs-parent="#foodbankTestimonialsAccordion">
+                    <div class="accordion-body">
+                        {% if displayed_testimonials %}
+                            <div class="row">
+                                {% for testimonial in displayed_testimonials %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-success">{{ testimonial.get_approval_status_display }}</span>
+                                            <small class="text-muted">{{ testimonial.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" alt="Impact photo" class="img-fluid rounded mb-3" style="max-height: 200px; width: 100%; object-fit: contain; background: #0f172a;">
+                                            {% endif %}
+                                            <p class="card-text">{{ testimonial.message|truncatewords:50 }}</p>
+                                            <div class="alert alert-success small mb-2">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                Approved by {{ testimonial.reviewed_by.email }} on {{ testimonial.reviewed_at|date:"M d, Y" }}
+                                            </div>
+                                            {% with display_since=testimonial.display_start_date|default:testimonial.reviewed_at|default:testimonial.created_at %}
+                                                <div class="small text-muted mb-2 js-testimonial-displayed-time d-none">
+                                                    <i class="fas fa-hourglass-half me-1"></i>
+                                                    Displayed for: {{ display_since|timesince }}
+                                                </div>
+                                            {% endwith %}
+                                            {% if testimonial.display_start_date and testimonial.display_end_date %}
+                                                <div class="small text-muted mb-2">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Display period: {{ testimonial.display_start_date|date:"M d" }} - {{ testimonial.display_end_date|date:"M d, Y" }}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" disabled {% if testimonial.display_on_public %}checked{% endif %}>
+                                                <label class="form-check-label small">
+                                                    {% if testimonial.display_on_public %}Displayed publicly{% else %}Hidden from public{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <div class="btn-group w-100" role="group">
+                                                <form method="post" action="{% url 'toggle_foodbank_testimonial_display' testimonial.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-eye{% if not testimonial.display_on_public %}-slash{% endif %}"></i>
+                                                        {% if testimonial.display_on_public %}Hide{% else %}Show{% endif %}
+                                                    </button>
+                                                </form>
+                                                <a href="{% url 'delete_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">No displayed testimonials.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="fbHeadingArchived">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fbCollapseArchived" aria-expanded="false" aria-controls="fbCollapseArchived">
+                        Archived ({{ archived_testimonials|length }})
+                    </button>
+                </h2>
+                <div id="fbCollapseArchived" class="accordion-collapse collapse" aria-labelledby="fbHeadingArchived" data-bs-parent="#foodbankTestimonialsAccordion">
+                    <div class="accordion-body">
+                        {% if archived_testimonials %}
+                            <div class="row">
+                                {% for testimonial in archived_testimonials %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span class="badge 
+                                                {% if testimonial.approval_status == 'approved' %}bg-success
+                                                {% elif testimonial.approval_status == 'rejected' %}bg-danger
+                                                {% else %}bg-warning text-dark{% endif %}">
+                                                {{ testimonial.get_approval_status_display }}
+                                            </span>
+                                            <small class="text-muted">{{ testimonial.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" alt="Impact photo" class="img-fluid rounded mb-3" style="max-height: 200px; width: 100%; object-fit: contain; background: #0f172a;">
+                                            {% endif %}
+                                            <p class="card-text">{{ testimonial.message|truncatewords:50 }}</p>
+
+                                            {% if testimonial.approval_status == 'approved' %}
+                                                <div class="alert alert-success small mb-2">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    Approved by {{ testimonial.reviewed_by.email }} on {{ testimonial.reviewed_at|date:"M d, Y" }}
+                                                </div>
+                                                {% if testimonial.display_start_date and testimonial.display_end_date %}
+                                                    <div class="small text-muted mb-2">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        Display period: {{ testimonial.display_start_date|date:"M d" }} - {{ testimonial.display_end_date|date:"M d, Y" }}
+                                                    </div>
+                                                {% endif %}
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" disabled {% if testimonial.display_on_public %}checked{% endif %}>
+                                                    <label class="form-check-label small">
+                                                        {% if testimonial.display_on_public %}Displayed publicly{% else %}Hidden from public{% endif %}
+                                                    </label>
+                                                </div>
+                                            {% elif testimonial.approval_status == 'rejected' %}
+                                                <div class="alert alert-danger small mb-2">
+                                                    <i class="fas fa-times-circle me-1"></i>
+                                                    Rejected: {{ testimonial.rejection_reason|default:"No reason provided" }}
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-warning small mb-2">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    Awaiting admin review
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <div class="btn-group w-100" role="group">
+                                                {% if testimonial.approval_status != 'approved' %}
+                                                    <a href="{% url 'edit_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </a>
+                                                {% endif %}
+
+                                                {% if testimonial.approval_status == 'approved' %}
+                                                    <form method="post" action="{% url 'toggle_foodbank_testimonial_display' testimonial.id %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="fas fa-eye{% if not testimonial.display_on_public %}-slash{% endif %}"></i>
+                                                            {% if testimonial.display_on_public %}Hide{% else %}Show{% endif %}
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+
+                                                <a href="{% url 'delete_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">No archived testimonials.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="fbHeadingRejected">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fbCollapseRejected" aria-expanded="false" aria-controls="fbCollapseRejected">
+                        Rejected ({{ rejected_testimonials|length }})
+                    </button>
+                </h2>
+                <div id="fbCollapseRejected" class="accordion-collapse collapse" aria-labelledby="fbHeadingRejected" data-bs-parent="#foodbankTestimonialsAccordion">
+                    <div class="accordion-body">
+                        {% if rejected_testimonials %}
+                            <div class="row">
+                                {% for testimonial in rejected_testimonials %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-danger">{{ testimonial.get_approval_status_display }}</span>
+                                            <small class="text-muted">{{ testimonial.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" alt="Impact photo" class="img-fluid rounded mb-3" style="max-height: 200px; width: 100%; object-fit: contain; background: #0f172a;">
+                                            {% endif %}
+                                            <p class="card-text">{{ testimonial.message|truncatewords:50 }}</p>
+
+                                            <div class="mb-2">
+                                                {% if testimonial.rejection_reason %}
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#foodbankTestimonialRejectionModal{{ testimonial.id }}">
+                                                        View Reason
+                                                    </button>
+
+                                                    <div class="modal fade" id="foodbankTestimonialRejectionModal{{ testimonial.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Rejection Reason (Testimonial #{{ testimonial.id }})</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    {{ testimonial.rejection_reason }}
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted small">No reason provided</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <div class="btn-group w-100" role="group">
+                                                <a href="{% url 'edit_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <a href="{% url 'delete_foodbank_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">No rejected testimonials.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-comment-slash fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Testimonials Yet</h4>
+            <p class="text-muted">Share your story and the impact of the help you received</p>
+            <a href="{% url 'create_foodbank_testimonial' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create Your First Testimonial
+            </a>
+        </div>
+    {% endif %}
+</div>
+<script>
+    (function() {
+        const key = 'fbh_show_testimonial_displayed_time';
+        const toggle = document.getElementById('toggleFoodbankTestimonialDisplayedTime');
+        if (!toggle) {
+            return;
+        }
+
+        function apply(show) {
+            document.querySelectorAll('.js-testimonial-displayed-time').forEach(function(el) {
+                el.classList.toggle('d-none', !show);
+            });
+        }
+
+        const saved = localStorage.getItem(key);
+        toggle.checked = saved === '1';
+        apply(toggle.checked);
+
+        toggle.addEventListener('change', function() {
+            localStorage.setItem(key, toggle.checked ? '1' : '0');
+            apply(toggle.checked);
+        });
+    })();
+</script>
+{% endblock %}

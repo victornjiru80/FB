@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Request - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Request</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3{% if field.name == 'custom_unit' %} custom-unit-field{% endif %}"{% if field.name == 'custom_unit' %} id="customUnitGroup" style="display: none;"{% endif %}>
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}{% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-info px-4 text-white">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find the quantity unit and custom unit fields
+    const quantityUnitField = document.querySelector('select[name="quantity_unit"]');
+    const customUnitField = document.querySelector('input[name="custom_unit"]');
+    const customUnitGroup = document.getElementById('customUnitGroup');
+    
+    // Add form classes
+    const formFields = document.querySelectorAll('input, select, textarea');
+    formFields.forEach(field => {
+        if (field.type === 'select-one') {
+            field.classList.add('form-select');
+        } else {
+            field.classList.add('form-control');
+        }
+    });
+    
+    // Show/hide custom unit field based on quantity unit selection
+    function toggleCustomUnitField() {
+        if (!quantityUnitField || !customUnitGroup) return;
+        
+        const quantityUnitValue = quantityUnitField.value;
+        
+        if (quantityUnitValue === 'other') {
+            customUnitGroup.style.display = 'block';
+            if (customUnitField) {
+                customUnitField.required = true;
+            }
+            // Add smooth animation
+            customUnitGroup.style.opacity = '0';
+            customUnitGroup.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                customUnitGroup.style.transition = 'all 0.3s ease';
+                customUnitGroup.style.opacity = '1';
+                customUnitGroup.style.transform = 'translateY(0)';
+            }, 10);
+        } else {
+            customUnitGroup.style.display = 'none';
+            if (customUnitField) {
+                customUnitField.required = false;
+                customUnitField.value = ''; // Clear the field when hidden
+            }
+        }
+    }
+    
+    // Add event listener for quantity unit change
+    if (quantityUnitField) {
+        quantityUnitField.addEventListener('change', toggleCustomUnitField);
+        // Check initial state on page load
+        toggleCustomUnitField();
+    }
+});
+</script>
+{% endblock %}

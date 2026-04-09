@@ -1,0 +1,170 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">
+                <i class="fas fa-file-alt text-primary me-2"></i>{{ title }}
+            </h1>
+            <p class="text-muted mb-0">View and export recipient request data</p>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Export Options</h6>
+            <div class="export-buttons">
+                <a href="{% url 'custom_admin:export_report' 'recipient_requests' %}?format=csv" 
+                   class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-csv me-1"></i> Export CSV
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'recipient_requests' %}?format=excel" 
+                   class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'recipient_requests' %}?format=pdf" 
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Request Type</label>
+                    <select name="request_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in request_type_choices %}
+                        <option value="{{ value }}" {% if request_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by recipient name, email, or description..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'custom_admin:recipient_requests_report' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Recipient Requests ({{ requests.count }} total)
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Recipient</th>
+                            <th>Contact</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Foodbank</th>
+                            <th>Status</th>
+                            <th>Delivery</th>
+                            <th>Location</th>
+                            <th>Request Date</th>
+                            <th>Fulfilled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td>{{ req.recipient.full_name }}</td>
+                            <td>
+                                <small>{{ req.recipient.user.email }}<br>
+                                {{ req.recipient.user.phone_number|default:"-" }}</small>
+                            </td>
+                            <td><span class="badge bg-info">{{ req.get_request_type_display }}</span></td>
+                            <td>{{ req.description|truncatewords:10 }}</td>
+                            <td>{{ req.quantity }} {{ req.unit }}</td>
+                            <td>
+                                {% if req.foodbank %}
+                                    {{ req.foodbank.foodbank_name }}
+                                {% elif req.assigned_foodbank %}
+                                    {{ req.assigned_foodbank.foodbank_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'fulfilled' %}
+                                    <span class="badge bg-success">{{ req.get_status_display }}</span>
+                                {% elif req.status == 'pending' %}
+                                    <span class="badge bg-warning">{{ req.get_status_display }}</span>
+                                {% elif req.status == 'declined' %}
+                                    <span class="badge bg-danger">{{ req.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ req.get_delivery_method_display }}</small></td>
+                            <td><small>{{ req.location|truncatewords:5 }}</small></td>
+                            <td><small>{{ req.time_of_request|date:"Y-m-d H:i" }}</small></td>
+                            <td>
+                                {% if req.fulfilled_at %}
+                                    <small>{{ req.fulfilled_at|date:"Y-m-d" }}<br>
+                                    Qty: {{ req.quantity_fulfilled }}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No recipient requests found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

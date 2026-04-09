@@ -1,0 +1,208 @@
+﻿<!-- Donations Table -->
+<div class="donations-table-wrapper" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+    {% if recent_donations_table %}
+        <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table style="width: 100%; border-collapse: collapse; {% if is_direct_preview %}table-layout: fixed; min-width: 1020px;{% else %}min-width: 850px;{% endif %}">
+                <thead style="background: #f9fafb; position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; white-space: nowrap;">Date</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; white-space: normal; min-width: 100px;">Type</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; white-space: nowrap;">Category</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; {% if is_direct_preview %}width: 190px; min-width: 190px; max-width: 190px;{% else %}min-width: 280px;{% endif %} white-space: normal;">Description</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; max-width: 150px; min-width: 120px;">Food Bank</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; white-space: nowrap;">Quantity</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; max-width: 120px; min-width: 100px;">Delivery</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; max-width: 150px; min-width: 120px;">Location</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; max-width: 200px; min-width: 150px; white-space: normal;">Notes</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; white-space: nowrap;">Status</th>
+                        <th style="padding: 1rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb; white-space: nowrap; min-width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in recent_donations_table %}
+                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;">
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; white-space: nowrap;">
+                            <div>{{ donation.donated_at|date:"M d" }}</div>
+                            <small style="color: #9ca3af;">{{ donation.donated_at|time:"H:i" }}</small>
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; min-width: 100px; word-wrap: break-word; white-space: normal;">
+                            <!-- FULL TYPE DISPLAY - No truncation -->
+                            {% if donation.donor_type_value == 'food' %}
+                                <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #dbeafe; color: #1e40af;">Food</span>
+                            {% elif donation.donor_type_value == 'non_food' %}
+                                <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #fef3c7; color: #92400e;">Non-Food</span>
+                            {% else %}
+                                <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #f3f4f6; color: #6b7280;">{{ donation.donor_type_display|default:"Other" }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25;">
+                            {{ donation.donor_category_display|default:donation.get_donation_type_display }}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; {% if is_direct_preview %}width: 190px; min-width: 190px; max-width: 190px;{% else %}min-width: 280px;{% endif %} white-space: normal !important; word-break: break-word; overflow-wrap: anywhere; overflow: visible; text-overflow: clip;">
+                            <div style="white-space: normal !important; word-break: break-word; overflow-wrap: anywhere;">
+                            {% if donation.foodbank_request and donation.foodbank_request.original_request is None %}
+                                <div style="font-weight: 600; color: #111827;">
+                                    {{ donation.foodbank_request.title|default:"Untitled Request" }}
+                                </div>
+                                <small style="display: block; color: #6b7280; white-space: normal !important; word-break: break-word; overflow-wrap: anywhere;">
+                                    {{ donation.foodbank_request.description|default:"No description provided" }}
+                                </small>
+                            {% elif donation.donation_type == 'item' %}
+                                {% if donation.foodbank_request and donation.foodbank_request.original_request and donation.foodbank_request.original_request.description %}
+                                    {{ donation.foodbank_request.original_request.description }}
+                                {% elif donation.foodbank_request and donation.foodbank_request.linked_request_management and donation.foodbank_request.linked_request_management.description %}
+                                    {{ donation.foodbank_request.linked_request_management.description }}
+                                {% elif donation.foodbank_request and donation.foodbank_request.description %}
+                                    {{ donation.foodbank_request.description }}
+                                {% else %}
+                                    {{ donation.item_name|default:"Unnamed Item" }}
+                                {% endif %}
+                            {% elif donation.donation_type == 'money' %}
+                                {% if donation.foodbank_request %}
+                                    {% if donation.foodbank_request.original_request and donation.foodbank_request.original_request.description %}
+                                        {{ donation.foodbank_request.original_request.description }}
+                                    {% elif donation.foodbank_request.linked_request_management and donation.foodbank_request.linked_request_management.description %}
+                                        {{ donation.foodbank_request.linked_request_management.description }}
+                                    {% elif donation.foodbank_request.description %}
+                                        {{ donation.foodbank_request.description }}
+                                    {% elif donation.foodbank_request.title %}
+                                        {{ donation.foodbank_request.title }}
+                                    {% else %}
+                                        Monetary Donation
+                                    {% endif %}
+                                {% else %}
+                                    Monetary Donation
+                                {% endif %}
+                            {% elif donation.donation_type == 'subsidized' %}
+                                {{ donation.subsidized_product_type|default:"Subsidized Goods" }}
+                            {% elif donation.donation_type == 'csr' %}
+                                CSR - {{ donation.get_csr_subcategory_display }}
+                            {% else %}
+                                {{ donation.other_description|default:"Other donation" }}
+                            {% endif %}
+                            </div>
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; max-width: 150px; min-width: 120px; word-wrap: break-word; white-space: normal;">
+                            {{ donation.foodbank.foodbank_name }}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.3;">
+                            {% if donation.donation_type == 'item' %}
+                                <span style="color: #16a34a; font-weight: 500;">{{ donation.quantity }} {{ donation.quantity_unit|default:"units" }}</span>
+                                {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(of {{ donation.foodbank_request.quantity_needed }} {{ donation.requested_unit_label|default:"units" }} requested)</small>
+                                {% endif %}
+                            {% elif donation.donation_type == 'money' %}
+                                <strong style="color: #059669;">KES {{ donation.amount|floatformat:0 }}</strong>
+                                {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(for {{ donation.foodbank_request.quantity_needed }} {{ donation.requested_unit_label|default:"units" }})</small>
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(of {{ donation.foodbank_request.quantity_needed }} {{ donation.requested_unit_label|default:"units" }} requested)</small>
+                                {% elif donation.foodbank_request and donation.foodbank_request.original_request %}
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(for {{ donation.foodbank_request.original_request.quantity }} {{ donation.requested_unit_label|default:"units" }})</small>
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(of {{ donation.foodbank_request.original_request.quantity }} {{ donation.requested_unit_label|default:"units" }} requested)</small>
+                                {% endif %}
+                            {% elif donation.donation_type == 'subsidized' %}
+                                <span style="color: #d97706;">KES {{ donation.subsidized_price|floatformat:0 }}</span>
+                                {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(for {{ donation.foodbank_request.quantity_needed }} {{ donation.requested_unit_label|default:"units" }})</small>
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(of {{ donation.foodbank_request.quantity_needed }} {{ donation.requested_unit_label|default:"units" }} requested)</small>
+                                {% elif donation.foodbank_request and donation.foodbank_request.original_request %}
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(for {{ donation.foodbank_request.original_request.quantity }} {{ donation.requested_unit_label|default:"units" }})</small>
+                                    <br>
+                                    <small style="display: block; color: #6b7280; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">(of {{ donation.foodbank_request.original_request.quantity }} {{ donation.requested_unit_label|default:"units" }} requested)</small>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #6b7280;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; max-width: 120px; min-width: 100px; word-wrap: break-word; white-space: normal;">
+                            {% if donation.delivery_method %}
+                                {{ donation.get_delivery_method_display }}
+                            {% else %}
+                                <span style="color: #9ca3af;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; max-width: 150px; min-width: 120px; word-wrap: break-word; white-space: normal;">
+                            {{ donation.foodbank.address|default:"No location specified" }}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; color: #6b7280; max-width: 200px; min-width: 150px; word-wrap: break-word; white-space: normal;">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary donor-view-notes-btn"
+                                    data-note-title="Notes for {{ donation.foodbank.foodbank_name|default:'Donation' }}"
+                                    data-note-layout="{% if is_direct_preview %}direct{% else %}standard{% endif %}"
+                                    data-donor-note="{% if donation.message %}{{ donation.message|escapejs }}{% elif donation.csr_description %}{{ donation.csr_description|escapejs }}{% elif donation.other_description %}{{ donation.other_description|escapejs }}{% else %}{% endif %}"
+                                    data-recipient-note="{% if donation.latest_recipient_note %}{{ donation.latest_recipient_note|escapejs }}{% elif donation.request_management and donation.request_management.additional_notes %}{{ donation.request_management.additional_notes|escapejs }}{% elif donation.foodbank_request and donation.foodbank_request.original_request and donation.foodbank_request.original_request.additional_notes %}{{ donation.foodbank_request.original_request.additional_notes|escapejs }}{% else %}{% endif %}"
+                                    data-foodbank-note="{% if donation.foodbank_request and donation.foodbank_request.foodbank_note %}{{ donation.foodbank_request.foodbank_note|escapejs }}{% elif donation.request_management and donation.request_management.foodbank_response_note %}{{ donation.request_management.foodbank_response_note|escapejs }}{% else %}{% endif %}"
+                                    data-foodbank-acceptance-note="{% if donation.request_management and donation.request_management.foodbank_response_note %}{{ donation.request_management.foodbank_response_note|escapejs }}{% elif donation.decline_message and donation.status != 'declined' and not donation.declined_by_recipient %}{{ donation.decline_message|escapejs }}{% elif donation.foodbank_request and donation.foodbank_request.foodbank_note %}{{ donation.foodbank_request.foodbank_note|escapejs }}{% else %}{% endif %}"
+                                    data-foodbank-decline-note="{% if donation.declined_by_recipient %}{% elif donation.decline_message and donation.status == 'declined' %}{{ donation.decline_message|escapejs }}{% elif donation.request_management and donation.request_management.foodbank_declined_request and donation.request_management.decline_message %}{{ donation.request_management.decline_message|escapejs }}{% elif donation.foodbank_request and donation.foodbank_request.original_request and donation.foodbank_request.original_request.foodbank_declined_request and donation.foodbank_request.original_request.decline_message %}{{ donation.foodbank_request.original_request.decline_message|escapejs }}{% else %}{% endif %}"
+                                    data-recipient-decline-note="{% if donation.decline_responses %}{% for r in donation.decline_responses %}{{ r.recipient.full_name|default:r.recipient.user.email|escapejs }}: {{ r.notes|default:'No note provided.'|escapejs }}{% if not forloop.last %}\n{% endif %}{% endfor %}{% elif donation.declined_by_recipient and donation.decline_message %}{{ donation.decline_message|escapejs }}{% elif donation.request_management and donation.request_management.recipient_declined_request and donation.request_management.decline_message %}{{ donation.request_management.decline_message|escapejs }}{% elif donation.foodbank_request and donation.foodbank_request.original_request and donation.foodbank_request.original_request.recipient_declined_request and donation.foodbank_request.original_request.decline_message %}{{ donation.foodbank_request.original_request.decline_message|escapejs }}{% elif donation.declined_by_recipient and donation.latest_recipient_note %}{{ donation.latest_recipient_note|escapejs }}{% else %}{% endif %}">
+                                <i class="fas fa-sticky-note me-1"></i>View Notes
+                            </button>
+                        </td>
+                        <td style="padding: 1rem 0.75rem; white-space: normal; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">
+                            {% with status=donation.status_display|default:donation.get_status_display status_class=donation.status_class|default:'pending' %}
+                                {% if status_class == 'declined' %}
+                                    <span style="display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; text-align: left; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #fee2e2; color: #991b1b;">
+                                        <i class="fas fa-times"></i> {{ status|default:'Declined' }}
+                                    </span>
+                                {% elif status_class == 'pending' %}
+                                    <span style="display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; text-align: left; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #fef3c7; color: #92400e;">
+                                        <i class="fas fa-clock"></i> {{ status|default:'Awaiting FB Review' }}
+                                    </span>
+                                {% elif status_class == 'accepted' %}
+                                    <span style="display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; text-align: left; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #dbeafe; color: #1d4ed8;">
+                                        <i class="fas fa-paper-plane"></i> {{ status|default:'Accepted' }}
+                                    </span>
+                                {% elif status_class == 'fulfilled' %}
+                                    <span style="display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; text-align: left; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #059669; color: white;">
+                                        <i class="fas fa-check-circle"></i> {{ status|default:'Fulfilled' }}
+                                    </span>
+                                {% elif status_class == 'partial' %}
+                                    <span style="display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; text-align: left; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #fef3c7; color: #92400e;">
+                                        <i class="fas fa-adjust"></i> {{ status|default:'Partially Fulfilled' }}
+                                    </span>
+                                {% else %}
+                                    <span style="display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; text-align: left; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #e5e7eb; color: #6b7280;">
+                                        {{ status|default:'Unknown' }}
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td style="padding: 1rem 0.75rem; white-space: nowrap;">
+                            <a href="{% url 'donation_detail' donation.id %}" style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: 600; text-decoration: none; background: white; color: #6b7280; border: 1px solid #e5e7eb; font-size: 0.7rem;">
+                                <i class="fas fa-eye fa-xs"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <i class="fas fa-hand-holding-heart" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+            <h3>No Donations Yet</h3>
+            <p>Start making a difference today!</p>
+            <a href="{% url 'donate' %}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; background: #10b981; color: white;">
+                <i class="fas fa-plus"></i> Make Your First Donation
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableContainer = document.querySelector('.donations-table-wrapper > div');
+    if (tableContainer) {
+        tableContainer.style.border = '1px solid #e5e7eb';
+        tableContainer.style.borderRadius = '8px';
+    }
+});
+</script>

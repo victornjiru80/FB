@@ -1,0 +1,1251 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FBHMS{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/password_strength.css' %}" rel="stylesheet">
+    <link href="{% static 'css/foodbank_navbar.css' %}" rel="stylesheet">
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        html {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Ensure smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Modern Navbar Styles - Matching Homepage */
+        .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            padding: 0.75rem 0;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .navbar.scrolled {
+            padding: 0.6rem 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #334155 !important;
+            letter-spacing: -0.01em;
+            padding: 0.4rem 0;
+            margin-left: 0.75rem;
+            transition: color 0.2s ease;
+            text-shadow: none;
+        }
+
+        .navbar-brand:hover {
+            transform: none;
+            color: #0f766e !important;
+            text-shadow: none;
+        }
+
+
+
+        .nav-link {
+            font-weight: 500;
+            color: #334155 !important;
+            padding: 0.55rem 0.95rem !important;
+            margin: 0 0.2rem;
+            border-radius: 999px;
+            transition: color 0.2s ease, background 0.2s ease;
+            position: relative;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+        }
+
+        .nav-link:hover, .nav-link:focus {
+            color: #0f766e !important;
+            background: rgba(15, 118, 110, 0.08);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .nav-link.active {
+            color: #0f766e !important;
+            background: rgba(15, 118, 110, 0.12);
+            box-shadow: none;
+        }
+
+        .navbar-toggler {
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            padding: 0.55rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+            background: white;
+        }
+
+        .navbar-toggler:hover {
+            background: rgba(15, 118, 110, 0.06);
+            transform: none;
+        }
+
+        .navbar-toggler-icon {
+            background-image: none;
+            position: relative;
+            width: 24px;
+            height: 2px;
+            background-color: #334155;
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            background-color: #334155;
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .navbar-toggler-icon::before {
+            transform: translateY(-9px);
+        }
+
+        .navbar-toggler-icon::after {
+            transform: translateY(9px);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+            background-color: transparent;
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+            transform: rotate(45deg);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+            transform: rotate(-45deg);
+        }
+
+        .dropdown-menu {
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+            border-radius: 0.9rem;
+            padding: 0.6rem;
+            margin-top: 0.6rem;
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 1050;
+            position: absolute;
+            top: 100%;
+            left: auto;
+            right: 0;
+            min-width: 200px;
+        }
+
+        .dropdown-item {
+            padding: 0.65rem 0.9rem;
+            border-radius: 0.7rem;
+            font-weight: 500;
+            color: #334155;
+            transition: background 0.2s ease, color 0.2s ease;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background: rgba(15, 118, 110, 0.08);
+            color: #0f172a;
+            transform: none;
+        }
+
+        .dropdown-item.active {
+            background: #0f766e;
+            color: white;
+            box-shadow: none;
+        }
+        
+        /* Ensure dropdowns don't overlap with navbar */
+        .nav-item.dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu.show {
+            display: block !important;
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+        
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Force dropdowns to be click-based only - but not for foodbank navbar */
+        .dropdown-menu:not(.foodbank-navbar .dropdown-menu) {
+            display: none !important;
+        }
+        
+        .dropdown-menu.show:not(.foodbank-navbar .dropdown-menu) {
+            display: block !important;
+        }
+        
+        /* Allow Bootstrap to handle foodbank navbar dropdowns naturally - styles moved to foodbank_navbar.css */
+        
+        /* Ensure proper z-index and positioning */
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            z-index: 1050;
+            top: 100%;
+            left: auto;
+            right: 0;
+        }
+
+        .auth-buttons .btn {
+            padding: 0.6rem 1.4rem;
+            font-weight: 600;
+            border-radius: 999px;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+            box-shadow: none;
+        }
+
+        .auth-buttons .btn-outline-primary {
+            border-width: 1px;
+            color: #0f766e;
+            border-color: #0f766e;
+        }
+
+        .auth-buttons .btn-outline-primary:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgba(15, 118, 110, 0.08);
+            color: #0f172a;
+        }
+
+        .auth-buttons .btn-primary {
+            background: #0f766e;
+            border: none;
+            box-shadow: none;
+            color: #ffffff;
+        }
+
+        .auth-buttons .btn-primary:hover {
+            transform: none;
+            box-shadow: none;
+            background: #115e59;
+            color: #ffffff;
+        }
+
+        .auth-buttons .btn-success {
+            background: #16a34a;
+            border: none;
+            box-shadow: none;
+        }
+
+        .auth-buttons .btn-success:hover {
+            transform: none;
+            box-shadow: none;
+            background: #15803d;
+        }
+
+        .auth-buttons .btn-danger {
+            background: #dc2626;
+            border: none;
+            box-shadow: none;
+        }
+
+        .auth-buttons .btn-danger:hover {
+            transform: none;
+            box-shadow: none;
+            background: #b91c1c;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(12px);
+                padding: 1.25rem;
+                border-radius: 1rem;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+                margin-top: 1rem;
+                border: 1px solid rgba(226, 232, 240, 0.9);
+            }
+
+            .nav-link {
+                padding: 0.9rem 1rem !important;
+                margin: 0.25rem 0;
+                border-radius: 0.9rem;
+                font-weight: 600;
+            }
+
+            .auth-buttons {
+                margin-top: 1.25rem;
+                padding-top: 1.25rem;
+                border-top: 1px solid rgba(226, 232, 240, 0.9);
+            }
+
+            .auth-buttons .btn {
+                width: 100%;
+                margin: 0.6rem 0;
+                padding: 0.9rem 1.25rem;
+                font-size: 0.95rem;
+            }
+            
+            .auth-buttons .d-flex {
+                flex-direction: column;
+                gap: 0.8rem !important;
+            }
+            
+            .auth-buttons .d-flex span {
+                text-align: center;
+                margin: 0 !important;
+            }
+        }
+
+        /* Scroll Progress Indicator */
+        .scroll-progress {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-progress.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scroll-progress-circle {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scroll-progress-circle svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .scroll-progress-circle circle {
+            fill: none;
+            stroke-width: 4;
+        }
+
+        .scroll-progress-circle circle:first-child {
+            stroke: rgba(13, 110, 253, 0.1);
+        }
+
+        .scroll-progress-circle circle:last-child {
+            stroke: #0d6efd;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s ease;
+        }
+
+        .scroll-progress-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0d6efd;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .scroll-progress:hover .scroll-progress-icon {
+            transform: translate(-50%, -60%);
+        }
+
+        .scroll-progress:hover circle:last-child {
+            stroke: #0b5ed7;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-progress {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        /* Recipient Navbar Specific Styles */
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #6c757d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+        }
+        .badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .nav-link {
+            transition: all 0.2s ease;
+        }
+        .nav-link:hover {
+            transform: translateY(-1px);
+        }
+        .dropdown-item {
+            transition: all 0.2s ease;
+        }
+        .dropdown-item:hover {
+            transform: translateX(4px);
+        }
+        @media (max-width: 991.98px) {
+            .navbar-nav {
+                padding-top: 1rem;
+            }
+        }
+
+        /* Donor theme: turn Bootstrap "primary/blue" into green */
+        .user-donor .btn-primary,
+        .user-donor .btn.btn-primary {
+            background-color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .user-donor .btn-primary:hover,
+        .user-donor .btn.btn-primary:hover {
+            background-color: #15803d !important;
+            border-color: #15803d !important;
+        }
+        .user-donor .btn-outline-primary,
+        .user-donor .btn.btn-outline-primary {
+            color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .user-donor .btn-outline-primary:hover,
+        .user-donor .btn.btn-outline-primary:hover {
+            background-color: rgba(22, 163, 74, 0.12) !important;
+            border-color: #15803d !important;
+            color: #15803d !important;
+        }
+        .user-donor .text-primary { color: #16a34a !important; }
+        .user-donor .bg-primary { background-color: #16a34a !important; }
+        .user-donor .border-primary { border-color: #16a34a !important; }
+        .user-donor .badge.bg-primary { background-color: #16a34a !important; }
+
+        /* Donor navbar active tab highlight */
+        .user-donor .nav-link.active,
+        .user-donor .nav-link:hover,
+        .user-donor .nav-link:focus {
+            color: #16a34a !important;
+        }
+
+        /* Recipient theme: Bootstrap primary → green */
+        .user-recipient .btn-primary,
+        .user-recipient .btn.btn-primary {
+            background-color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .user-recipient .btn-primary:hover,
+        .user-recipient .btn.btn-primary:hover {
+            background-color: #15803d !important;
+            border-color: #15803d !important;
+        }
+        .user-recipient .btn-outline-primary,
+        .user-recipient .btn.btn-outline-primary {
+            color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .user-recipient .btn-outline-primary:hover,
+        .user-recipient .btn.btn-outline-primary:hover {
+            background-color: rgba(22, 163, 74, 0.12) !important;
+            border-color: #15803d !important;
+            color: #15803d !important;
+        }
+        .user-recipient .text-primary { color: #16a34a !important; }
+        .user-recipient .bg-primary { background-color: #16a34a !important; }
+        .user-recipient .border-primary { border-color: #16a34a !important; }
+        .user-recipient .badge.bg-primary { background-color: #16a34a !important; }
+        .user-recipient .nav-link.active,
+        .user-recipient .nav-link:hover,
+        .user-recipient .nav-link:focus {
+            color: #16a34a !important;
+        }
+
+        /* Food bank theme: Bootstrap primary → green */
+        .user-foodbank .btn-primary,
+        .user-foodbank .btn.btn-primary {
+            background-color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .user-foodbank .btn-primary:hover,
+        .user-foodbank .btn.btn-primary:hover {
+            background-color: #15803d !important;
+            border-color: #15803d !important;
+        }
+        .user-foodbank .btn-outline-primary,
+        .user-foodbank .btn.btn-outline-primary {
+            color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .user-foodbank .btn-outline-primary:hover,
+        .user-foodbank .btn.btn-outline-primary:hover {
+            background-color: rgba(22, 163, 74, 0.12) !important;
+            border-color: #15803d !important;
+            color: #15803d !important;
+        }
+        .user-foodbank .text-primary { color: #16a34a !important; }
+        .user-foodbank .bg-primary { background-color: #16a34a !important; }
+        .user-foodbank .border-primary { border-color: #16a34a !important; }
+        .user-foodbank .badge.bg-primary { background-color: #16a34a !important; }
+        .user-foodbank .nav-link.active,
+        .user-foodbank .nav-link:hover,
+        .user-foodbank .nav-link:focus {
+            color: #16a34a !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body {% if user.is_authenticated %}class="authenticated user-{{ user.user_type|lower }}"{% endif %}>
+    <div class="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    {% if user.is_authenticated and user.user_type == 'DONOR' %}
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+                <strong>FoodBank Hub</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDonor">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarDonor">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'donate' %}">
+                            <i class="fas fa-hand-holding-heart me-1"></i> Donate
+                        </a>
+                    </li>
+                    <!--<li class="nav-item">
+                        <a class="nav-link" href="{% url 'reports_dashboard' %}">
+                            <i class="fas fa-chart-line me-1"></i> Reports
+                        </a>-->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'donor_testimonials_list' %}">
+                            <i class="fas fa-comments me-1"></i> My Testimonials
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'my_support_messages' or request.resolver_match.url_name == 'support_message_detail_user' or request.resolver_match.url_name == 'donor_contact_support' %}active{% endif %}" href="{% url 'my_support_messages' %}">
+                            <i class="fas fa-headset me-1"></i> Support
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="donorSettingsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> 
+                            {% if user.donor_profile.is_organization and user.donor_profile.organization_name %}
+                                {{ user.donor_profile.organization_name }}
+                            {% else %}
+                                {{ user.donor_profile.full_name|default:user.email }}
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="donorSettingsDropdown">
+                            <li class="dropdown-header fw-bold text-primary">Settings & Support</li>
+                            <li><a class="dropdown-item" href="{% url 'donor_settings' %}"><i class="fas fa-user-cog me-2"></i> Update Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fas fa-key me-2"></i> Change Password</a></li>
+                            <li><a class="dropdown-item" href="{% url 'donor_contact_support' %}"><i class="fas fa-headset me-2"></i> Contact Support</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% elif user.is_authenticated and user.user_type == 'FOODBANK' %}
+    <!-- Elegant Foodbank navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top foodbank-navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+                <strong>FoodBank Hub</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFoodbank">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarFoodbank">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'foodbank_requests_view' %}active{% endif %}" href="{% url 'foodbank_requests_view' %}">
+                            <i class="fas fa-tasks me-2"></i> Manage Requests
+                        </a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'foodbank_requests' %}">
+                            <i class="fas fa-bullhorn me-1"></i> Direct Request
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'foodbank_donations_list' %}active{% endif %}" href="{% url 'foodbank_donations_list' %}">
+                            <i class="fas fa-hand-holding-heart me-2"></i> Receive Donations
+                        </a>
+                    </li>
+                   <!-- <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" href="{% url 'reports_dashboard' %}">
+                            <i class="fas fa-chart-line me-2"></i> Reports
+                        </a>-->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'foodbank_testimonials_list' %}active{% endif %}" href="{% url 'foodbank_testimonials_list' %}">
+                            <i class="fas fa-star me-2"></i> My Testimonials
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="foodbankSettingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span class="d-none d-lg-inline">{{ user.foodbank_profile.foodbank_name|truncatewords:2 }}</span>
+                            <span class="d-lg-none">Account</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="foodbankSettingsDropdown">
+                            <li class="dropdown-header fw-bold text-primary d-flex align-items-center">
+                                <i class="fas fa-cog me-2"></i> Settings & Support
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="{% url 'foodbank_settings' %}">
+                                    <i class="fas fa-user-cog me-2 text-primary"></i> Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="{% url 'change_foodbank_password' %}">
+                                    <i class="fas fa-key me-2 text-info"></i> Change Password
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="{% url 'foodbank_contact_support' %}">
+                                    <i class="fas fa-headset me-2 text-success"></i> Contact Support
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center text-danger" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- Dark Mode Toggle -->
+                    <li class="nav-item">
+                        <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% elif user.is_authenticated and user.user_type == 'RECIPIENT' %}
+    <!-- Recipient navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center fw-bold text-dark" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils me-2 text-primary"></i>
+                FoodBank Hub
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarRecipient" aria-controls="navbarRecipient" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarRecipient">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipient_requests_view' %}active fw-semibold{% endif %}" href="{% url 'recipient_requests_view' %}">
+                            <i class="fas fa-list me-1"></i> My Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipient_foodbanks_list' %}active fw-semibold{% endif %}" href="{% url 'recipient_foodbanks_list' %}">
+                            <i class="fas fa-building me-1"></i> Food Banks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipient_testimonials_list' %}active fw-semibold{% endif %}" href="{% url 'recipient_testimonials_list' %}">
+                            <i class="fas fa-comments me-1"></i> My Testimonials
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'create_testimonial' %}active fw-semibold{% endif %}" href="{% url 'create_testimonial' %}">
+                            <i class="fas fa-comment-dots me-1"></i> Testimonial
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="recipientSettingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar me-2">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="d-none d-lg-inline">
+                                {% if user.recipient_profile.is_organization %}
+                                    {{ user.recipient_profile.organization_name|default:user.email|truncatechars:15 }}
+                                {% else %}
+                                    {{ user.recipient_profile.full_name|default:user.email|truncatechars:15 }}
+                                {% endif %}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="recipientSettingsDropdown">
+                            <li class="dropdown-header fw-bold text-primary border-bottom">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {% if user.recipient_profile.is_organization %}
+                                    {{ user.recipient_profile.organization_name|default:user.email }}
+                                {% else %}
+                                    {{ user.recipient_profile.full_name|default:user.email }}
+                                {% endif %}
+                            </li>
+                            <li><a class="dropdown-item py-2" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt me-2 text-muted"></i> Dashboard</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'recipient_settings' %}"><i class="fas fa-user-cog me-2 text-muted"></i> Update Profile</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'change_recipient_password' %}"><i class="fas fa-key me-2 text-muted"></i> Change Password</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'recipient_contact_support' %}"><i class="fas fa-headset me-2 text-muted"></i> Contact Support</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- Public navbar for non-authenticated users -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <img src="{% static 'images/logo.svg' %}" alt="FoodBank Hub logo" style="width: 34px; height: 34px; margin-right: 8px;">
+                <strong>FoodBank Hub</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!--<li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>-->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if selected_type == 'food' %}active{% endif %}" href="{% url 'home' %}?donation_type=food">
+                            <i class="fas fa-utensils me-1"></i>Food
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if selected_type == 'non_food' %}active{% endif %}" href="{% url 'home' %}?donation_type=non_food">
+                            <i class="fas fa-box me-1"></i>Non-Food
+                        </a>
+                    </li>
+                    {% if request.user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/">Admin Dashboard</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="auth-buttons">
+                    {% if user.is_authenticated and user.is_staff %}
+                        <!-- Admin user shows logout and admin dashboard -->
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="text-muted me-2">
+                                <i class="fas fa-user-shield me-1"></i>{{ user.email }}
+                            </span>
+                            <a href="/admin/" class="btn btn-outline-primary">
+                                <i class="fas fa-tachometer-alt me-1"></i>Admin
+                            </a>
+                            <a href="{% url 'custom_admin:logout' %}" class="btn btn-danger">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a>
+                        </div>
+                    {% elif request.resolver_match.url_name == 'login' %}
+                        <!-- Login page shows Register button -->
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'register_donor' %}">
+                                    <i class="fas fa-hand-holding-heart me-2"></i>As Donor
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'register_foodbank' %}">
+                                    <i class="fas fa-warehouse me-2"></i>As Food Bank
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'register_recipient' %}">
+                                    <i class="fas fa-utensils me-2"></i>As Recipient
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'register_admin' %}"><i class="fas fa-user-shield me-2"></i>As Admin</a></li>
+                            </ul>
+                        </div>
+                    {% elif request.resolver_match.url_name == 'register_donor' or request.resolver_match.url_name == 'register_foodbank' or request.resolver_match.url_name == 'register_recipient' or request.resolver_match.url_name == 'register_admin' %}
+                        <!-- Registration pages show Login dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'login' %}">
+                                    <i class="fas fa-sign-in-alt me-2"></i>General Login
+                                </a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <!-- Home page shows both Login and Register -->
+                        <div class="d-flex gap-2">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'login' %}">
+                                        <i class="fas fa-sign-in-alt me-2"></i>General Login
+                                    </a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-plus me-1"></i>Register
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'register_donor' %}">
+                                        <i class="fas fa-hand-holding-heart me-2"></i>As Donor
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'register_foodbank' %}">
+                                        <i class="fas fa-warehouse me-2"></i>As Food Bank
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'register_recipient' %}">
+                                        <i class="fas fa-utensils me-2"></i>As Recipient
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'register_admin' %}"><i class="fas fa-user-shield me-2"></i>As Admin</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+
+    <!-- Messages Container - Fixed positioning to avoid layout conflicts -->
+    {% if messages %}
+    <div class="messages-container">
+        <div class="container-fluid px-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show auto-dismiss-alert" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-6 mb-4">
+                    <div class="footer-panel">
+                        <div class="footer-brand">
+                            <div class="footer-logo">
+                                <i class="fas fa-heart"></i>
+                                <span>FoodBank Hub</span>
+                            </div>
+                            <p class="footer-description">
+                                Connecting donors with food banks and those in need. Making a difference in our community.
+                            </p>
+                            <div class="footer-badges">
+                                <span class="footer-badge"><i class="fas fa-shield-alt"></i>Secure</span>
+                                <span class="footer-badge"><i class="fas fa-check-circle"></i>Verified</span>
+                                <span class="footer-badge"><i class="fas fa-hand-holding-heart"></i>Impact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 mb-4">
+                    <div class="footer-panel">
+                        <h5 class="footer-title">Get Involved</h5>
+                        <ul class="footer-links">
+                            <li><a href="{% url 'register_donor' %}"><i class="fas fa-hand-holding-heart me-2"></i>Become a Donor</a></li>
+                            <li><a href="{% url 'register_foodbank' %}"><i class="fas fa-warehouse me-2"></i>Register Food Bank</a></li>
+                            <li><a href="{% url 'register_recipient' %}"><i class="fas fa-utensils me-2"></i>Need Assistance</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-inner">
+                    <p class="copyright">
+                        &copy; {% now "Y" %} FoodBank Hub. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" role="button" aria-label="Scroll to top">
+        <div class="scroll-progress-circle">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45"></circle>
+                <circle cx="50" cy="50" r="45"></circle>
+            </svg>
+            <div class="scroll-progress-icon">
+                <i class="fas fa-chevron-up"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/password_strength.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/session_timeout.js' %}"></script>
+    {% endif %}
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            const scrollY = window.scrollY;
+            
+            // Check if it's the FoodBank navbar
+            if (navbar.classList.contains('foodbank-navbar')) {
+                // Elegant FoodBank navbar scroll effect
+                if (scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                    
+                    // Check if dark mode is active
+                    if (navbar.classList.contains('dark-mode')) {
+                        // Dark mode scroll effect
+                        const opacity = Math.min(0.98, 0.95 + (scrollY / 500) * 0.03);
+                        const shadow = Math.min(0.3, 0.2 + (scrollY / 500) * 0.1);
+                        
+                        navbar.style.background = `rgba(15, 23, 42, ${opacity})`;
+                        navbar.style.boxShadow = `0 4px 6px -1px rgba(0, 0, 0, ${shadow}), 0 2px 4px -1px rgba(0, 0, 0, ${shadow * 0.6})`;
+                    } else {
+                        // Light mode scroll effect
+                        const opacity = Math.min(0.98, 0.95 + (scrollY / 500) * 0.03);
+                        const shadow = Math.min(0.15, 0.1 + (scrollY / 500) * 0.05);
+                        
+                        navbar.style.background = `rgba(248, 250, 252, ${opacity})`;
+                        navbar.style.boxShadow = `0 4px 6px -1px rgba(0, 0, 0, ${shadow}), 0 2px 4px -1px rgba(0, 0, 0, ${shadow * 0.6})`;
+                    }
+                } else {
+                    navbar.classList.remove('scrolled');
+                    if (navbar.classList.contains('dark-mode')) {
+                        // Dark mode default
+                        navbar.style.background = 'linear-gradient(135deg, #0f172a, #1e293b, #334155)';
+                        navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)';
+                    } else {
+                        // Light mode default
+                        navbar.style.background = 'linear-gradient(135deg, #f8fafc, #e2e8f0, #f1f5f9)';
+                        navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+                    }
+                }
+            } else {
+                // Default navbar scroll effect
+                if (scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                    
+                    // Add dynamic opacity based on scroll position
+                    const opacity = Math.min(0.98, 0.85 + (scrollY / 500) * 0.13);
+                    const blur = Math.min(15, 8 + (scrollY / 500) * 7);
+                    const shadow = Math.min(0.1, 0.05 + (scrollY / 500) * 0.05);
+                    
+                    navbar.style.background = `rgba(255, 255, 255, ${opacity})`;
+                    navbar.style.backdropFilter = `blur(${blur}px)`;
+                    navbar.style.boxShadow = `0 2px 10px rgba(0, 0, 0, ${shadow})`;
+                } else {
+                    navbar.classList.remove('scrolled');
+                    navbar.style.background = 'rgba(255, 255, 255, 0.85)';
+                    navbar.style.backdropFilter = 'blur(8px)';
+                    navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                }
+            }
+        });
+
+        // Enhanced FoodBank navbar interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const foodbankNavbar = document.querySelector('.foodbank-navbar');
+            
+            if (foodbankNavbar) {
+                // Add hover effects to stat items
+                const statItems = foodbankNavbar.querySelectorAll('.stat-item');
+                statItems.forEach(item => {
+                    item.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-3px) scale(1.05)';
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0) scale(1)';
+                    });
+                });
+
+                // Enhanced dropdown positioning (let Bootstrap handle animations)
+                const dropdowns = foodbankNavbar.querySelectorAll('.dropdown');
+                dropdowns.forEach(dropdown => {
+                    const menu = dropdown.querySelector('.dropdown-menu');
+                    
+                    // Ensure proper positioning only
+                    menu.style.position = 'absolute';
+                    menu.style.zIndex = '1050';
+                });
+
+                // Add active state management for FoodBank navbar
+                const currentPath = window.location.pathname;
+                const navLinks = foodbankNavbar.querySelectorAll('.nav-link');
+                
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === currentPath) {
+                        link.classList.add('active');
+                    }
+                    
+                    // Add click effect
+                    link.addEventListener('click', function() {
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            }
+        });
+
+        // Dark Mode Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const foodbankNavbar = document.querySelector('.foodbank-navbar');
+            
+            if (themeToggle && foodbankNavbar) {
+                // Check for saved theme preference or default to light mode
+                const currentTheme = localStorage.getItem('foodbank-theme') || 'light';
+                
+                // Apply the saved theme
+                if (currentTheme === 'dark') {
+                    foodbankNavbar.classList.add('dark-mode');
+                    themeIcon.className = 'fas fa-sun';
+                    themeToggle.title = 'Switch to Light Mode';
+                }
+                
+                // Theme toggle click handler
+                themeToggle.addEventListener('click', function() {
+                    if (foodbankNavbar.classList.contains('dark-mode')) {
+                        // Switch to light mode
+                        foodbankNavbar.classList.remove('dark-mode');
+                        themeIcon.className = 'fas fa-moon';
+                        themeToggle.title = 'Toggle Dark Mode';
+                        localStorage.setItem('foodbank-theme', 'light');
+                        
+                        // Update scroll effect for light mode
+                        if (window.scrollY > 10) {
+                            foodbankNavbar.style.background = 'rgba(248, 250, 252, 0.95)';
+                            foodbankNavbar.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                        } else {
+                            foodbankNavbar.style.background = 'linear-gradient(135deg, #f8fafc, #e2e8f0, #f1f5f9)';
+                            foodbankNavbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+                        }
+                    } else {
+                        // Switch to dark mode
+                        foodbankNavbar.classList.add('dark-mode');
+                        themeIcon.className = 'fas fa-sun';
+                        themeToggle.title = 'Switch to Light Mode';
+                        localStorage.setItem('foodbank-theme', 'dark');
+                        
+                        // Update scroll effect for dark mode
+                        if (window.scrollY > 10) {
+                            foodbankNavbar.style.background = 'rgba(15, 23, 42, 0.95)';
+                            foodbankNavbar.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)';
+                        } else {
+                            foodbankNavbar.style.background = 'linear-gradient(135deg, #0f172a, #1e293b, #334155)';
+                            foodbankNavbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)';
+                        }
+                    }
+                    
+                    // Add smooth transition effect
+                    foodbankNavbar.style.transition = 'all 0.3s ease';
+                    
+                    // Remove transition after animation completes
+                    setTimeout(() => {
+                        foodbankNavbar.style.transition = '';
+                    }, 300);
+                });
+            }
+        });
+
+        // Set active nav link based on current page
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Hide loading screen when page is loaded
+        window.addEventListener('load', function() {
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+        });
+
+        // Fallback: Hide loading screen after 3 seconds if it's still showing
+        setTimeout(function() {
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement && loadingElement.style.display !== 'none') {
+                loadingElement.style.display = 'none';
+                console.warn('Loading screen hidden by fallback timeout');
+            }
+        }, 3000);
+
+        // Hide loading screen when DOM is ready (additional fallback)
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const loadingElement = document.querySelector('.loading');
+                if (loadingElement && loadingElement.style.display !== 'none') {
+                    loadingElement.style.display = 'none';
+                }
+            }, 1000);
+        });
+
+        // Auto-dismiss flash alerts after a short delay.
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.auto-dismiss-alert');
+            alerts.forEach(function(alertEl) {
+                const isError = alertEl.classList.contains('alert-danger') || alertEl.classList.contains('alert-error');
+                const dismissAfterMs = isError ? 5000 : 3000;
+                setTimeout(function() {
+                    if (alertEl && alertEl.parentNode) {
+                        if (window.bootstrap && bootstrap.Alert) {
+                            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertEl);
+                            bsAlert.close();
+                        } else {
+                            alertEl.classList.remove('show');
+                            alertEl.classList.add('fade');
+                            setTimeout(function() {
+                                if (alertEl && alertEl.parentNode) {
+                                    alertEl.remove();
+                                }
+                            }, 200);
+                        }
+                    }
+                }, dismissAfterMs);
+            });
+        });
+
+        // Scroll Progress Indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            const scrollProgress = document.querySelector('.scroll-progress');
+            const circle = scrollProgress.querySelector('circle:last-child');
+            const circumference = 2 * Math.PI * 45; // 2πr where r=45
+
+            // Set the stroke-dasharray and initial stroke-dashoffset
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+
+            // Update progress on scroll
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrollPercent = (scrollTop / scrollHeight) * 100;
+                
+                // Calculate the stroke-dashoffset
+                const offset = circumference - (scrollPercent / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+
+                // Show/hide the progress indicator
+                if (scrollTop > 300) {
+                    scrollProgress.classList.add('visible');
+                } else {
+                    scrollProgress.classList.remove('visible');
+                }
+            });
+
+            // Scroll to top when clicked
+            scrollProgress.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Add hover effect
+            scrollProgress.addEventListener('mouseenter', function() {
+                this.querySelector('.scroll-progress-icon').style.transform = 'translate(-50%, -60%)';
+            });
+
+            scrollProgress.addEventListener('mouseleave', function() {
+                this.querySelector('.scroll-progress-icon').style.transform = 'translate(-50%, -50%)';
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
+

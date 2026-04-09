@@ -1,0 +1,33 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Access Denied - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <div class="mb-4">
+                    <i class="fas fa-lock fa-5x text-danger"></i>
+                </div>
+                <h1 class="display-4 text-danger">403</h1>
+                <h2 class="mb-3">Access Denied</h2>
+                <p class="lead mb-4">
+                    You don't have permission to access this resource. 
+                    Please contact your administrator if you believe this is an error.
+                </p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{% url 'custom_admin:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>
+                        Back to Dashboard
+                    </a>
+                    <a href="{% url 'custom_admin:logout' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

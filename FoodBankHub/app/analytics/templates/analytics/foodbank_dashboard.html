@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports Dashboard - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --secondary: #6366f1;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+    }
+
+    body { background: #f9fafb; }
+
+    .reports-wrapper {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 1rem;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid var(--primary);
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card.secondary { border-left-color: var(--secondary); }
+    .stat-card.danger { border-left-color: var(--danger); }
+    .stat-card.warning { border-left-color: var(--warning); }
+    .stat-card.info { border-left-color: var(--info); }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon.primary { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+    .stat-icon.secondary { background: rgba(99, 102, 241, 0.1); color: var(--secondary); }
+    .stat-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    /* Report Cards */
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .report-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary);
+    }
+
+    .report-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--primary), #059669);
+        color: white;
+    }
+
+    .report-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+
+    .report-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .report-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: gap 0.2s;
+    }
+
+    .report-link:hover {
+        gap: 0.75rem;
+        color: #059669;
+    }
+
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .subscription-alert {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-left: 4px solid var(--warning);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .subscription-alert.active {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        border-left-color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-wrapper">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-chart-line me-3"></i>
+                        {% if user_type == 'DONOR' %}
+                            My Donation Reports
+                        {% elif user_type == 'RECIPIENT' %}
+                            My Reports
+                        {% else %}
+                            Reports Dashboard
+                        {% endif %}
+                    </h1>
+                    <p class="page-subtitle mb-0">
+                        {% if user_type == 'DONOR' %}
+                            Track your donation history and impact
+                        {% elif user_type == 'RECIPIENT' %}
+                            View your requests and allocations
+                        {% else %}
+                            Comprehensive insights and analytics
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        {% if user_type == 'DONOR' %}
+        <!-- Report Downloads -->
+        <h2 class="section-header">
+            <i class="fas fa-file-download me-2"></i>Report Downloads
+        </h2>
+        <div class="reports-grid">
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h3 class="report-title">All My Donations</h3>
+                <p class="report-description">
+                    Download a complete report of all your donations with details, status, and delivery information.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'donor_donations_export' 'pdf' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'donor_donations_export' 'excel' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'donor_donations_export' 'csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3 class="report-title">Unspecified Donations</h3>
+                <p class="report-description">
+                    Download a report of your unspecified donations with foodbank and recipient status.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'donor_unspecified_export' 'pdf' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'donor_unspecified_export' 'excel' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'donor_unspecified_export' 'csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h3 class="report-title">Subsidized Donations</h3>
+                <p class="report-description">
+                    Download a report of your subsidized donations with pricing, quantity, and recipient details.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'donor_subsidized_export' 'pdf' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'donor_subsidized_export' 'excel' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'donor_subsidized_export' 'csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user_type == 'FOODBANK' %}
+        <!-- Report Downloads -->
+        <h2 class="section-header">
+            <i class="fas fa-file-download me-2"></i>Report Downloads
+        </h2>
+        <div class="reports-grid">
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h3 class="report-title">Received Donations</h3>
+                <p class="report-description">
+                    Download a report of all donations received by your foodbank with details and status.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'foodbank_donations_export' %}?format=pdf" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'foodbank_donations_export' %}?format=excel" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'foodbank_donations_export' %}?format=csv" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3 class="report-title">Unspecified Donations</h3>
+                <p class="report-description">
+                    Download a report of unspecified donations pending acceptance or already processed.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'foodbank_export_unspecified_donations' %}?format=pdf" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'foodbank_export_unspecified_donations' %}?format=excel" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'foodbank_export_unspecified_donations' %}?format=csv" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h3 class="report-title">Subsidized Donations</h3>
+                <p class="report-description">
+                    Download a report of subsidized donations with pricing, status, and recipient details.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'foodbank_subsidized_donations_export' %}?format=pdf" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'foodbank_subsidized_donations_export' %}?format=excel" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'foodbank_subsidized_donations_export' %}?format=csv" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+
+        {% if user_type == 'RECIPIENT' %}
+        <!-- Recipient Reports -->
+        <h2 class="section-header">
+            <i class="fas fa-file-download me-2"></i>My Reports & Downloads
+        </h2>
+        <div class="reports-grid">
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3 class="report-title">My Requests</h3>
+                <p class="report-description">
+                    Download a report of all your requests to foodbanks including status and fulfillment details.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'export_recipient_requests' 'pdf' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'export_recipient_requests' 'excel' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'export_recipient_requests' 'csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3 class="report-title">Available Donations</h3>
+                <p class="report-description">
+                    Download a report of available unspecified donations from foodbanks that you can claim.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'export_available_donations' 'pdf' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'export_available_donations' 'excel' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'export_available_donations' 'csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h3 class="report-title">Subsidized Donations</h3>
+                <p class="report-description">
+                    Download a report of subsidized donations available at discounted rates from foodbanks.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'export_subsidized_donations' 'pdf' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'export_subsidized_donations' 'excel' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="{% url 'export_subsidized_donations' 'csv' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

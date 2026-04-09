@@ -1,0 +1,4277 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - FoodBank Hub{% endblock %}
+
+{% block content %}
+<style>
+/* Full borders for all tables */
+.donor-preview-table,
+table {
+    border: 1px solid #dee2e6 !important;
+}
+
+.donor-preview-table th,
+.donor-preview-table td,
+table th,
+table td {
+    border: 1px solid #dee2e6 !important;
+}
+
+.donor-preview-table thead th,
+table thead th {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Request type badges */
+.request-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.request-type-badge.recipient-request {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+.recipient-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.recipient-info i {
+    color: #9ca3af;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.progress-details {
+    margin-top: 0.25rem;
+}
+
+.progress-details small {
+    color: #6b7280;
+    font-size: 0.7rem;
+}
+
+.no-progress {
+    color: #9ca3af;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+/* Make table rows more compact to fit 6 requests */
+.request-row {
+    padding: 0.75rem 0 !important;
+    min-height: auto !important;
+}
+
+.request-row .row-col {
+    padding: 0.5rem !important;
+}
+
+/* Preview tables: ensure horizontal scroll instead of clipping */
+.donor-preview-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.donor-preview-table {
+    min-width: 1400px;
+}
+
+.request-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.request-description {
+    font-size: 0.8rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.quantity-info {
+    font-size: 0.75rem !important;
+    margin-top: 0.25rem !important;
+}
+
+.foodbank-name {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.view-foodbank-link {
+    font-size: 0.75rem !important;
+}
+
+.request-time {
+    font-size: 0.7rem !important;
+}
+
+.requests-section .table-card a.btn-outline-primary:focus,
+.requests-section .table-card .btn-outline:focus,
+.requests-section .table-card span.badge:focus {
+    outline: none;
+    box-shadow: none;
+}
+.requests-section tbody tr td .btn,
+.requests-section tbody tr td .badge {
+    transition: box-shadow 0.2s ease;
+}
+.requests-section tbody tr td .badge:focus-visible,
+.requests-section tbody tr td .badge:hover {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.compact-table tbody td .badge,
+.compact-table tbody td .badge:hover {
+    outline: none;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Remove flashing/pulsing outline on subsidized donations preview table */
+.donor-preview-table tbody tr td,
+.donor-preview-table tbody tr td .badge,
+.donor-preview-table tbody tr td span {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    animation: none !important;
+}
+
+.donor-preview-table tbody tr td .badge:focus,
+.donor-preview-table tbody tr td .badge:hover,
+.donor-preview-table tbody tr td .badge:active,
+.donor-preview-table tbody tr td .badge:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    animation: none !important;
+}
+
+.bg-purple {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
+}
+.csr-type-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5b21b6;
+    margin-top: 0.15rem;
+    display: block;
+}
+
+.note-block {
+    padding: 0.35rem 0;
+}
+
+.note-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: #9ca3af;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.note-text {
+    font-size: 0.72rem;
+    color: #374151;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.note-empty {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.dashboard-note-box {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.donor-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: none;
+    border: 1px solid transparent;
+}
+
+.donor-status-pill--info {
+    background: rgba(59,130,246,0.15);
+    color: #1d4ed8;
+    border-color: rgba(59,130,246,0.25);
+}
+
+.donor-status-pill--success {
+    background: rgba(16,185,129,0.15);
+    color: #0f766e;
+    border-color: rgba(16,185,129,0.25);
+}
+
+.donor-status-pill--warning {
+    background: rgba(251,191,36,0.18);
+    color: #92400e;
+    border-color: rgba(251,191,36,0.35);
+}
+
+.donor-status-pill--danger {
+    background: rgba(239,68,68,0.15);
+    color: #991b1b;
+    border-color: rgba(239,68,68,0.25);
+}
+
+.donor-tabs {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.tab-alert {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 999px;
+    background: rgba(239,68,68,0.12);
+    color: #b91c1c;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.tab-alert i {
+    font-size: 0.8rem;
+}
+
+.request-row .row-col {
+    padding: 0.5rem !important;
+}
+
+/* Preview tables: ensure horizontal scroll instead of clipping */
+.donor-preview-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive.donor-unspecified-wrapper {
+    overflow-x: hidden;
+}
+
+.donor-unspecified-compact {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.donor-unspecified-compact thead th {
+    font-size: 0.64rem;
+    padding: 0.22rem 0.3rem;
+    line-height: 1.1;
+}
+
+.donor-unspecified-compact th,
+.donor-unspecified-compact td {
+    font-size: 0.72rem;
+    padding: 0.28rem 0.35rem;
+    line-height: 1.2;
+    vertical-align: top;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.donor-unspecified-compact .badge {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.35rem;
+}
+
+.donor-unspecified-compact .btn {
+    font-size: 0.66rem;
+    padding: 0.18rem 0.32rem;
+    line-height: 1.1;
+}
+
+.donor-unspecified-compact .donor-status-pill {
+    font-size: 0.58rem;
+    padding: 0.16rem 0.4rem;
+    display: inline-block;
+    white-space: normal;
+    max-width: 100%;
+}
+
+.donor-unspecified-compact th:nth-child(1) { width: 3%; }
+.donor-unspecified-compact th:nth-child(2) { width: 7%; }
+.donor-unspecified-compact th:nth-child(3) { width: 7%; }
+.donor-unspecified-compact th:nth-child(4) { width: 7%; }
+.donor-unspecified-compact th:nth-child(5) { width: 18%; }
+.donor-unspecified-compact th:nth-child(6) { width: 8%; }
+.donor-unspecified-compact th:nth-child(7) { width: 6%; }
+.donor-unspecified-compact th:nth-child(8) { width: 6%; }
+.donor-unspecified-compact th:nth-child(9) { width: 10%; }
+.donor-unspecified-compact th:nth-child(10) { width: 8%; }
+.donor-unspecified-compact th:nth-child(11) { width: 6%; }
+.donor-unspecified-compact th:nth-child(12) { width: 12%; }
+
+.donor-unspecified-compact th:nth-child(6),
+.donor-unspecified-compact td:nth-child(6),
+.donor-unspecified-compact th:nth-child(9),
+.donor-unspecified-compact td:nth-child(9),
+.donor-unspecified-compact th:nth-child(10),
+.donor-unspecified-compact td:nth-child(10) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.donor-unspecified-compact th:nth-child(12),
+.donor-unspecified-compact td:nth-child(12) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+.donor-unspecified-compact th,
+.donor-unspecified-compact td {
+    max-width: 1px;
+}
+
+.donor-unspecified-compact td:last-child,
+.donor-unspecified-compact th:last-child {
+    white-space: nowrap;
+}
+
+@media (max-width: 1400px) {
+    .donor-unspecified-compact th,
+    .donor-unspecified-compact td {
+        font-size: 0.68rem;
+        padding: 0.22rem 0.28rem;
+    }
+    .donor-unspecified-compact .badge {
+        font-size: 0.58rem;
+        padding: 0.12rem 0.3rem;
+    }
+    .donor-unspecified-compact .btn {
+        font-size: 0.62rem;
+        padding: 0.16rem 0.28rem;
+    }
+}
+
+.donor-preview-table {
+    min-width: 1400px;
+}
+
+</style>
+
+<div class="dashboard-container">
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="nav-left">
+                <div class="user-greeting">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+            </div>
+                    <div class="greeting-text">
+                        <h5 class="user-name">
+                            {% if user.donor_profile.is_organization and user.donor_profile.organization_name %}
+                                {{ user.donor_profile.organization_name }}
+                            {% else %}
+                                {{ user.donor_profile.full_name|default:user.email }}
+                            {% endif %}
+                        </h5>
+                        <span class="user-role">Donor</span>
+        </div>
+    </div>
+            </div>
+            <div class="nav-right">
+                <div class="donation-options">
+                    <a href="{% url 'donate' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Unspecified Donations
+                    </a>
+                    <a href="{% url 'view_foodbank_requests' %}" class="btn btn-outline">
+                        <i class="fas fa-search"></i> Browse Requests
+                    </a>
+                    <a href="{% url 'donor_contact_support' %}" class="btn btn-outline">
+                        <i class="fas fa-headset"></i> Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="donor-tabs" id="donorDashboardTabs">
+            <button type="button" class="btn btn-primary" data-tab="donations">
+                My Donations
+                {% if donor_tab_alerts.my_donations %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ donor_tab_alerts.my_donations }}
+                    </span>
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-outline" data-tab="direct">
+                Direct
+                {% if donor_tab_alerts.direct %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ donor_tab_alerts.direct }}
+                    </span>
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-outline" data-tab="unspecified">
+                Unspecified Donations
+                {% if donor_tab_alerts.unspecified %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ donor_tab_alerts.unspecified }}
+                    </span>
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-outline" data-tab="subsidized">
+                Subsidized Donations
+                {% if donor_tab_alerts.subsidized %}
+                    <span class="tab-alert">
+                        <i class="fas fa-bell"></i>
+                        {{ donor_tab_alerts.subsidized }}
+                    </span>
+                {% endif %}
+            </button>
+        </div>
+
+        <div class="content-grid" id="donorMyDonationsPanel" style="grid-template-columns: 1fr;">
+            <!-- My Donations Section -->
+            <div class="requests-section" style="grid-column: 1;">
+                <div class="section-header">
+                    <div class="header-left">
+                        <h3 class="section-title">
+                            <i class="fas fa-gifts text-primary"></i>
+                            My Donations
+                        </h3>
+                        <p class="section-subtitle">Track your giving history</p>
+                    </div>
+                    <div class="header-right">
+                        {% if recent_donations_table %}
+                            <span class="count-badge">{{ recent_donations_table|length }} recent</span>
+                        {% endif %}
+                        <a href="{% url 'donor_donations_list' %}" class="btn btn-outline">View All</a>
+                    </div>
+                </div>
+
+                <!-- Donations Table -->
+                {% include 'authentication/dashboard_donor_donations_table.html' %}
+            </div>
+
+            <!-- Remove Sidebar - Table spans full width -->
+        </div>
+
+        <div class="content-grid" id="donorDirectDonationsPanel" style="grid-template-columns: 1fr; display: none;">
+            <div class="requests-section" style="grid-column: 1;">
+                <div class="section-header">
+                    <div class="header-left">
+                        <h3 class="section-title">
+                            <i class="fas fa-gifts text-primary"></i>
+                            Direct Donations
+                        </h3>
+                        <p class="section-subtitle">Donations made in response to foodbank-created requests</p>
+                    </div>
+                    <div class="header-right">
+                        {% if direct_donations_table %}
+                            <span class="count-badge">{{ direct_donations_table|length }} recent</span>
+                        {% endif %}
+                        <a href="{% url 'donor_donations_list' %}?direct=1" class="btn btn-outline">View All</a>
+                    </div>
+                </div>
+
+                {% include 'authentication/dashboard_donor_direct_donations_table.html' %}
+            </div>
+        </div>
+
+        <!-- Donation Tracking Tables Section -->
+        <div class="content-grid" id="donorTrackingPanels" style="grid-template-columns: 1fr; margin-top: 2rem;">
+            
+            <!-- 1. Unspecified Donations Tracking -->
+            <div class="requests-section" data-tab-panel="unspecified" style="margin-bottom: 2rem;">
+                <div class="section-header">
+                    <div class="header-left">
+                        <h3 class="section-title">
+                            <i class="fas fa-gift text-warning"></i>
+                            Unspecified Donations Status
+                        </h3>
+                        <p class="section-subtitle">Track your general donations to food banks</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="count-badge" style="background: #fef3c7; color: #92400e;">{{ donor_unspecified_counts.pending_foodbank }} pending</span>
+                        <span class="count-badge" style="background: #dcfce7; color: #166534;">{{ donor_unspecified_counts.received }} received</span>
+                        <a href="{% url 'donor_unspecified_donations_detail' %}" class="btn btn-outline" style="margin-left: 0.5rem;">
+                            <i class="fas fa-external-link-alt me-1"></i>View More
+                        </a>
+                    </div>
+                </div>
+                
+                {% if donor_unspecified_donations %}
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2 text-warning"></i>Recent Unspecified Donations</h5>
+                        <span class="badge bg-secondary">{{ donor_unspecified_donations|length }} shown</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive donor-unspecified-wrapper">
+                            <table class="table table-hover mb-0 compact-table donor-unspecified-compact">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>S/No</th>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Food Bank</th>
+                                        <th>Qty/Amount</th>
+                                        <th>Delivery</th>
+                                        <th>Location</th>
+                                        <th>Recipient</th>
+                                        <th>Notes</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in donor_unspecified_donations %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td style="line-height: 1.2;">
+                                            <div style="font-size: 0.7rem;">{{ item.created_at|date:"M d, Y" }}</div>
+                                            <small class="text-muted" style="font-size: 0.58rem;">{{ item.created_at|date:"H:i" }}</small>
+                                        </td>
+                                        <td style="font-size: 0.72rem;">
+                                            {% if item.donation.donation_type == 'csr' or item.donation.donation_category == 'csr' %}
+                                                <span class="badge 
+                                                    {% if item.donation.donation_category == 'food' %}bg-success
+                                                    {% elif item.donation.donation_category == 'non_food' %}bg-info
+                                                    {% elif item.donation.donation_category == 'monetary' %}bg-warning text-dark
+                                                    {% elif item.donation.donation_category == 'csr' %}bg-purple
+                                                    {% else %}bg-secondary{% endif %}">
+                                                    {{ item.donation.get_donation_category_display }}
+                                                </span>
+                                                {% if item.donation.donation_category == 'csr' %}
+                                                    <span class="csr-type-label">
+                                                        {% if item.donation.csr_subcategory == 'other' and item.donation.csr_custom_subcategory %}
+                                                            {{ item.donation.csr_custom_subcategory }}
+                                                        {% elif item.donation.csr_subcategory %}
+                                                            {{ item.donation.get_csr_subcategory_display }}
+                                                        {% else %}
+                                                            CSR Initiative
+                                                        {% endif %}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if item.donation.donation_type == 'item' %}
+                                                    {% if item.donation.donation_mode == 'free' %}
+                                                        <span class="badge bg-success">Free Goods</span>
+                                                    {% elif item.donation.donation_mode == 'subsidized' %}
+                                                        <span class="badge bg-warning text-dark">Subsidized</span>
+                                                        <div class="text-muted small mt-1">{{ item.donation.item_name|default:"General items" }}</div>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                                        <div class="text-muted small mt-1">{{ item.donation.item_name|default:"General items" }}</div>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if item.donation.donation_type == 'money' %}
+                                                        Monetary
+                                                    {% else %}
+                                                        {{ item.donation.get_donation_type_display }}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.donation.donation_type == 'csr' or item.donation.donation_category == 'csr' %}
+                                                {% if item.donation.donation_type == 'item' %}
+                                                    {% if item.donation.donation_mode == 'free' %}
+                                                        <span class="badge bg-success">Free Goods</span>
+                                                    {% elif item.donation.donation_mode == 'subsidized' %}
+                                                        <span class="badge bg-warning text-dark">Subsidized</span>
+                                                        <div class="text-muted small mt-1">{{ item.donation.item_name|default:"General items" }}</div>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                                        <div class="text-muted small mt-1">{{ item.donation.item_name|default:"General items" }}</div>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if item.donation.donation_type == 'money' %}
+                                                        Monetary
+                                                    {% else %}
+                                                        {{ item.donation.get_donation_type_display }}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge 
+                                                    {% if item.donation.donation_category == 'food' %}bg-success
+                                                    {% elif item.donation.donation_category == 'non_food' %}bg-info
+                                                    {% elif item.donation.donation_category == 'monetary' %}bg-warning text-dark
+                                                    {% elif item.donation.donation_category == 'csr' %}bg-purple
+                                                    {% else %}bg-secondary{% endif %}">
+                                                    {{ item.donation.get_donation_category_display }}
+                                                </span>
+                                                {% if item.donation.donation_category == 'csr' %}
+                                                    <span class="csr-type-label">
+                                                        {% if item.donation.csr_subcategory == 'other' and item.donation.csr_custom_subcategory %}
+                                                            {{ item.donation.csr_custom_subcategory }}
+                                                        {% elif item.donation.csr_subcategory %}
+                                                            {{ item.donation.get_csr_subcategory_display }}
+                                                        {% else %}
+                                                            CSR Initiative
+                                                        {% endif %}
+                                                    </span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.donation.donation_type == 'item' %}
+                                                {% if item.donation.donation_mode == 'free' %}
+                                                    {{ item.donation.item_name|default:"General donation" }}
+                                                {% else %}
+                                                    {{ item.donation.subsidized_product_type|default:item.donation.item_name|default:"Subsidized goods" }}
+                                                {% endif %}
+                                            {% elif item.donation.donation_type == 'subsidized' %}
+                                                {{ item.donation.subsidized_product_type|default:"Subsidized goods" }}
+                                            {% elif item.donation.donation_type == 'csr' %}
+                                                {{ item.donation.csr_description }}
+                                            {% elif item.donation.donation_type == 'other' %}
+                                                {{ item.donation.other_description|default:"Other donation" }}
+                                            {% elif item.donation.donation_type == 'money' %}
+                                                {{ item.donation.message|default:"Monetary donation" }}
+                                            {% else %}
+                                                <span class="text-muted">No description</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ item.donation.foodbank.foodbank_name }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if item.donation.donation_type == 'item' %}
+                                                <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}
+                                            {% elif item.donation.donation_type == 'money' %}
+                                                <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                            {% elif item.donation.donation_type == 'csr' or item.donation.donation_type == 'other' %}
+                                                {% if item.donation.amount and item.donation.quantity %}
+                                                    <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                                    for
+                                                    <strong>{{ item.donation.quantity }}</strong>
+                                                    {{ item.donation.quantity_unit|default:"units" }}
+                                                {% elif item.donation.amount %}
+                                                    <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                                {% elif item.donation.quantity %}
+                                                    <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.donation.delivery_method %}
+                                                <span class="text-capitalize fw-semibold">
+                                                    {{ item.donation.get_delivery_method_display|default:item.donation.delivery_method }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ item.donation.foodbank.address|default:"Location not provided" }}
+                                        </td>
+                                        <td>
+                                            {% if item.accepted_by_recipient %}
+                                                <span class="badge bg-success-subtle text-success fw-semibold" style="font-size: 0.7rem;">
+                                                    Claimed
+                                                </span>
+                                                <br><small class="text-muted">
+                                                    {{ item.accepted_by_recipient.full_name|default:item.accepted_by_recipient.user.email }}
+                                                </small>
+                                            {% else %}
+                                                <span class="badge bg-light text-secondary fw-semibold" style="font-size: 0.7rem;">
+                                                    Unclaimed
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="notes-cell">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary donor-view-notes-btn"
+                                                    data-note-title="Notes for {{ item.donation.foodbank.foodbank_name|default:'Donation' }}"
+                                                    data-donor-note="{% if item.donation.message %}{{ item.donation.message|escapejs }}{% elif item.donation.other_description %}{{ item.donation.other_description|escapejs }}{% else %}{% endif %}"
+                                                    data-recipient-note="{{ item.recipient_notes|default_if_none:''|escapejs }}"
+                                                    data-foodbank-decline-note="{{ item.foodbank_decline_reason|default_if_none:''|escapejs }}"
+                                                    data-recipient-decline-note="{{ item.recipient_decline_reason|default_if_none:''|escapejs }}">
+                                                <i class="fas fa-sticky-note me-1"></i>View Notes
+                                            </button>
+                                        </td>
+                                        <td class="status-cell text-center">
+                                            {% if item.foodbank_status == 'accepted_by_foodbank' %}
+                                                {% if item.recipient_status == 'received' %}
+                                                    <span class="donor-status-pill donor-status-pill--success">Received by recipient</span>
+                                                {% elif item.recipient_status == 'accepted_by_recipient' %}
+                                                    <span class="donor-status-pill donor-status-pill--info">Claimed by recipient</span>
+                                                {% elif item.recipient_status == 'declined_by_recipient' %}
+                                                    <span class="donor-status-pill donor-status-pill--danger" title="Rejected by recipient - broadcasted to other recipients">Rejected by recipient - broadcasted</span>
+                                                {% else %}
+                                                    <span class="donor-status-pill donor-status-pill--warning">Accepted by FB - Sent to Recipients</span>
+                                                {% endif %}
+                                            {% elif item.foodbank_status == 'pending_foodbank' %}
+                                                <span class="donor-status-pill donor-status-pill--warning">Awaiting foodbank</span>
+                                            {% elif item.foodbank_status == 'declined_by_foodbank' %}
+                                                <span class="donor-status-pill donor-status-pill--danger">Declined by foodbank</span>
+                                            {% else %}
+                                                <span class="donor-status-pill donor-status-pill--info">{{ item.get_foodbank_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem 1.5rem; background: #f9fafb; border-radius: 12px;">
+                    <i class="fas fa-gift" style="font-size: 2rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                    <h5 style="font-size: 1rem; color: #374151;">No unspecified donations yet</h5>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Make a general donation to a food bank to see it tracked here.</p>
+                    <a href="{% url 'donate' %}" class="btn btn-primary btn-sm" style="margin-top: 0.5rem;">
+                        <i class="fas fa-plus"></i> Make a Donation
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 2. Subsidized Donations Tracking -->
+            <div class="requests-section" data-tab-panel="subsidized" style="margin-bottom: 2rem;">
+                <div class="section-header">
+                    <div class="header-left">
+                        <h3 class="section-title">
+                            <i class="fas fa-tags text-primary"></i>
+                            Subsidized Donations Status
+                        </h3>
+                        <p class="section-subtitle">Track your subsidized goods donations</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="count-badge" style="background: #fef3c7; color: #92400e;">{{ donor_subsidized_counts.pending }} pending</span>
+                        <span class="count-badge" style="background: #dcfce7; color: #166534;">{{ donor_subsidized_counts.delivered }} delivered</span>
+                        <a href="{% url 'donor_subsidized_donations_detail' %}" class="btn btn-outline" style="margin-left: 0.5rem;">
+                            <i class="fas fa-external-link-alt me-1"></i>View More
+                        </a>
+                    </div>
+                </div>
+                
+                {% if donor_subsidized_donations %}
+                <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+                    <div class="donor-preview-scroll">
+                    <table class="donor-preview-table" style="width: 100%; border-collapse: collapse; background: white; font-size: 0.8rem;">
+                        <thead style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+                            <tr>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">S/No</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Date</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Food Bank</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Type</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Category</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Product</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Quantity</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Amount</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Subsidy</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">New Price</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Status</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Delivery</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Recipient</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem; min-width: 160px;">Notes</th>
+                                <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.75rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donor_subsidized_donations %}
+                            <tr class="{% cycle 'bg-white' 'bg-light' %}" style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {{ forloop.counter }}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {{ donation.donated_at|date:"M d, Y" }}<br><small>{{ donation.donated_at|time:"H:i" }}</small>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    <strong>{{ donation.foodbank.foodbank_name|truncatechars:25 }}</strong>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {{ donation.get_donation_category_display|default:"Food" }}
+                                </td>
+                                <td><span class="badge bg-success text-white">Subsidized</span></td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {{ donation.subsidized_product_type|default:"Subsidized Goods"|truncatechars:25 }}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {{ donation.subsidized_quantity|default:"-" }} {{ donation.subsidized_quantity_unit|default:"units" }}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_initial_amount %}
+                                        <strong>{{ donation.subsidized_initial_amount|floatformat:0 }}</strong>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    {% if donation.subsidized_subsidy_amount %}
+                                        <span style="color: #dc2626; font-weight: 600;">{{ donation.subsidized_subsidy_amount|floatformat:0 }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.75rem;">
+                                    <span style="color: #059669; font-weight: 600;">{{ donation.subsidized_price|floatformat:0 }}</span>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    {% if donation.accepted_by_recipient %}
+                                        <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; background: #dbeafe; color: #1d4ed8;">
+                                            <i class="fas fa-user-check me-1"></i> Accepted by recipient
+                                        </span>
+                                        {% if donation.unspecified_management and donation.unspecified_management.recipient_status == 'received' %}
+                                            <div class="mt-1" style="color: #059669; font-size: 0.65rem; font-weight: 600;">
+                                                <i class="fas fa-box-check me-1"></i>Marked as received
+                                            </div>
+                                        {% endif %}
+                                    {% elif donation.declined_by_recipient and donation.status == 'accepted' %}
+                                        <span style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600; background: #fef3c7; color: #92400e; white-space: normal; max-width: 11em; text-align: left;">
+                                            <i class="fas fa-times me-1"></i>Rejected - broadcasted to other recipients
+                                        </span>
+                                    {% elif donation.status == 'pending' %}
+                                        <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; background: #fef3c7; color: #92400e;">
+                                            <i class="fas fa-clock me-1"></i>Awaiting foodbank
+                                        </span>
+                                    {% elif donation.status == 'accepted' %}
+                                        <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; background: #dcfce7; color: #166534;">
+                                            <i class="fas fa-check me-1"></i>Accepted by fb sent to recipients
+                                        </span>
+                                    {% elif donation.status == 'fulfilled' %}
+                                        <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; background: #d1fae5; color: #065f46;">
+                                            <i class="fas fa-hand-holding-heart me-1"></i>Fulfilled & allocated
+                                        </span>
+                                    {% elif donation.status == 'declined' %}
+                                        <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; background: #fee2e2; color: #991b1b;">
+                                            <i class="fas fa-times me-1"></i>Declined by food bank
+                                        </span>
+                                    {% else %}
+                                        <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; background: #e5e7eb; color: #374151;">
+                                            <i class="fas fa-info-circle me-1"></i>{{ donation.get_status_display|default:"Status update pending" }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    {% if donation.delivery_method %}
+                                        <span style="display: inline-block; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.65rem; font-weight: 600; background: #f3f4f6; color: #1f2937;">
+                                            {{ donation.get_delivery_method_display|default:donation.delivery_method|capfirst }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle;">
+                                    {% if donation.accepted_by_recipient %}
+                                        <span class="badge" style="background: #d1fae5; color: #065f46;">Claimed</span>
+                                        <br><small style="color: #6b7280;">{{ donation.accepted_by_recipient.full_name|truncatechars:15 }}</small>
+                                    {% else %}
+                                        <span class="badge" style="background: #f1f5f9; color: #1f2937;">Not claimed</span>
+                                        {% if donation.delivery_status == 'delivered' %}
+                                            <br><small style="color: #6b7280;">Delivered but awaiting recipient</small>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.7rem; color: #374151;">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary donor-view-notes-btn"
+                                            data-note-title="Notes for {{ donation.foodbank.foodbank_name|default:'Donation' }}"
+                                            data-donor-note="{% if donation.message %}{{ donation.message|escapejs }}{% elif donation.csr_description %}{{ donation.csr_description|escapejs }}{% elif donation.other_description %}{{ donation.other_description|escapejs }}{% else %}{% endif %}"
+                                            data-recipient-note="{% if donation.effective_recipient_note %}{{ donation.effective_recipient_note|escapejs }}{% endif %}"
+                                            data-foodbank-decline-note="{% if donation.decline_message %}{{ donation.decline_message|escapejs }}{% elif donation.unspecified_management and donation.unspecified_management.foodbank_decline_reason %}{{ donation.unspecified_management.foodbank_decline_reason|escapejs }}{% else %}{% endif %}"
+                                            data-recipient-decline-note="{% if donation.effective_recipient_decline_note %}{{ donation.effective_recipient_decline_note|escapejs }}{% endif %}">
+                                        <i class="fas fa-sticky-note me-1"></i>View Notes
+                                    </button>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; vertical-align: middle; white-space: nowrap;">
+                                    <a href="{% url 'donor_subsidized_donations_detail' %}?highlight={{ donation.id }}" class="btn btn-sm btn-outline-primary" style="margin-bottom: 0.35rem;">
+                                        <i class="fas fa-eye fa-xs"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem 1.5rem; background: #f9fafb; border-radius: 12px;">
+                    <i class="fas fa-tags" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                    <h5 style="font-size: 1rem; color: #374151;">No subsidized donations yet</h5>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Offer subsidized goods to food banks to see them tracked here.</p>
+                </div>
+                {% endif %}
+            </div>
+
+    <!-- Rest of content below -->
+    <div style="display: none;">
+                <div class="requests-list-old" id="requestsList">
+                    {% if active_requests %}
+                        <div class="list-header">
+                            <div class="header-col priority-col">Priority</div>
+                            <div class="header-col foodbank-col">Food Bank</div>
+                            <div class="header-col request-col">Request Details</div>
+                            <div class="header-col progress-col">Progress</div>
+                            <div class="header-col actions-col">Actions</div>
+                        </div>
+                        {% for request in active_requests|slice:":12" %}
+                            <div class="request-row" data-priority="{{ request.priority }}" data-created="{{ request.created_at|date:'U' }}">
+                                <div class="row-col priority-col">
+                                    <div class="priority-indicator priority-{{ request.priority }}"></div>
+                                    <span class="priority-text priority-{{ request.priority }}">{{ request.priority|title }}</span>
+                                </div>
+                                <div class="row-col foodbank-col">
+                                    <div class="foodbank-info">
+                                        <h6 class="foodbank-name">{{ request.foodbank.foodbank_name }}</h6>
+                                        <a href="{% url 'foodbank_public_profile' request.foodbank.id %}" class="view-foodbank-link" title="View {{ request.foodbank.foodbank_name }} Profile">
+                                            View Foodbank
+                                        </a>
+                                        <span class="request-time">{{ request.created_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+                                <div class="row-col request-col">
+                                    <h6 class="request-title">{{ request.title }}</h6>
+                                    <p class="request-description">{{ request.description|truncatewords:15 }}</p>
+                                    {% if request.quantity_needed %}
+                                        <div class="quantity-info">
+                                            <i class="fas fa-weight"></i>
+                                            <span><strong>{{ request.quantity_needed }} {{ request.quantity_unit }}</strong> needed</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="row-col progress-col">
+                                    {% if request.quantity_needed %}
+                                        {% with progress=request.get_fulfillment_percentage %}
+                                            <div class="progress-container">
+                                                <div class="progress-bar-wrapper">
+                                                    <div class="progress-bar" style="width: {{ progress }}%"></div>
+                                                </div>
+                                                <span class="progress-text">{{ progress|floatformat:0 }}%</span>
+                                            </div>
+                                            <div class="progress-details">
+                                                <small>{{ request.get_total_donations_received|default:0 }} / {{ request.quantity_needed }} {{ request.quantity_unit }}</small>
+                                            </div>
+                                        {% endwith %}
+                                    {% else %}
+                                        <div class="progress-container">
+                                            <span class="no-progress">No target set</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="row-col actions-col">
+                                    <div class="action-buttons">
+                                        <a href="{% url 'donate_to_foodbank' request.id %}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-hand-holding-heart"></i> Donate
+                                        </a>
+                                        <button class="btn btn-ghost btn-sm" onclick="showRequestModal({{ request.id }}, '{{ request.title|escapejs }}', '{{ request.description|escapejs|truncatewords:30 }}', '{{ request.foodbank.foodbank_name|escapejs }}', '{{ request.priority }}', '{{ request.quantity_needed|default:'' }}', '{{ request.quantity_unit|default:'' }}', '{{ request.created_at|timesince }}')">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-check-circle"></i>
+                    </div>
+                            <h4>All Caught Up!</h4>
+                            <p>No urgent requests at the moment. Great work!</p>
+                            <div class="empty-actions">
+                                <a href="{% url 'view_foodbank_requests' %}" class="btn btn-outline">
+                                    <i class="fas fa-search me-2"></i>Browse All Requests
+                                </a>
+                                <a href="{% url 'donate' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Start General Donation
+                                </a>
+                </div>
+                            <div class="donation-paths-info mt-4">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-hand-holding-heart"></i>
+            </div>
+                                        <h6>Respond to Specific Requests</h6>
+                                        <p>Help food banks by fulfilling their exact needs - like 100 bags of rice or 50 liters of cooking oil.</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-gift"></i>
+                                        </div>
+                                        <h6>General Donations</h6>
+                                        <p>Choose any food bank and donate items, money, or services based on your preference.</p>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                    {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Donation Summary Section -->
+    <div class="quick-summary-section">
+        <div class="summary-container">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-chart-pie text-primary"></i>
+                    Your Donation Summary
+                </h3>
+                <p class="section-subtitle">Quick overview of your giving activity</p>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-card primary">
+                    <div class="summary-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="summary-content">
+                        <div class="summary-number">{{ this_month_donations }}</div>
+                        <div class="summary-label">This Month</div>
+                        <div class="summary-description">{{ this_month_amount|floatformat:0 }} donated</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card success">
+                    <div class="summary-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="summary-content">
+                        <div class="summary-number">{{ donation_streak }}</div>
+                        <div class="summary-label">Month Streak</div>
+                        <div class="summary-description">Consecutive months</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card info">
+                    <div class="summary-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="summary-content">
+                        <div class="summary-number">{{ total_donations }}</div>
+                        <div class="summary-label">Total Donations</div>
+                        <div class="summary-description">All time</div>
+                    </div>
+                </div>
+                
+                {% if most_recent_donation %}
+                <div class="summary-card warning">
+                    <div class="summary-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="summary-content">
+                        <div class="summary-number">{{ most_recent_donation.donated_at|timesince }}</div>
+                        <div class="summary-label">Last Donation</div>
+                        <div class="summary-description">{{ most_recent_donation.get_donation_type_display }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievement Badges Section -->
+    <div class="achievements-section">
+        <div class="achievements-container">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-trophy text-warning"></i>
+                    Your Achievements
+                </h3>
+                <p class="section-subtitle">Celebrate your impact and unlock new milestones</p>
+            </div>
+            <div class="achievements-grid">
+                {% for achievement in achievements %}
+                <div class="achievement-card {% if achievement.earned %}earned{% else %}locked{% endif %}">
+                    <div class="achievement-icon">
+                        <i class="{{ achievement.icon }}"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <h4 class="achievement-name">{{ achievement.name }}</h4>
+                        <p class="achievement-description">{{ achievement.description }}</p>
+                        {% if achievement.earned and achievement.earned_date %}
+                        <div class="achievement-date">
+                            <i class="fas fa-calendar"></i>
+                            Earned {{ achievement.earned_date|date:"M d, Y" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="achievement-status">
+                        {% if achievement.earned %}
+                        <i class="fas fa-check-circle text-success"></i>
+                        {% else %}
+                        <i class="fas fa-lock text-muted"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Notifications Center -->
+    <div class="notifications-center-section">
+        <div class="notifications-container">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-bell text-info"></i>
+                    Smart Notifications
+                </h3>
+                <p class="section-subtitle">Stay updated with real-time activity and opportunities</p>
+            </div>
+            <div class="notifications-list">
+                {% if smart_notifications %}
+                    {% for notification in smart_notifications %}
+                    <div class="notification-item {{ notification.color }}">
+                        <div class="notification-icon">
+                            <i class="{{ notification.icon }}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <h5 class="notification-title">{{ notification.title }}</h5>
+                            <p class="notification-message">{{ notification.message }}</p>
+                            <div class="notification-time">
+                                <i class="fas fa-clock"></i>
+                                {{ notification.time|timesince }} ago
+                            </div>
+                        </div>
+                        <div class="notification-action">
+                            <a href="{{ notification.action_url }}" class="btn btn-sm btn-outline">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-notifications">
+                        <div class="no-notifications-icon">
+                            <i class="fas fa-bell-slash"></i>
+                        </div>
+                        <h5>All caught up!</h5>
+                        <p>No new notifications at the moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Analytics Section -->
+    <div class="analytics-section">
+        <div class="analytics-container">
+            <div class="section-header">
+                <div class="header-left">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-bar text-primary"></i>
+                        Your Analytics Dashboard
+                    </h3>
+                    <p class="section-subtitle">Visualize your donation impact and trends</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-outline toggle-analytics" onclick="toggleAnalytics()">
+                        <i class="fas fa-eye" id="toggle-icon"></i>
+                        <span id="toggle-text">Hide</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="analytics-grid" id="analyticsGrid">
+                <!-- Donation Timeline Chart -->
+                <div class="chart-card timeline-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-chart-line"></i>
+                            6-Month Donation Timeline
+                        </h4>
+                        <p class="chart-subtitle">Your donation activity over time</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="timelineChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Donation Type Breakdown -->
+                <div class="chart-card breakdown-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Donation Breakdown
+                        </h4>
+                        <p class="chart-subtitle">Types of donations you've made</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="breakdownChart" width="300" height="300"></canvas>
+                    </div>
+                    <div class="breakdown-legend">
+                        <div class="legend-item">
+                            <div class="legend-color items"></div>
+                            <span>Food Items</span>
+                            <strong>{{ item_count }}</strong>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color money"></div>
+                            <span>Money</span>
+                            <strong>{{ money_count }}</strong>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color subsidized"></div>
+                            <span>Subsidized</span>
+                            <strong>{{ subsidized_count }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Geographic Impact -->
+                <div class="chart-card geographic-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Geographic Impact
+                        </h4>
+                        <p class="chart-subtitle">Cities where you've made a difference</p>
+                    </div>
+                    <div class="chart-container">
+                        <div class="geographic-bars" id="geographicChart">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Time Trend -->
+                <div class="chart-card response-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-stopwatch"></i>
+                            Response Time Trend
+                        </h4>
+                        <p class="chart-subtitle">How quickly you respond to urgent requests</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="responseChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Community Leaderboard -->
+                <div class="chart-card leaderboard-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-trophy"></i>
+                            Community Leaderboard
+                        </h4>
+                        <p class="chart-subtitle">Top donors this month</p>
+                    </div>
+                    <div class="chart-container">
+                        <div class="leaderboard-list">
+                            {% for donor in leaderboard %}
+                                <div class="leaderboard-item {% if donor.is_current %}current-user{% endif %}">
+                                    <div class="rank">
+                                        {% if donor.rank == 1 %}ðŸ¥‡
+                                        {% elif donor.rank == 2 %}ðŸ¥ˆ
+                                        {% elif donor.rank == 3 %}ðŸ¥‰
+                                        {% else %}{{ donor.rank }}{% endif %}
+                                    </div>
+                                    <div class="donor-info">
+                                        <span class="donor-name">{{ donor.name }}</span>
+                                        <div class="donor-bar">
+                                            <div class="bar-fill" style="width: {% widthratio donor.donations leaderboard.0.donations 100 %}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="donor-score">{{ donor.donations }}</div>
+                                </div>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donor Notes Modal -->
+<div class="modal fade" id="donorNotesModal" tabindex="-1" aria-labelledby="donorNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="overflow: hidden;">
+            <div class="modal-header" style="padding: 0.75rem 1rem;">
+                <h5 class="modal-title" id="donorNotesModalLabel">Donation Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 0.75rem 1rem; overflow-x: hidden;">
+                <div class="mb-3" id="donorModalDonorWrap">
+                    <h6 class="text-muted mb-1">Donor Note</h6>
+                    <div id="donorModalDonorNote" class="p-2 border rounded bg-light dashboard-note-box">No donor note</div>
+                </div>
+                <div class="mb-3" id="donorModalRecipientWrap">
+                    <h6 class="text-muted mb-1">Recipient Note</h6>
+                    <div id="donorModalRecipientNote" class="p-2 border rounded bg-light dashboard-note-box">No recipient note</div>
+                </div>
+                <div class="mb-3" id="donorModalFoodbankWrap">
+                    <h6 class="text-muted mb-1" id="donorModalFoodbankLabel">Foodbank Decline Note</h6>
+                    <div id="donorModalFoodbankDeclineNote" class="p-2 border rounded bg-light dashboard-note-box">No foodbank decline note</div>
+                </div>
+                <div class="mb-0" id="donorModalRecipientDeclineWrap">
+                    <h6 class="text-muted mb-1">Recipient Decline Note</h6>
+                    <div id="donorModalRecipientDeclineNote" class="p-2 border rounded bg-light dashboard-note-box">No recipient decline note</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 0.75rem 1rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('click', function (event) {
+    const btn = event.target.closest('.donor-view-notes-btn');
+    if (!btn) return;
+
+    if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return;
+    }
+
+    const modalEl = document.getElementById('donorNotesModal');
+    const modalTitle = document.getElementById('donorNotesModalLabel');
+    const donorWrapEl = document.getElementById('donorModalDonorWrap');
+    const recipientWrapEl = document.getElementById('donorModalRecipientWrap');
+    const foodbankWrapEl = document.getElementById('donorModalFoodbankWrap');
+    const recipientDeclineWrapEl = document.getElementById('donorModalRecipientDeclineWrap');
+    const foodbankLabelEl = document.getElementById('donorModalFoodbankLabel');
+    const donorNoteEl = document.getElementById('donorModalDonorNote');
+    const recipientNoteEl = document.getElementById('donorModalRecipientNote');
+    const foodbankDeclineNoteEl = document.getElementById('donorModalFoodbankDeclineNote');
+    const recipientDeclineNoteEl = document.getElementById('donorModalRecipientDeclineNote');
+    if (!modalEl || !modalTitle || !donorWrapEl || !recipientWrapEl || !foodbankWrapEl || !recipientDeclineWrapEl || !foodbankLabelEl || !donorNoteEl || !recipientNoteEl || !foodbankDeclineNoteEl || !recipientDeclineNoteEl) return;
+
+    function decodeUnicode(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\\\/g, '\\')
+            .trim();
+    }
+
+    const title = btn.getAttribute('data-note-title') || 'Donation Notes';
+    const noteLayout = (btn.getAttribute('data-note-layout') || 'standard').trim().toLowerCase();
+    let donorNote = decodeUnicode(btn.getAttribute('data-donor-note'));
+    let recipientNote = decodeUnicode(btn.getAttribute('data-recipient-note'));
+    let foodbankNote = decodeUnicode(btn.getAttribute('data-foodbank-note'));
+    let foodbankAcceptanceNote = decodeUnicode(btn.getAttribute('data-foodbank-acceptance-note'));
+    let foodbankDeclineNote = decodeUnicode(btn.getAttribute('data-foodbank-decline-note'));
+    let recipientDeclineNote = decodeUnicode(btn.getAttribute('data-recipient-decline-note'));
+
+    modalTitle.textContent = title;
+
+    function stripLeadingHeader(value, header) {
+        if (!value) return '';
+        let cleaned = value;
+        const dashed = new RegExp(`^\\s*---\\s*${header}.*?---\\s*(\\n|\\r\\n)?`, 'i');
+        const colon = new RegExp(`^\\s*${header}\\s*:\\s*(\\n|\\r\\n)?`, 'i');
+        cleaned = cleaned.replace(dashed, '');
+        cleaned = cleaned.replace(colon, '');
+        return cleaned.trim();
+    }
+
+    donorNote = stripLeadingHeader(donorNote, 'Your Note');
+    donorNote = stripLeadingHeader(donorNote, 'Donor Note');
+    recipientNote = stripLeadingHeader(recipientNote, 'Recipient Note');
+    foodbankNote = stripLeadingHeader(foodbankNote, 'Foodbank Note');
+    foodbankAcceptanceNote = stripLeadingHeader(foodbankAcceptanceNote, 'Foodbank Acceptance Note');
+    foodbankAcceptanceNote = stripLeadingHeader(foodbankAcceptanceNote, 'Acceptance Note');
+    foodbankDeclineNote = stripLeadingHeader(foodbankDeclineNote, 'Foodbank Decline Note');
+    foodbankDeclineNote = stripLeadingHeader(foodbankDeclineNote, 'Decline Note');
+    recipientDeclineNote = stripLeadingHeader(recipientDeclineNote, 'Recipient Decline Note');
+    recipientDeclineNote = stripLeadingHeader(recipientDeclineNote, 'Decline Note');
+    const isDirectLayout = noteLayout === 'direct';
+    donorNoteEl.textContent = donorNote || 'No donor note';
+    if (isDirectLayout) {
+        donorWrapEl.classList.remove('d-none');
+        foodbankWrapEl.classList.remove('d-none');
+        recipientWrapEl.classList.add('d-none');
+        recipientDeclineWrapEl.classList.add('d-none');
+
+        const decisionIsDecline = !!foodbankDeclineNote;
+        const decisionText = decisionIsDecline
+            ? foodbankDeclineNote
+            : (foodbankAcceptanceNote || foodbankNote);
+        foodbankLabelEl.textContent = decisionIsDecline ? 'Foodbank Decline Note' : 'Foodbank Acceptance Note';
+        foodbankDeclineNoteEl.textContent = decisionText || (decisionIsDecline ? 'No foodbank decline note' : 'No foodbank acceptance note');
+    } else {
+        donorWrapEl.classList.remove('d-none');
+        recipientWrapEl.classList.remove('d-none');
+        foodbankWrapEl.classList.remove('d-none');
+        if (recipientDeclineNote) {
+            recipientDeclineWrapEl.classList.remove('d-none');
+            recipientDeclineNoteEl.textContent = recipientDeclineNote;
+        } else {
+            recipientDeclineWrapEl.classList.add('d-none');
+            recipientDeclineNoteEl.textContent = '';
+        }
+        foodbankLabelEl.textContent = 'Foodbank Decline Note';
+        recipientNoteEl.textContent = recipientNote || 'No recipient note';
+        foodbankDeclineNoteEl.textContent = foodbankDeclineNote || 'No foodbank decline note';
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance
+        ? bootstrap.Modal.getOrCreateInstance(modalEl)
+        : new bootstrap.Modal(modalEl);
+    modal.show();
+});
+</script>
+
+<style>
+/* Modern Dashboard Styles */
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #1e40af;
+    --primary-light: #eff6ff;
+    --secondary: #6b7280;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #06b6d4;
+    --light: #f8fafc;
+    --dark: #111827;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --transition: all 0.2s ease;
+}
+
+* { box-sizing: border-box; }
+
+.dashboard-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin-top: 0;
+    padding-top: 80px; /* Add space for fixed navbar */
+}
+
+/* Responsive adjustments for navbar spacing */
+@media (max-width: 991.98px) {
+    .dashboard-container {
+        padding-top: 90px; /* Slightly more space on mobile due to larger navbar */
+    }
+}
+
+/* Top Navigation */
+.top-nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 1rem 0;
+    box-shadow: var(--shadow);
+    position: relative;
+    z-index: 100;
+}
+
+.nav-content {
+    max-width: 2000px;
+    width: min(99vw, 2000px);
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-greeting {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.2rem;
+}
+
+.greeting-text .user-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.greeting-text .user-role {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.quick-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.donation-options {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 2000px;
+    width: min(99vw, 2000px);
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+}
+
+/* Requests Section */
+.requests-section {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    width: 100%;
+}
+
+.section-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--gray-50);
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-subtitle {
+    margin: 0.25rem 0 0 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.count-badge {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Search and Filters */
+.search-filters {
+    padding: 1.5rem 2rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    background: var(--white);
+    font-size: 0.875rem;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.filter-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    background: var(--white);
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Requests List */
+.requests-list {
+    padding: 0;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.list-header {
+    display: grid;
+    grid-template-columns: 120px 200px 1fr 150px 120px;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    background: var(--gray-50);
+    border-bottom: 2px solid var(--gray-200);
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-col {
+    display: flex;
+    align-items: center;
+}
+
+.request-row {
+    display: grid;
+    grid-template-columns: 120px 200px 1fr 150px 120px;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--gray-200);
+    transition: var(--transition);
+    background: var(--white);
+}
+
+.request-row:hover {
+    background: var(--gray-50);
+    transform: translateX(2px);
+    box-shadow: var(--shadow);
+}
+
+.row-col {
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+}
+
+/* Priority Column */
+.priority-col {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.priority-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-text.priority-urgent { color: var(--danger); }
+.priority-text.priority-high { color: var(--warning); }
+.priority-text.priority-medium { color: var(--info); }
+.priority-text.priority-low { color: var(--success); }
+
+/* Food Bank Column */
+.foodbank-col .foodbank-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.foodbank-col .foodbank-name {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.2;
+}
+
+.foodbank-col .view-foodbank-link {
+    font-size: 0.75rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    margin-bottom: 0.125rem;
+}
+
+.foodbank-col .view-foodbank-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.foodbank-col .request-time {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* Request Details Column */
+.request-col {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.request-col .request-title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.3;
+}
+
+.request-col .request-description {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    line-height: 1.4;
+}
+
+.request-col .quantity-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--gray-700);
+    background: var(--gray-50);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+}
+
+/* Progress Column */
+.progress-col {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.progress-info-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.progress-percentage {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.progress-bar-mini {
+    width: 100%;
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill-mini {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success) 0%, var(--primary) 100%);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.donors-info {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+}
+
+.remaining-compact {
+    font-size: 0.75rem;
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.no-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.no-progress .progress-text {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    font-style: italic;
+}
+
+.no-progress .full-need {
+    font-size: 0.75rem;
+    color: var(--gray-700);
+    font-weight: 600;
+}
+
+.no-quantity {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    font-style: italic;
+}
+
+/* Actions Column */
+.actions-col {
+    justify-content: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.request-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.request-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.request-card .card-header {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.priority-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+}
+
+.priority-urgent .priority-indicator,
+.priority-urgent.priority-indicator { background: var(--danger); }
+.priority-high .priority-indicator,
+.priority-high.priority-indicator { background: var(--warning); }
+.priority-medium .priority-indicator,
+.priority-medium.priority-indicator { background: var(--info); }
+.priority-low .priority-indicator,
+.priority-low.priority-indicator { background: var(--success); }
+
+.foodbank-info {
+    flex: 1;
+}
+
+.foodbank-name {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.request-time {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-urgent.priority-badge { background: var(--danger); color: var(--white); }
+.priority-high.priority-badge { background: var(--warning); color: var(--white); }
+.priority-medium.priority-badge { background: var(--info); color: var(--white); }
+.priority-low.priority-badge { background: var(--success); color: var(--white); }
+
+.request-card .card-body {
+    padding: 1.5rem;
+}
+
+.request-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.4;
+}
+
+.request-description {
+    margin: 0 0 1rem 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.request-details {
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.quantity-needed {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.fulfillment-options {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 0.75rem;
+}
+
+.fulfillment-text {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.quick-amounts {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.amount-option {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.amount-option:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.request-card .card-footer {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-donate {
+    flex: 1;
+}
+
+/* Empty State */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--success);
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 0 0 2rem 0;
+    color: var(--gray-600);
+}
+
+.empty-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.donation-paths-info {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-200);
+}
+
+.info-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem auto;
+}
+
+.info-item h6 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    line-height: 1.4;
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.requests-widget,
+.actions-widget {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.widget-header {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.widget-title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-all-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.view-all-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* Requests Widget */
+.requests-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.request-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--gray-100);
+    display: flex;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.request-item:last-child {
+    border-bottom: none;
+}
+
+.request-item:hover {
+    background: var(--gray-50);
+    transform: translateX(2px);
+}
+
+.request-priority {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.priority-dot.priority-urgent { background: var(--danger); }
+.priority-dot.priority-high { background: var(--warning); }
+.priority-dot.priority-medium { background: var(--info); }
+.priority-dot.priority-low { background: var(--success); }
+
+.request-content {
+    flex: 1;
+}
+
+.request-title {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.3;
+}
+
+.request-foodbank {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.request-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.request-time,
+.request-quantity {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.request-action {
+    display: flex;
+    align-items: center;
+    color: var(--gray-300);
+    font-size: 0.8rem;
+}
+
+.empty-requests {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.empty-requests .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--success);
+}
+
+.empty-requests h6 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-700);
+    font-weight: 600;
+}
+
+.empty-requests p {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+}
+
+/* Quick Actions Widget */
+.quick-actions {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.action-button.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.action-button.btn-primary:hover {
+    background: var(--primary-dark);
+    color: var(--white);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.action-button.btn-outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border-color: var(--gray-300);
+}
+
+.action-button.btn-outline:hover {
+    background: var(--gray-50);
+    color: var(--gray-800);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Impact Stats Widget */
+.impact-stats {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.impact-stats .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+}
+
+.impact-stats .stat-item:hover {
+    background: var(--primary-light);
+    transform: translateX(2px);
+}
+
+.impact-stats .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.impact-stats .stat-content {
+    flex: 1;
+}
+
+.impact-stats .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    line-height: 1;
+}
+
+.impact-stats .stat-label {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-top: 0.25rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+    justify-content: center;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    color: var(--white);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    color: var(--gray-800);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--gray-500);
+    border: 1px solid transparent;
+}
+
+.btn-ghost:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+.btn-details {
+    color: var(--gray-600);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .nav-content {
+        padding: 0 1rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .quick-stats {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        justify-content: stretch;
+    }
+    
+    .filter-select {
+        flex: 1;
+    }
+    
+    .requests-list {
+        max-height: none;
+    }
+    
+    .list-header {
+        display: none; /* Hide header on mobile */
+    }
+    
+    .request-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 0.75rem;
+        box-shadow: var(--shadow);
+    }
+    
+    .row-col {
+        min-height: auto;
+    }
+    
+    .priority-col {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .foodbank-col .foodbank-info {
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .progress-col {
+        padding-top: 0.5rem;
+    }
+    
+    .actions-col {
+        justify-content: stretch;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--gray-200);
+    }
+    
+    .action-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .action-buttons .btn {
+        flex: 1;
+        margin: 0 0.25rem;
+        min-width: 0;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .action-buttons .btn i {
+        margin-right: 0;
+    }
+    
+    .action-buttons .btn span {
+        display: none;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .empty-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .donation-options {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .quick-actions {
+        gap: 0.5rem;
+    }
+    
+    .action-button {
+        padding: 1rem;
+        justify-content: center;
+    }
+}
+
+/* Smart Stats Cards Styles */
+.stats-cards-section {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 100%);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 2rem 0;
+}
+
+.stats-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card .stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--white);
+}
+
+.impact-card .stat-icon { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); }
+.response-card .stat-icon { background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%); }
+.streak-card .stat-icon { background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%); }
+.rank-card .stat-icon { background: linear-gradient(135deg, var(--info) 0%, #0284c7 100%); }
+.efficiency-card .stat-icon { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    line-height: 1;
+}
+
+.stat-unit {
+    font-size: 1rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.stat-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.stat-description {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 0.75rem;
+}
+
+/* Trend Indicators */
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.stat-trend.positive { color: var(--success); }
+.stat-trend.negative { color: var(--danger); }
+.stat-trend.neutral { color: var(--gray-500); }
+
+/* Progress Bars */
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.75rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--warning) 0%, var(--success) 100%);
+    border-radius: 3px;
+    transition: width 1s ease-out;
+}
+
+/* Streak Indicators */
+.streak-indicator {
+    margin-top: 0.75rem;
+}
+
+.streak-status {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    display: inline-block;
+}
+
+.streak-status.hot {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: var(--danger);
+}
+
+.streak-status.warm {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #d97706;
+}
+
+.streak-status.cool {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: var(--info);
+}
+
+/* Rank Card Styles */
+.rank-position {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.rank-total {
+    font-size: 1rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.rank-badge {
+    margin-top: 0.75rem;
+}
+
+.badge {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    display: inline-block;
+}
+
+.badge.gold {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #d97706;
+    border: 1px solid #f59e0b;
+}
+
+.badge.silver {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.badge.bronze {
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    color: #ea580c;
+    border: 1px solid #f97316;
+}
+
+.badge.standard {
+    background: linear-gradient(135deg, var(--primary-light) 0%, #dbeafe 100%);
+    color: var(--primary-dark);
+    border: 1px solid var(--primary);
+}
+
+/* Efficiency Meter */
+.efficiency-meter {
+    margin-top: 0.75rem;
+}
+
+.meter-fill {
+    height: 6px;
+    background: linear-gradient(90deg, var(--danger) 0%, var(--warning) 50%, var(--success) 100%);
+    border-radius: 3px;
+    transition: width 1s ease-out;
+    margin-bottom: 0.5rem;
+}
+
+.meter-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+/* Responsive Stats Cards */
+@media (max-width: 768px) {
+    .stats-container {
+        padding: 0 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+}
+
+/* Visual Analytics Section Styles */
+.analytics-section {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 2rem 0;
+}
+
+.analytics-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.chart-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
+    transition: var(--transition);
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 1rem;
+}
+
+.chart-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-subtitle {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.chart-container {
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Timeline Chart Specific */
+.timeline-card {
+    grid-column: span 2;
+}
+
+/* Breakdown Chart Legend */
+
+/* New Dashboard Sections Styles */
+
+/* Quick Summary Section */
+.quick-summary-section {
+    margin: 2rem 0;
+    padding: 0 1rem;
+}
+
+.summary-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.summary-card.primary { border-left-color: #3b82f6; }
+.summary-card.success { border-left-color: #10b981; }
+.summary-card.info { border-left-color: #06b6d4; }
+.summary-card.warning { border-left-color: #f59e0b; }
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.summary-card.primary .summary-icon { background: #3b82f6; }
+.summary-card.success .summary-icon { background: #10b981; }
+.summary-card.info .summary-icon { background: #06b6d4; }
+.summary-card.warning .summary-icon { background: #f59e0b; }
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.summary-description {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+}
+
+/* Achievements Section */
+.achievements-section {
+    margin: 2rem 0;
+    padding: 0 1rem;
+}
+
+.achievements-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.achievement-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-card.earned {
+    border: 2px solid #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.achievement-card.locked {
+    opacity: 0.6;
+    background: #f9fafb;
+}
+
+.achievement-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.achievement-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.achievement-card.earned .achievement-icon {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.achievement-card.locked .achievement-icon {
+    background: #9ca3af;
+}
+
+.achievement-content {
+    flex: 1;
+}
+
+.achievement-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+}
+
+.achievement-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0 0 0.5rem 0;
+}
+
+.achievement-date {
+    font-size: 0.75rem;
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.achievement-status {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Impact Tracker Section */
+.impact-tracker-section {
+    margin: 2rem 0;
+    padding: 0 1rem;
+}
+
+.impact-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.impact-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-top: 4px solid #ef4444;
+}
+
+.impact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.impact-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin: 0 auto 1rem auto;
+}
+
+.impact-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.impact-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.impact-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Notifications Center Section */
+.notifications-center-section {
+    margin: 2rem 0;
+    padding: 0 1rem;
+}
+
+.notifications-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.notifications-list {
+    margin-top: 1.5rem;
+}
+
+.notification-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    border-left: 4px solid;
+}
+
+.notification-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.notification-item.danger { border-left-color: #ef4444; }
+.notification-item.success { border-left-color: #10b981; }
+.notification-item.info { border-left-color: #06b6d4; }
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.notification-item.danger .notification-icon { background: #ef4444; }
+.notification-item.success .notification-icon { background: #10b981; }
+.notification-item.info .notification-icon { background: #06b6d4; }
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+}
+
+.notification-message {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0 0 0.5rem 0;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.notification-action {
+    flex-shrink: 0;
+}
+
+.no-notifications {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+}
+
+.no-notifications-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-notifications h5 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.no-notifications p {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Responsive Design for New Sections */
+@media (max-width: 768px) {
+    .summary-grid,
+    .achievements-grid,
+    .impact-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .summary-card,
+    .achievement-card,
+    .impact-card {
+        padding: 1rem;
+    }
+    
+    .notification-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .notification-content {
+        order: 1;
+    }
+    
+    .notification-action {
+        order: 2;
+    }
+}
+.breakdown-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+.legend-color.items { background: var(--success); }
+.legend-color.money { background: var(--primary); }
+.legend-color.subsidized { background: var(--warning); }
+
+.legend-item span {
+    flex: 1;
+    color: var(--gray-700);
+}
+
+.legend-item strong {
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+/* Geographic Bars */
+.geographic-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.geo-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.geo-city {
+    min-width: 80px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.geo-bar-container {
+    flex: 1;
+    height: 24px;
+    background: var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.geo-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+    border-radius: 12px;
+    transition: width 1s ease-out;
+    position: relative;
+}
+
+.geo-count {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    min-width: 30px;
+    text-align: right;
+}
+
+/* Leaderboard */
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+}
+
+.leaderboard-item.current-user {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 100%);
+    border: 2px solid var(--primary);
+}
+
+.leaderboard-item:not(.current-user) {
+    background: var(--gray-50);
+}
+
+.leaderboard-item .rank {
+    font-size: 1.5rem;
+    font-weight: 700;
+    min-width: 40px;
+    text-align: center;
+}
+
+.donor-info {
+    flex: 1;
+}
+
+.donor-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.donor-bar {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+    border-radius: 3px;
+    transition: width 1s ease-out;
+}
+
+.donor-score {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    min-width: 40px;
+    text-align: right;
+}
+
+/* Toggle Analytics Button */
+.toggle-analytics {
+    transition: var(--transition);
+}
+
+.analytics-grid.hidden {
+    display: none;
+}
+
+/* Responsive Analytics */
+@media (max-width: 1200px) {
+    .timeline-card {
+        grid-column: span 1;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-container {
+        padding: 0 1rem;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .chart-card {
+        padding: 1.25rem;
+    }
+    
+    .chart-container {
+        min-height: 150px;
+    }
+    
+    .breakdown-legend {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .legend-item {
+        flex: none;
+        min-width: 120px;
+    }
+}
+
+/* Progress and Analytics Styles */
+.fulfillment-progress {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success) 0%, var(--primary) 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.progress-text {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.donors-count {
+    color: var(--gray-600);
+    font-size: 0.8rem;
+}
+
+.remaining-need {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--warning);
+    color: var(--white);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+}
+
+.remaining-need i {
+    color: var(--white);
+}
+
+.request-fulfilled {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--success);
+    color: var(--white);
+    border-radius: var(--border-radius-sm);
+    margin-top: 0.75rem;
+}
+
+.request-fulfilled i {
+    color: var(--white);
+    font-size: 1.2rem;
+}
+
+.fulfilled-text {
+    font-weight: 600;
+}
+
+/* Responsive adjustments for progress indicators */
+@media (max-width: 768px) {
+    .progress-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .remaining-need {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        text-align: left;
+    }
+}
+
+/* Request Modal Styles */
+.request-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 2rem;
+}
+
+.request-modal {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.request-modal .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+}
+
+.modal-title-section {
+    flex: 1;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.3;
+}
+
+.modal-foodbank {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.request-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.request-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-item label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    line-height: 1.4;
+}
+
+.request-modal .modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.request-modal .modal-footer .btn {
+    padding: 0.75rem 1.5rem;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+    .request-modal-overlay {
+        padding: 1rem;
+    }
+    
+    .request-modal {
+        max-width: 100%;
+    }
+    
+    .request-modal .modal-footer {
+        flex-direction: column;
+    }
+    
+    .request-modal .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Loading and transitions */
+.requests-grid {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dropdown customization */
+.dropdown-menu {
+    border: none;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    background: var(--gray-50);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('requestSearch');
+    const priorityFilter = document.getElementById('priorityFilter');
+    const sortOrder = document.getElementById('sortOrder');
+    const requestsList = document.getElementById('requestsList');
+
+    const tabsContainer = document.getElementById('donorDashboardTabs');
+    const myDonationsPanel = document.getElementById('donorMyDonationsPanel');
+    const directDonationsPanel = document.getElementById('donorDirectDonationsPanel');
+    const trackingPanels = document.getElementById('donorTrackingPanels');
+    const unspecifiedPanel = document.querySelector('[data-tab-panel="unspecified"]');
+    const subsidizedPanel = document.querySelector('[data-tab-panel="subsidized"]');
+
+    const donorDashboardTabKey = 'donor_dashboard_active_tab';
+    const donorDashboardTabs = ['donations', 'direct', 'unspecified', 'subsidized'];
+
+    function normalizeDonorTab(tabKey) {
+        return donorDashboardTabs.includes(tabKey) ? tabKey : null;
+    }
+
+    function resolveInitialDonorTab() {
+        const hash = window.location.hash || '';
+        const params = new URLSearchParams(window.location.search || '');
+        const queryTab = normalizeDonorTab(params.get('tab'));
+        const hashTab = normalizeDonorTab(hash.startsWith('#tab=') ? decodeURIComponent(hash.slice(5)) : hash.replace('#', ''));
+        const storedTab = normalizeDonorTab(sessionStorage.getItem(donorDashboardTabKey));
+        return queryTab || hashTab || storedTab || 'donations';
+    }
+
+    function setActiveTab(tabKey) {
+        const resolvedTab = normalizeDonorTab(tabKey) || 'donations';
+        if (tabsContainer) {
+            tabsContainer.querySelectorAll('button[data-tab]').forEach(btn => {
+                const isActive = btn.getAttribute('data-tab') === resolvedTab;
+                btn.classList.toggle('btn-primary', isActive);
+                btn.classList.toggle('btn-outline', !isActive);
+            });
+        }
+
+        if (myDonationsPanel) {
+            myDonationsPanel.style.display = resolvedTab === 'donations' ? '' : 'none';
+        }
+
+        if (directDonationsPanel) {
+            directDonationsPanel.style.display = resolvedTab === 'direct' ? '' : 'none';
+        }
+
+        const showTracking = resolvedTab === 'unspecified' || resolvedTab === 'subsidized';
+        if (trackingPanels) {
+            trackingPanels.style.display = showTracking ? '' : 'none';
+        }
+
+        if (unspecifiedPanel) {
+            unspecifiedPanel.style.display = resolvedTab === 'unspecified' ? '' : 'none';
+        }
+        if (subsidizedPanel) {
+            subsidizedPanel.style.display = resolvedTab === 'subsidized' ? '' : 'none';
+        }
+
+        sessionStorage.setItem(donorDashboardTabKey, resolvedTab);
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('tab', resolvedTab);
+        window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+    }
+
+    if (tabsContainer) {
+        tabsContainer.querySelectorAll('button[data-tab]').forEach(btn => {
+            btn.addEventListener('click', () => setActiveTab(btn.getAttribute('data-tab')));
+        });
+        setActiveTab(resolveInitialDonorTab());
+    }
+
+    function filterAndSortRequests() {
+        if (!requestsList || !searchInput || !priorityFilter || !sortOrder) {
+            return;
+        }
+        const searchTerm = searchInput.value.toLowerCase();
+        const priority = priorityFilter.value;
+        const sort = sortOrder.value;
+        
+        const rows = Array.from(requestsList.querySelectorAll('.request-row'));
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const rowPriority = row.getAttribute('data-priority');
+            
+            const matchesSearch = !searchTerm || text.includes(searchTerm);
+            const matchesPriority = priority === 'all' || rowPriority === priority;
+            
+            row.style.display = (matchesSearch && matchesPriority) ? 'grid' : 'none';
+        });
+        
+        const visibleRows = rows.filter(row => row.style.display !== 'none');
+        
+        visibleRows.sort((a, b) => {
+            const timeA = parseInt(a.getAttribute('data-created'));
+            const timeB = parseInt(b.getAttribute('data-created'));
+            
+            return sort === 'newest' ? timeB - timeA : timeA - timeB;
+        });
+        
+        const header = requestsList.querySelector('.list-header');
+        visibleRows.forEach(row => {
+            if (header) {
+                header.insertAdjacentElement('afterend', row);
+            } else {
+                requestsList.appendChild(row);
+            }
+        });
+    }
+    
+    if (searchInput) searchInput.addEventListener('input', filterAndSortRequests);
+    if (priorityFilter) priorityFilter.addEventListener('change', filterAndSortRequests);
+    if (sortOrder) sortOrder.addEventListener('change', filterAndSortRequests);
+    
+    if (requestsList) filterAndSortRequests();
+    
+    if (typeof initializeStatsCards === 'function') {
+        initializeStatsCards();
+    }
+});
+
+function showRequestDetails(requestId) {
+    // TODO: Implement request details modal
+    console.log('Show details for request:', requestId);
+}
+
+// Function to show request modal from sidebar
+function showRequestModal(id, title, description, foodbankName, priority, quantity, unit, timeAgo) {
+    // Create modal HTML
+    const modalHTML = `
+        <div class="request-modal-overlay" onclick="closeRequestModal()">
+            <div class="request-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div class="priority-indicator priority-${priority}"></div>
+                    <div class="modal-title-section">
+                        <h3 class="modal-title">${title}</h3>
+                        <p class="modal-foodbank">${foodbankName}</p>
+                    </div>
+                    <button class="modal-close" onclick="closeRequestModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="request-info">
+                        <div class="info-item">
+                            <label>Description:</label>
+                            <p>${description}</p>
+                        </div>
+                        ${quantity ? `
+                        <div class="info-item">
+                            <label>Quantity Needed:</label>
+                            <p><strong>${quantity} ${unit}</strong></p>
+                        </div>
+                        ` : ''}
+                        <div class="info-item">
+                            <label>Posted:</label>
+                            <p>${timeAgo} ago</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Priority:</label>
+                            <span class="priority-badge priority-${priority}">${priority.charAt(0).toUpperCase() + priority.slice(1)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="/donate-to-foodbank/${id}/" class="btn btn-primary">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        Respond to Request
+                    </a>
+                    <button class="btn btn-outline" onclick="closeRequestModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const donationBreakdown = JSON.parse('{{ donation_breakdown|safe }}');
+    const responseTrend = JSON.parse('{{ response_trend|safe }}');
+    
+    // Timeline Chart
+    const timelineCtx = document.getElementById('timelineChart');
+    if (timelineCtx) {
+        new Chart(timelineCtx, {
+            type: 'line',
+            data: {
+                labels: timelineData.map(d => d.month_short),
+                datasets: [{
+                    label: 'Donations',
+                    data: timelineData.map(d => d.donations),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(156, 163, 175, 0.2)'
+                        },
+                        ticks: {
+                            color: '#6b7280'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6b7280'
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: '#1e40af'
+                    }
+            }
+        }
+    });
+    }
+    
+    // Donation Breakdown Donut Chart
+    const breakdownCtx = document.getElementById('breakdownChart');
+    if (breakdownCtx && (donationBreakdown.item + donationBreakdown.money + donationBreakdown.subsidized > 0)) {
+        new Chart(breakdownCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Food Items', 'Money', 'Subsidized'],
+                datasets: [{
+                    data: [donationBreakdown.item, donationBreakdown.money, donationBreakdown.subsidized],
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+                    borderColor: ['#059669', '#1e40af', '#d97706'],
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+    
+    // Response Time Trend Chart
+    const responseCtx = document.getElementById('responseChart');
+    if (responseCtx && responseTrend.length > 0) {
+        new Chart(responseCtx, {
+            type: 'bar',
+            data: {
+                labels: responseTrend.map(d => `#${d.donation}`),
+                datasets: [{
+                    label: 'Response Time (hours)',
+                    data: responseTrend.map(d => d.hours),
+                    backgroundColor: responseTrend.map(d => 
+                        d.hours <= 2 ? '#10b981' : 
+                        d.hours <= 8 ? '#f59e0b' : '#ef4444'
+                    ),
+                    borderColor: responseTrend.map(d => 
+                        d.hours <= 2 ? '#059669' : 
+                        d.hours <= 8 ? '#d97706' : '#dc2626'
+                    ),
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(156, 163, 175, 0.2)'
+                        },
+                        ticks: {
+                            color: '#6b7280'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6b7280'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initializeGeographicBars() {
+    const geographicData = JSON.parse('{{ geographic_data|safe }}');
+    const container = document.getElementById('geographicChart');
+    
+    if (container && geographicData.length > 0) {
+        const maxDonations = Math.max(...geographicData.map(d => d.donations));
+        
+        container.innerHTML = geographicData.map(item => `
+            <div class="geo-bar-item">
+                <div class="geo-city">${item.city}</div>
+                <div class="geo-bar-container">
+                    <div class="geo-bar-fill" style="width: ${(item.donations / maxDonations) * 100}%"></div>
+                </div>
+                <div class="geo-count">${item.donations}</div>
+            </div>
+        `).join('');
+        
+        // Animate bars after a short delay
+        setTimeout(() => {
+            container.querySelectorAll('.geo-bar-fill').forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }, 500);
+    } else if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                <i class="fas fa-map-marker-alt" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No geographic data available yet.<br>Start donating to see your impact!</p>
+            </div>
+        `;
+    }
+}
+</script>
+
+<!-- Floating Support Button -->
+<div class="floating-support-btn" id="supportBtn">
+    <div class="support-icon">
+        <i class="fas fa-heart"></i>
+    </div>
+    <div class="support-text">Support FoodBank Hub</div>
+</div>
+
+<!-- Support Button Styles -->
+<style>
+.floating-support-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+    border-radius: 50px;
+    padding: 15px 20px;
+    box-shadow: 0 8px 25px rgba(238, 90, 36, 0.3);
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    border: none;
+    outline: none;
+}
+
+.floating-support-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(238, 90, 36, 0.4);
+    background: linear-gradient(135deg, #ee5a24, #ff6b6b);
+    color: white;
+    text-decoration: none;
+}
+
+.floating-support-btn:active {
+    transform: translateY(-1px);
+}
+
+.support-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.support-text {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 8px 25px rgba(238, 90, 36, 0.3);
+    }
+    50% {
+        box-shadow: 0 8px 25px rgba(238, 90, 36, 0.5), 0 0 0 10px rgba(238, 90, 36, 0.1);
+    }
+    100% {
+        box-shadow: 0 8px 25px rgba(238, 90, 36, 0.3);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .floating-support-btn {
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        font-size: 12px;
+    }
+    
+    .support-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    
+    .support-text {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .floating-support-btn {
+        bottom: 15px;
+        right: 15px;
+        padding: 10px 12px;
+    }
+    
+    .support-icon {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+    }
+}
+</style>
+
+<!-- Support Button JavaScript -->
+<script>
+const supportBtn = document.getElementById('supportBtn');
+if (supportBtn) {
+    supportBtn.addEventListener('click', function() {
+        window.location.href = '{% url "support_payment" %}';
+    });
+}
+</script>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

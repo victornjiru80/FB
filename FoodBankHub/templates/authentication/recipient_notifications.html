@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Notifications - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .notifications-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+        padding: 100px 0 60px;
+    }
+
+
+    /* Notification Cards */
+    .notification-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border-left: 5px solid;
+        position: relative;
+        overflow: hidden;
+        animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .notification-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .notification-card.dismissing {
+        animation: slideOut 0.3s ease;
+    }
+
+    @keyframes slideOut {
+        to {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    }
+
+    /* Notification Types */
+    .notification-card.acknowledgement {
+        border-left-color: #198754;
+    }
+
+    .notification-card.request {
+        border-left-color: #0d6efd;
+    }
+
+    .notification-card.system {
+        border-left-color: #6c757d;
+    }
+
+    .notification-card.donation_received {
+        border-left-color: #fd7e14;
+    }
+
+    .notification-card.request_fulfilled {
+        border-left-color: #20c997;
+    }
+
+    .notification-card.urgent_request {
+        border-left-color: #dc3545;
+    }
+
+    .notification-card.donation_pickup {
+        border-left-color: #0dcaf0;
+    }
+
+    .notification-card.donation_delivered {
+        border-left-color: #198754;
+    }
+
+    .notification-card.system_maintenance {
+        border-left-color: #ffc107;
+    }
+
+    .notification-card.new_donor {
+        border-left-color: #6f42c1;
+    }
+
+    .notification-card.request_expiring {
+        border-left-color: #fd7e14;
+    }
+
+    /* Notification Icon */
+    .notification-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 20px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .notification-card.acknowledgement .notification-icon {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        color: white;
+    }
+
+    .notification-card.request .notification-icon {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+    }
+
+    .notification-card.system .notification-icon {
+        background: linear-gradient(135deg, #6c757d 0%, #5c636a 100%);
+        color: white;
+    }
+
+    .notification-card.donation_received .notification-icon {
+        background: linear-gradient(135deg, #fd7e14 0%, #dc6502 100%);
+        color: white;
+    }
+
+    .notification-card.request_fulfilled .notification-icon {
+        background: linear-gradient(135deg, #20c997 0%, #1aa179 100%);
+        color: white;
+    }
+
+    .notification-card.urgent_request .notification-icon {
+        background: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%);
+        color: white;
+    }
+
+    .notification-card.donation_pickup .notification-icon {
+        background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+        color: white;
+    }
+
+    .notification-card.donation_delivered .notification-icon {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        color: white;
+    }
+
+    .notification-card.system_maintenance .notification-icon {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        color: white;
+    }
+
+    .notification-card.new_donor .notification-icon {
+        background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+        color: white;
+    }
+
+    .notification-card.request_expiring .notification-icon {
+        background: linear-gradient(135deg, #fd7e14 0%, #dc6502 100%);
+        color: white;
+    }
+
+    /* Notification Content */
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-type-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+
+    .notification-message {
+        font-size: 1rem;
+        color: #2d3748;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+
+    .notification-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .notification-time i {
+        font-size: 0.8rem;
+    }
+
+    /* Dismiss Button */
+    .dismiss-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: #f8f9fa;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .dismiss-btn:hover {
+        background: #dc3545;
+        color: white;
+        transform: rotate(90deg);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 30px;
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #adb5bd;
+    }
+
+    .empty-state h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 15px;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 30px;
+    }
+
+    .empty-state .btn {
+        padding: 12px 30px;
+        font-weight: 600;
+        border-radius: 10px;
+    }
+
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .notification-card {
+            padding: 20px;
+        }
+
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+
+        .dismiss-btn {
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="container">
+        <!-- CSRF token for JS -->
+        <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+        {% if notifications %}
+            <!-- Notifications List -->
+            <div id="notifications-list">
+                {% for note in notifications %}
+                <div class="notification-card {{ note.notification_type }}" id="note-{{ note.id }}" data-type="{{ note.notification_type }}" data-created="{{ note.created_at|date:'Y-m-d' }}">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon">
+                            {% if note.notification_type == 'acknowledgement' %}
+                                <i class="fas fa-thumbs-up"></i>
+                            {% elif note.notification_type == 'request' %}
+                                <i class="fas fa-bullhorn"></i>
+                            {% elif note.notification_type == 'donation_received' %}
+                                <i class="fas fa-gift"></i>
+                            {% elif note.notification_type == 'request_fulfilled' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif note.notification_type == 'urgent_request' %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                            {% elif note.notification_type == 'donation_pickup' %}
+                                <i class="fas fa-truck"></i>
+                            {% elif note.notification_type == 'donation_delivered' %}
+                                <i class="fas fa-box-open"></i>
+                            {% elif note.notification_type == 'system_maintenance' %}
+                                <i class="fas fa-tools"></i>
+                            {% elif note.notification_type == 'new_donor' %}
+                                <i class="fas fa-user-plus"></i>
+                            {% elif note.notification_type == 'request_expiring' %}
+                                <i class="fas fa-clock"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="notification-content">
+                            <span class="notification-type-badge bg-light text-dark">
+                                {{ note.get_notification_type_display }}
+                            </span>
+                            <div class="notification-message">
+                                {{ note.message }}
+                            </div>
+                            <div class="notification-time">
+                                <i class="far fa-clock"></i>
+                                <span>{{ note.created_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                        <button class="dismiss-btn" onclick="dismissNotification({{ note.id }})" title="Dismiss notification">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h3>No Notifications Yet</h3>
+                <p>You're all caught up! Check back later for updates.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Go to Dashboard
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Get CSRF Token
+function getCSRFToken() {
+    return document.getElementById("csrf-token").value;
+}
+
+// Dismiss Notification
+function dismissNotification(noteId) {
+    const noteElement = document.getElementById(`note-${noteId}`);
+    
+    // Add dismissing animation
+    noteElement.classList.add('dismissing');
+    
+    fetch(`/recipient/notifications/${noteId}/dismiss/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+            "Content-Type": "application/json"
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            setTimeout(() => {
+                noteElement.remove();
+                checkEmptyState();
+            }, 300);
+        } else {
+            noteElement.classList.remove('dismissing');
+            showToast("Error: " + data.error, "error");
+        }
+    })
+    .catch(err => {
+        console.error("Fetch error:", err);
+        noteElement.classList.remove('dismissing');
+        showToast("Failed to dismiss notification", "error");
+    });
+}
+
+// Check if notifications list is empty
+function checkEmptyState() {
+    const notificationsList = document.getElementById('notifications-list');
+    if (notificationsList && notificationsList.children.length === 0) {
+        location.reload();
+    }
+}
+
+// Show Toast Notification
+function showToast(message, type = 'info') {
+    // Simple toast implementation
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'custom_admin/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-share-alt me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Track how donations are distributed to recipients</p>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card"><div class="card-body text-center">
+                <h3 class="mb-0">{{ total_allocations }}</h3>
+                <small class="text-white-50">Total Allocations</small>
+            </div></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card success"><div class="card-body text-center">
+                <h3 class="mb-0">{{ acknowledged_allocations }}</h3>
+                <small class="text-white-50">Acknowledged</small>
+            </div></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card warning"><div class="card-body text-center">
+                <h3 class="mb-0">{{ pending_acknowledgment }}</h3>
+                <small class="text-white-50">Pending</small>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Donation Type</label>
+                    <select name="donation_type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in donation_types %}
+                            <option value="{{ value }}" {% if current_filters.donation_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All</option>
+                        {% for fb in foodbanks %}
+                            <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Recipient</label>
+                    <select name="recipient" class="form-select">
+                        <option value="">All</option>
+                        {% for r in recipients %}
+                            <option value="{{ r.id }}" {% if current_filters.recipient == r.id|stringformat:"s" %}selected{% endif %}>{{ r.user.email }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Acknowledged</label>
+                    <select name="acknowledged" class="form-select">
+                        <option value="">All</option>
+                        <option value="yes" {% if current_filters.acknowledged == 'yes' %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if current_filters.acknowledged == 'no' %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" value="{{ current_filters.search }}" placeholder="Recipient, donor, foodbank...">
+                </div>
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'custom_admin:donation_allocations_management' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="mb-0">Allocations ({{ page_obj.paginator.count }})</h5></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>ID</th><th>Donation</th><th>Recipient</th><th>Amount</th><th>Acknowledged</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for allocation in page_obj %}
+                        <tr>
+                            <td>#{{ allocation.id }}</td>
+                            <td>{{ allocation.donation.get_donation_type_display }}</td>
+                            <td>{{ allocation.recipient.full_name }}</td>
+                            <td>{% if allocation.quantity %}{{ allocation.quantity }} items{% elif allocation.amount %}KES {{ allocation.amount }}{% endif %}</td>
+                            <td>{% if allocation.is_acknowledged %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-warning">No</span>{% endif %}</td>
+                            <td>{{ allocation.allocated_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center py-4">No allocations found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

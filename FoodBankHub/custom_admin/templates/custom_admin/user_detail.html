@@ -1,0 +1,146 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- User Information Card -->
+            <div class="card mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">User Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
+                                {{ user_form.email }}
+                                {% if user_form.email.errors %}
+                                    <div class="text-danger small">{{ user_form.email.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ user_form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                                {{ user_form.phone_number }}
+                                {% if user_form.phone_number.errors %}
+                                    <div class="text-danger small">{{ user_form.phone_number.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="user_type" class="form-label">User Type</label>
+                                <input type="text" class="form-control" id="user_type" value="{{ user.get_user_type_display }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_joined" class="form-label">Date Joined</label>
+                                <input type="text" class="form-control" id="date_joined" value="{{ user.date_joined|date:'M d, Y H:i' }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ user_form.is_active }}
+                                <label class="form-check-label" for="{{ user_form.is_active.id_for_label }}">
+                                    Active User
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ user_form.is_staff }}
+                                <label class="form-check-label" for="{{ user_form.is_staff.id_for_label }}">
+                                    Staff User
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ user_form.non_field_errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Profile Information -->
+            {% if profile_form %}
+            <div class="card mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Profile Details</h6>
+                </div>
+                <div class="card-body">
+                    {% for field in profile_form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                                <div class="form-check">
+                                    {{ field }}
+                                </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if profile_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ profile_form.non_field_errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- User Statistics -->
+            <div class="card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">User Statistics</h6>
+                </div>
+                <div class="card-body">
+                    {% if user.user_type == 'DONOR' %}
+                        <p><strong>Total Donations:</strong> {{ user_stats.total_donations|default:0 }}</p>
+                        <p><strong>Total Amount Donated:</strong> 
+                            KES {{ user_stats.total_amount_donated|default:0|floatformat:0 }}
+                        </p>
+                    {% elif user.user_type == 'FOODBANK' %}
+                        <p><strong>Donations Received:</strong> {{ user_stats.donations_received|default:0 }}</p>
+                        <p><strong>Active Requests:</strong> {{ user_stats.active_requests|default:0 }}</p>
+                    {% elif user.user_type == 'RECIPIENT' %}
+                        <p><strong>Requests Made:</strong> {{ user_stats.requests_made|default:0 }}</p>
+                        <p><strong>Allocations Received:</strong> {{ user_stats.allocations_received|default:0 }}</p>
+                    {% endif %}
+
+                    <p><strong>Last Login:</strong> 
+                        {% if user.last_login %}
+                            {{ user.last_login|date:"M d, Y H:i" }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Update User
+        </button>
+        <a href="{% url 'custom_admin:user_management' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</form>
+{% endblock %}

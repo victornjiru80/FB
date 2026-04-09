@@ -1,0 +1,1387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .request-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    .request-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .status-update-form {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+    .overdue-indicator {
+        border-left: 4px solid #dc3545;
+    }
+    
+    /* Table view styles */
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .table {
+        margin-bottom: 0;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+    }
+
+    .manage-requests-table {
+        overflow-x: visible;
+        overflow-y: visible;
+    }
+
+    .manage-requests-table .table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .manage-requests-table .table th,
+    .manage-requests-table .table td {
+        font-size: 0.72rem;
+        padding: 0.32rem 0.35rem;
+        line-height: 1.22;
+    }
+
+    .manage-requests-table .table th {
+        white-space: normal;
+    }
+    
+    .table th {
+        border-top: none;
+        border-right: 1px solid #e5e7eb;
+        border-bottom: 1px solid #d1d5db;
+        font-weight: 600;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        padding: 0.5rem 0.5rem;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.5rem;
+        line-height: 1.3;
+        border-right: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table td:last-child,
+    .table th:last-child {
+        border-right: none;
+    }
+
+    .manage-requests-table .actions-column {
+        width: 8%;
+        text-align: center;
+    }
+
+    .requested-column {
+        white-space: nowrap;
+        width: 8%;
+    }
+
+    .manage-requests-table .table th:nth-child(1),
+    .manage-requests-table .table td:nth-child(1) {
+        width: 4%;
+        text-align: center;
+    }
+
+    .manage-requests-table .table th:nth-child(2),
+    .manage-requests-table .table td:nth-child(2) {
+        width: 6%;
+    }
+
+    .manage-requests-table .table th:nth-child(3),
+    .manage-requests-table .table td:nth-child(3) {
+        width: 13%;
+    }
+
+    .manage-requests-table .table th:nth-child(4),
+    .manage-requests-table .table td:nth-child(4) {
+        width: 9%;
+    }
+
+    .manage-requests-table .table th:nth-child(5),
+    .manage-requests-table .table td:nth-child(5) {
+        width: 14%;
+    }
+
+    .manage-requests-table .table th:nth-child(6),
+    .manage-requests-table .table td:nth-child(6) {
+        width: 7%;
+    }
+
+    .manage-requests-table .table th:nth-child(7),
+    .manage-requests-table .table td:nth-child(7) {
+        width: 8%;
+    }
+
+    .manage-requests-table .table th:nth-child(8),
+    .manage-requests-table .table td:nth-child(8) {
+        width: 7%;
+    }
+
+    .manage-requests-table .table th:nth-child(9),
+    .manage-requests-table .table td:nth-child(9) {
+        width: 16%;
+    }
+
+    .manage-requests-table .table th:nth-child(10),
+    .manage-requests-table .table td:nth-child(10) {
+        width: 8%;
+    }
+
+    .manage-requests-table .table th:nth-child(11),
+    .manage-requests-table .table td:nth-child(11) {
+        width: 8%;
+    }
+
+    .manage-requests-table .text-wrap-cell {
+        max-width: 100% !important;
+        white-space: normal !important;
+        word-break: break-word;
+    }
+
+    .manage-requests-table .text-truncate {
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+    
+    .table-warning {
+        background-color: rgba(255,193,7,0.1) !important;
+    }
+    
+    /* View toggle buttons */
+    .btn-group .btn {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+
+    .request-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.2rem;
+        justify-content: center;
+    }
+
+    .request-actions .action-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid #d1d5db;
+        background: #fff;
+        color: #4b5563;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.66rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    .request-actions .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+    }
+
+    .request-actions .action-btn.action-primary {
+        border-color: #3b82f6;
+        color: #1d4ed8;
+    }
+
+    .request-actions .action-btn.action-success {
+        border-color: #10b981;
+        color: #0f766e;
+    }
+
+    .request-actions .action-btn.action-warning {
+        border-color: #fbbf24;
+        color: #b45309;
+    }
+
+    .request-actions .action-btn.action-danger {
+        border-color: #f87171;
+        color: #b91c1c;
+    }
+
+    .text-wrap-cell {
+    white-space: normal !important;
+    word-wrap: break-word;
+    max-width: 200px;
+    line-height: 1.3;
+   }
+    /* Compact action buttons for table */
+    .btn-group-vertical .btn {
+        margin-bottom: 1px;
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+    
+    /* Responsive table adjustments */
+    @media (max-width: 768px) {
+        .manage-requests-table .table th,
+        .manage-requests-table .table td {
+            font-size: 0.64rem;
+            padding: 0.24rem 0.2rem;
+        }
+        
+        .text-truncate {
+            max-width: 80px !important;
+        }
+        
+        .btn-group-vertical .btn {
+            padding: 0.2rem 0.3rem;
+            font-size: 0.65rem;
+        }
+
+        .quantity-cell {
+            min-width: 0;
+        }
+
+        .quantity-breakdown-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .manage-requests-table .actions-column {
+            width: 8%;
+        }
+    }
+    
+    /* Collapsible filter animation */
+    .filter-section .collapse {
+        margin-top: 1rem;
+    }
+    
+    .filter-section .border-top {
+        border-color: #dee2e6 !important;
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+    
+    .filter-section .btn[data-bs-toggle="collapse"] {
+        transition: all 0.3s ease;
+    }
+    
+    .filter-section .btn[data-bs-toggle="collapse"]:focus {
+        box-shadow: none;
+    }
+    
+    .filter-section .btn[data-bs-toggle="collapse"] i {
+        transition: transform 0.3s ease;
+    }
+    
+    .filter-section .btn[data-bs-toggle="collapse"]:not(.collapsed) i {
+        transform: rotate(180deg);
+    }
+
+    .quantity-breakdown-btn {
+        padding: 0.14rem 0.35rem;
+        font-size: 0.62rem;
+        line-height: 1;
+        white-space: nowrap;
+        min-width: 0;
+        flex-shrink: 0;
+    }
+
+    .quantity-breakdown-btn i {
+        font-size: 0.66rem;
+        margin-right: 0.22rem;
+    }
+
+    .quantity-cell {
+        min-width: 0;
+    }
+
+    .quantity-breakdown-row {
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    .quantity-breakdown-summary {
+        line-height: 1.25;
+        min-width: 0;
+    }
+
+    .manage-notes-modal .modal-content {
+        border: 1px solid #e2e8f0;
+    }
+
+    .manage-notes-modal .modal-header {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 0.65rem;
+    }
+
+    .manage-notes-subtitle {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+
+    .manage-notes-body {
+        padding: 0.9rem 1rem 1rem;
+    }
+
+    .note-sections {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .note-section {
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #94a3b8;
+        border-radius: 0.55rem;
+        padding: 0.65rem 0.75rem;
+        background: #f8fafc;
+    }
+
+    .note-section.recipient {
+        border-left-color: #2563eb;
+    }
+
+    .note-section.donor {
+        border-left-color: #0891b2;
+    }
+
+    .note-section.decline {
+        border-left-color: #dc2626;
+    }
+
+    .note-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .note-section-content {
+        font-size: 0.82rem;
+        line-height: 1.45;
+        color: #111827;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .note-section-content em {
+        color: #6b7280;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tasks me-2"></i>{{ title }}</h2>
+            </div>
+
+            <!-- Filters (aligned with table: Type, Description, Recipient, Quantity, Delivery, Location, Notes, Status, Requested) -->
+            <div class="filter-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+
+                <form method="get" class="row g-3">
+                    <div class="col-md-2">
+                        <label for="type" class="form-label">Type</label>
+                        <select name="type" id="type" class="form-select">
+                            <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
+                            <option value="food" {% if type_filter == 'food' %}selected{% endif %}>Food</option>
+                            <option value="non_food" {% if type_filter == 'non_food' %}selected{% endif %}>Non-Food</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>Assigned to Foodbank</option>
+                            <option value="awaiting_recipient" {% if status_filter == 'awaiting_recipient' %}selected{% endif %}>Awaiting Recipient</option>
+                            <option value="submitted" {% if status_filter == 'submitted' %}selected{% endif %}>Submitted to Donors - Awaiting Donation</option>
+                            <option value="donation_received" {% if status_filter == 'donation_received' %}selected{% endif %}>Donated awaiting approval</option>
+                            <option value="fulfilled" {% if status_filter == 'fulfilled' %}selected{% endif %}>Fulfilled</option>
+                            <option value="recipient_received" {% if status_filter == 'recipient_received' %}selected{% endif %}>Recipient Received</option>
+                            <option value="partial" {% if status_filter == 'partial' %}selected{% endif %}>Partially fulfilled sent to recipient</option>
+                            <option value="declined_foodbank" {% if status_filter == 'declined_foodbank' %}selected{% endif %}>Declined by Foodbank</option>
+                            <option value="declined_recipient" {% if status_filter == 'declined_recipient' %}selected{% endif %}>Declined by Recipient</option>
+                            <option value="declined" {% if status_filter == 'declined' %}selected{% endif %}>Declined</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="delivery" class="form-label">Delivery</label>
+                        <select name="delivery" id="delivery" class="form-select">
+                            <option value="all" {% if delivery_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="pickup" {% if delivery_filter == 'pickup' %}selected{% endif %}>Pickup</option>
+                            <option value="delivery" {% if delivery_filter == 'delivery' %}selected{% endif %}>Delivery</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <select name="quantity" id="quantity" class="form-select">
+                            <option value="all" {% if quantity_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="small" {% if quantity_filter == 'small' %}selected{% endif %}>&lt;=10</option>
+                            <option value="medium" {% if quantity_filter == 'medium' %}selected{% endif %}>11-50</option>
+                            <option value="large" {% if quantity_filter == 'large' %}selected{% endif %}>51+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="amount" class="form-label">Amount</label>
+                        <select name="amount" id="amount" class="form-select">
+                            <option value="all" {% if amount_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="small" {% if amount_filter == 'small' %}selected{% endif %}>&lt;=5,000</option>
+                            <option value="medium" {% if amount_filter == 'medium' %}selected{% endif %}>5,001-20,000</option>
+                            <option value="large" {% if amount_filter == 'large' %}selected{% endif %}>20,001+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="anonymous" class="form-label">Anonymous</label>
+                        <select name="anonymous" id="anonymous" class="form-select">
+                            <option value="all" {% if anonymous_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="anonymous" {% if anonymous_filter == 'anonymous' %}selected{% endif %}>Anonymous Only</option>
+                            <option value="not_anonymous" {% if anonymous_filter == 'not_anonymous' %}selected{% endif %}>Not Anonymous</option>
+                        </select>
+                    </div>
+                    <div class="row g-3 mt-1 pt-3 border-top">
+                        <div class="col-md-2">
+                            <label for="date_range" class="form-label">Date Range</label>
+                            <select name="date_range" id="date_range" class="form-select" onchange="toggleCustomDateInputs(this.value)">
+                                <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
+                                <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+                                <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+                                <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+                                <option value="3months" {% if date_filter == '3months' %}selected{% endif %}>Last 3 Months</option>
+                                <option value="custom" {% if date_filter == 'custom' %}selected{% endif %}>Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2" id="customDateFrom" style="display: {% if date_filter == 'custom' %}block{% else %}none{% endif %};">
+                            <label for="date_from" class="form-label">From Date</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-2" id="customDateTo" style="display: {% if date_filter == 'custom' %}block{% else %}none{% endif %};">
+                            <label for="date_to" class="form-label">To Date</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sort" class="form-label">Sort</label>
+                            <select name="sort" id="sort" class="form-select">
+                                <option value="newest" {% if sort_filter == 'newest' or not sort_filter %}selected{% endif %}>Newest First</option>
+                                <option value="oldest" {% if sort_filter == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search (Description, Location, Recipient, Notes)</label>
+                            <input type="text" name="search" id="search" class="form-control" value="{{ search_query }}" placeholder="Search description, location, recipient, notes...">
+                        </div>
+                        <div class="col-md-12 col-lg-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2"><i class="fas fa-filter me-1"></i>Filter</button>
+                            <a href="{% url 'foodbank_requests_view' %}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i>Clear</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Download Reports -->
+            <div class="mb-3">
+                <div class="dropdown">
+                    <button class="btn btn-success fw-semibold shadow-sm dropdown-toggle" type="button" id="manageRequestsExportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-2"></i>Download Reports
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="manageRequestsExportDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'export_foodbank_manage_requests' 'pdf' %}?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i>Download PDF
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'export_foodbank_manage_requests' 'csv' %}?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}">
+                                <i class="fas fa-file-csv me-2 text-success"></i>Download CSV
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'export_foodbank_manage_requests' 'excel' %}?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}">
+                                <i class="fas fa-file-excel me-2 text-success"></i>Download Excel
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Requests List -->
+            {% if requests %}
+                <div class="table-responsive manage-requests-table">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>S/No</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Recipient</th>
+                                <th>Quantity</th>
+                                <th>Delivery</th>
+                                <th>Location</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th class="requested-column">Requested</th>
+                                <th class="actions-column">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in requests %}
+                            <tr {% if request.is_overdue %}class="table-warning"{% endif %} id="table-request-{{ request.id }}">
+                                <td>{{ forloop.counter|add:requests.start_index|add:"-1" }}</td>
+                                <td>
+                                    <span class="badge {{ request.get_type_badge_class }}">
+                                        {{ request.get_request_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="text-wrap-cell" style="max-width: 200px;" title="{{ request.description }}">
+                                        {{ request.description }}
+                                    </div>
+                                </td>
+                                <td class="text-wrap-cell" style="font-size: 0.75rem; max-width: 180px;">
+                                    {% if request.is_anonymous %}
+                                        Anonymous
+                                    {% else %}
+                                        {{ request.manage_recipient_display|default:request.recipient_name }}
+                                    {% endif %}
+                                </td>
+                                <td class="quantity-cell">
+                                    {% with remaining=request.get_remaining_quantity %}
+                                        <div>
+                                            <strong>{{ request.quantity }} {{ request.get_unit_display }}</strong>
+                                            <small class="text-muted ms-1">Requested</small>
+                                        </div>
+                                        <div class="quantity-breakdown-row">
+                                            <small class="quantity-breakdown-summary">
+                                                <span class="text-success fw-bold">{{ request.quantity_fulfilled|default:0 }} {{ request.get_unit_display }}</span>
+                                                <span class="text-muted">Fulfilled</span>
+                                                <span class="text-muted mx-1">|</span>
+                                                <span class="text-warning fw-bold">{{ remaining|default:0 }} {{ request.get_unit_display }}</span>
+                                                <span class="text-muted">Remaining</span>
+                                            </small>
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary quantity-breakdown-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#quantityBreakdownModal{{ request.id }}"
+                                                    title="View quantity breakdown"
+                                                    aria-label="View quantity breakdown">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                        </div>
+                                    {% endwith %}
+                                </td>
+                                <td style="font-size: 0.75rem;">{{ request.get_delivery_method_display }}</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 120px; font-size: 0.75rem;" title="{{ request.location }}">
+                                        {{ request.location|truncatechars:25 }}
+                                    </div>
+                                </td>
+                                <td class="text-wrap-cell" style="font-size: 0.7rem; max-width: 200px;">
+                                    {% with fb_req=request.foodbank_request_created.first %}
+                                        {% if request.additional_notes or request.decline_message or fb_req and fb_req.donations.all %}
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary manage-view-notes-btn"
+                                                    data-note-title="Notes for {% if request.is_anonymous %}Anonymous{% else %}{{ request.manage_recipient_display|default:request.recipient_name|default:'Request' }}{% endif %}"
+                                                    data-note-body="{{ request.additional_notes|default_if_none:''|escapejs }}"
+                                                    data-donor-note="{% if fb_req %}{% for donation in fb_req.donations.all %}{% if donation.message %}{{ donation.message|escapejs }}{% elif donation.other_description %}{{ donation.other_description|escapejs }}{% elif donation.csr_description %}{{ donation.csr_description|escapejs }}{% endif %}{% if not forloop.last %}\n\n{% endif %}{% endfor %}{% endif %}"
+                                                    data-decline-note="{{ request.decline_message|default_if_none:''|escapejs }}">
+                                                <i class="fas fa-sticky-note me-1"></i>View
+                                            </button>
+                                        {% else %}
+                                            <span title="No notes">â€”</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                <td style="vertical-align: middle; font-size: 0.75rem; padding: 0.4rem 0.6rem;">
+                                    {% if request.status == 'partial' %}
+                                    <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #dbeafe; color: #1d4ed8;">
+                                        <i class="fas fa-adjust" style="font-size: 0.6rem;"></i>
+                                        Partially fulfilled sent to recipient
+                                    </span>
+                                {% elif request.status == 'fulfilled' %}
+                                    <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #dcfce7; color: #166534;">
+                                        <i class="fas fa-check-circle" style="font-size: 0.6rem;"></i>
+                                        {% if request.acknowledged_by_recipient %}
+                                            Recipient Recieved
+                                        {% else %}
+                                            Fulfilled
+                                        {% endif %}
+                                    </span>
+                                    {% elif request.status == 'declined' %}
+                                        <span class="badge bg-danger" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                            {% if request.recipient_declined_request %}
+                                                Declined by Recipient
+                                            {% elif request.foodbank_declined_request or request.foodbank_declined_donation %}
+                                                Declined by Foodbank
+                                            {% else %}
+                                                Declined
+                                            {% endif %}
+                                        </span>
+                                    {% elif request.status == 'donation_received' %}
+                                        <span class="badge bg-info" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                            Donated awaiting approval
+                                        </span>
+                                    {% elif request.status == 'submitted' %}
+                                        <span class="badge bg-warning text-dark" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                            Submitted to Donors - Awaiting Donation
+                                        </span>
+                                    {% else %}
+                                        <span class="badge {{ request.get_status_badge_class }}" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                            {{ request.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="requested-column" style="font-size: 0.7rem; line-height: 1.3;">
+                                    <div>{{ request.time_of_request|date:"M d, Y" }}</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">{{ request.time_of_request|date:"H:i" }}</div>
+                                </td>
+                                
+                          <td class="actions-column">
+                                <div class="request-actions" role="group" aria-label="Request actions">
+                                    <!-- View details -->
+                                    <a href="{% url 'request_detail' request.id %}"
+                                    class="action-btn action-primary"
+                                    data-bs-toggle="tooltip"
+                                    title="View details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    {% if not request.status == 'declined' or not request.recipient_declined_request %}
+                                        {% if request.is_anonymous and request.assigned_foodbank is None %}
+                                            <!-- Assign anonymous request -->
+                                            <form method="POST" action="{% url 'assign_anonymous_request' request.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ current_full_path }}#table-request-{{ request.id }}">
+                                                <button type="submit"
+                                                        class="action-btn action-primary"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Assign to me">
+                                                    <i class="fas fa-hand-point-right"></i>
+                                                </button>
+                                            </form>
+
+                                        {% elif request.status == 'pending' or request.status == 'assigned' %}
+                                            <!-- Pending/Assigned actions -->
+                                            <button type="button"
+                                                    class="action-btn action-success"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#fulfillModal{{ request.id }}"
+                                                    title="Fulfill">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="action-btn action-warning"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#partialFulfillModal{{ request.id }}"
+                                                    title="Available Donations">
+                                                <i class="fas fa-box"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="action-btn action-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#declineModal{{ request.id }}"
+                                                    title="Decline">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+
+                                        {% elif request.foodbank_declined_donation %}
+                                            <!-- Fulfill + Available for foodbank-declined donations -->
+                                            <button type="button"
+                                                    class="action-btn action-success"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#fulfillModal{{ request.id }}"
+                                                    title="Fulfill">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="action-btn action-warning"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#partialFulfillModal{{ request.id }}"
+                                                    title="Available Donations">
+                                                <i class="fas fa-box-open"></i>
+                                            </button>
+
+                                        {% elif request.status == 'donation_received' %}
+                                            {% with foodbank_request=request.foodbank_request_created.first %}
+                                                {% if foodbank_request %}
+                                                    {% with donation=foodbank_request.donations.first %}
+                                                        {% if donation %}
+                                                            <!-- Accept Donation -->
+                                                            <form method="POST"
+                                                                action="{% url 'accept_donation' donation.id %}"
+                                                                class="d-inline"
+                                                                onsubmit="return confirm('Accept this donation and fulfill the request?')">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="next" value="{{ current_full_path }}#table-request-{{ request.id }}">
+                                                                <button type="submit"
+                                                                        class="action-btn action-success"
+                                                                        data-bs-toggle="tooltip"
+                                                                        title="Accept donation">
+                                                                    <i class="fas fa-check-double"></i>
+                                                                </button>
+                                                            </form>
+
+                                                            <!-- Decline Donation -->
+                                                            <button type="button"
+                                                                    class="action-btn action-danger"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#declineDonationModal{{ donation.id }}"
+                                                                    title="Decline donation">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endif %}
+                                            {% endwith %}
+
+                                        {% elif request.status == 'partial' %}
+                                            {% if request.acknowledged_by_recipient and request.quantity_fulfilled < request.quantity and not request.awaiting_donors %}
+                                                <!-- Partial fulfillment: Add More / Fulfill Rest (icon buttons) -->
+                                                <a href="{% url 'partial_fulfill_request' request.id %}"
+                                                class="action-btn action-warning"
+                                                data-bs-toggle="tooltip"
+                                                title="Add more">
+                                                    <i class="fas fa-plus"></i>
+                                                </a>
+
+                                                <button class="action-btn action-success"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#fulfillRemainingModal{{ request.id }}"
+                                                        title="Fulfill rest">
+                                                    <i class="fas fa-bullhorn"></i>
+                                                </button>
+                                            {% endif %}
+
+                                        {% endif %}
+                                    {% endif %}
+
+                                </div>
+                            </td>
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if requests.has_other_pages %}
+                <nav aria-label="Requests pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if requests.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter and type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if delivery_filter and delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if date_filter and date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if quantity_filter and quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter and amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if anonymous_filter and anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter and sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}{% if date_filter == 'custom' and date_from %}&date_from={{ date_from }}{% endif %}{% if date_filter == 'custom' and date_to %}&date_to={{ date_to }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ requests.previous_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter and type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if delivery_filter and delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if date_filter and date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if quantity_filter and quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter and amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if anonymous_filter and anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter and sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}{% if date_filter == 'custom' and date_from %}&date_from={{ date_from }}{% endif %}{% if date_filter == 'custom' and date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ requests.number }} of {{ requests.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if requests.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ requests.next_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter and type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if delivery_filter and delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if date_filter and date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if quantity_filter and quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter and amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if anonymous_filter and anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter and sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}{% if date_filter == 'custom' and date_from %}&date_from={{ date_from }}{% endif %}{% if date_filter == 'custom' and date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ requests.paginator.num_pages }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter and type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if delivery_filter and delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if date_filter and date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if quantity_filter and quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter and amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if anonymous_filter and anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter and sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}{% if date_filter == 'custom' and date_from %}&date_from={{ date_from }}{% endif %}{% if date_filter == 'custom' and date_to %}&date_to={{ date_to }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No requests found</h4>
+                    <p class="text-muted">No requests have been made to your foodbank yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MODALS SECTION - Outside the table -->
+{% for request in requests %}
+    <!-- Fulfill Modal -->
+    <div class="modal fade" id="fulfillModal{{ request.id }}" tabindex="-1" aria-labelledby="fulfillModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'fulfill_request' request.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ current_full_path }}#table-request-{{ request.id }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fulfillModalLabel{{ request.id }}">Fulfill Request</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Create a new donation request for donors?</p>
+                        <div class="form-check" style="display: none;">
+                            <input class="form-check-input" type="radio" name="fulfillment_option" id="availableDonations{{ request.id }}" value="available">
+                            <label class="form-check-label" for="availableDonations{{ request.id }}">
+                                Fulfill from Available Donations
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="fulfillment_option" id="newDonationRequest{{ request.id }}" value="new_request" required checked>
+                            <label class="form-check-label" for="newDonationRequest{{ request.id }}">
+                                Create a New Donation Request
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Proceed</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% for request in requests %}
+    {% with foodbank_request=request.foodbank_request_created.first %}
+        {% if foodbank_request %}
+            {% for donation in foodbank_request.donations.all %}
+                <div class="modal fade"
+                     id="declineDonationModal{{ donation.id }}"
+                     tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="POST"
+                                  action="{% url 'decline_donation' donation.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ current_full_path }}#table-request-{{ request.id }}">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Decline Donation</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <label>Reason for declining this donation</label>
+                                    <textarea name="message"
+                                              class="form-control"
+                                              rows="4"
+                                              required></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                            class="btn btn-danger">
+                                        Decline Donation
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+{% endfor %}
+
+    
+    <!-- Partial Fulfillment Modal -->
+    <div class="modal fade" id="partialFulfillModal{{ request.id }}" tabindex="-1" aria-labelledby="partialFulfillModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'partial_fulfill_request' request.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="partialFulfillModalLabel{{ request.id }}">Partial Fulfillment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Specify the quantity you can fulfill from available donations:</p>
+                        <div class="form-group">
+                            <label for="partialQuantity{{ request.id }}">Quantity</label>
+                            <input type="number" name="partial_quantity" id="partialQuantity{{ request.id }}" class="form-control" min="1" max="{{ request.quantity }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Modal -->
+    <div class="modal fade" id="declineModal{{ request.id }}" tabindex="-1" aria-labelledby="declineModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'decline_request' request.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ current_full_path }}#table-request-{{ request.id }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="declineModalLabel{{ request.id }}">Decline Request</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="declineMessage{{ request.id }}">Reason for Declining</label>
+                            <textarea name="decline_message" id="declineMessage{{ request.id }}" class="form-control" rows="4" placeholder="Enter your message here..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Decline</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Fulfill Remaining Modal -->
+                                 <div class="modal fade" id="fulfillRemainingModal{{ request.id }}" tabindex="-1"
+                                    aria-labelledby="fulfillRemainingModalLabel{{ request.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+
+                                            <form method="POST" action="{% url 'submit_remaining_to_donors' request.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ current_full_path }}#table-request-{{ request.id }}">
+
+                                                <!-- STEP 1 -->
+                                                <div id="step1-remaining{{ request.id }}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="fulfillRemainingModalLabel{{ request.id }}">
+                                                            Fulfill Remaining Quantity
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <p>
+                                                            This request has been <strong>partially fulfilled</strong>.
+                                                            <br>
+                                                            <strong>Remaining Quantity:</strong>
+                                                            <span class="text-danger fw-bold">
+                                                                {{ request.get_remaining_quantity }} {{ request.get_unit_display }}
+
+                                                            </span>
+                                                        </p>
+
+                                                        <p>How would you like to fulfill the remaining quantity?</p>
+
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="fulfillment_option"
+                                                                id="remainingAvailable{{ request.id }}"
+                                                                value="available" required>
+                                                            <label class="form-check-label" for="remainingAvailable{{ request.id }}">
+                                                                Fulfill from Available Foodbank Stock
+                                                            </label>
+                                                        </div>
+
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="fulfillment_option"
+                                                                id="remainingDonors{{ request.id }}"
+                                                                value="donors" required>
+                                                            <label class="form-check-label" for="remainingDonors{{ request.id }}">
+                                                                Submit Remaining Quantity to Donors
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <button type="button" class="btn btn-primary"
+                                                                onclick="showRemainingStep2('{{ request.id }}')">
+                                                            Proceed
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- STEP 2 -->
+                                                <div id="step2-remaining{{ request.id }}" style="display:none;">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirm Remaining Fulfillment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <ul>
+                                                            <li><strong>Description:</strong> {{ request.description }}</li>
+                                                            <li><strong>Remaining Quantity:</strong>
+                                                                {{ request.get_remaining_quantity }} {{ request.get_unit_display }}
+
+                                                            </li>
+                                                            <li><strong>Location:</strong> {{ request.location }}</li>
+                                                            <li><strong>Delivery Method:</strong> {{ request.delivery_method }}</li>
+                                                        </ul>
+
+                                                        <p>
+                                                            <strong>Selected Option:</strong>
+                                                            <span id="selectedRemainingOption{{ request.id }}"></span>
+                                                        </p>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                                onclick="showRemainingStep1('{{ request.id }}')">
+                                                            Back
+                                                        </button>
+                                                        <button type="submit" class="btn btn-success">
+                                                            Confirm & Submit
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+    <!-- Decline Message Modal -->
+    <div class="modal fade"
+        id="declineMessageModal{{ request.id }}"
+        tabindex="-1"
+        aria-labelledby="declineMessageModalLabel{{ request.id }}"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="declineMessageModalLabel{{ request.id }}">
+                        Decline Message
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    {% if request.decline_message %}
+                        <p class="mb-0">{{ request.decline_message }}</p>
+                    {% else %}
+                        <p class="text-muted mb-0">No message provided.</p>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Quantity Breakdown Modal -->
+    <div class="modal fade" id="quantityBreakdownModal{{ request.id }}" tabindex="-1" aria-labelledby="quantityBreakdownModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quantityBreakdownModalLabel{{ request.id }}">
+                        <i class="fas fa-list-ul me-2"></i>Quantity Breakdown
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% with remaining=request.get_remaining_quantity %}
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <div><strong>Requested:</strong> {{ request.quantity }} {{ request.get_unit_display }}</div>
+                        <div><strong>Fulfilled:</strong> {{ request.quantity_fulfilled|default:0 }} {{ request.get_unit_display }}</div>
+                        <div><strong>Remaining:</strong> {{ remaining|default:0 }} {{ request.get_unit_display }}</div>
+                    </div>
+                    {% endwith %}
+
+                    {% if request.quantity_timeline %}
+                        <div class="list-group list-group-flush">
+                            {% for entry in request.quantity_timeline %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-2 mt-1">
+                                        {% if entry.state == 'declined' %}
+                                            <i class="fas fa-times-circle text-danger"></i>
+                                        {% elif entry.state == 'accepted' %}
+                                            {% if entry.accepted_by_recipient or request.acknowledged_by_recipient %}
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            {% else %}
+                                                <i class="fas fa-circle text-muted" style="font-size: 0.55rem;"></i>
+                                            {% endif %}
+                                        {% else %}
+                                            <i class="fas fa-circle text-muted" style="font-size: 0.55rem;"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="w-100">
+                                        <div{% if entry.is_declined %} style="text-decoration: line-through; color: #9ca3af;"{% endif %}>
+                                            {{ entry.display }}
+                                        </div>
+                                        {% if entry.label %}
+                                            <small class="text-muted d-block">{{ entry.label }}</small>
+                                        {% endif %}
+                                        {% if entry.timestamp %}
+                                            <small class="text-muted d-block">{{ entry.timestamp|date:"M d, Y H:i" }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No donation breakdown yet.</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endfor %}
+
+<!-- Shared Notes Modal -->
+<div class="modal fade manage-notes-modal" id="manageNotesModal" tabindex="-1" aria-labelledby="manageNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="manageNotesModalLabel">Request Notes</h5>
+                    <p class="manage-notes-subtitle">Recipient, donor, and decline notes</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body manage-notes-body" id="manageNotesModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshRequests() {
+    location.reload();
+}
+
+function toggleCustomDateInputs(value) {
+    const dateFrom = document.getElementById('customDateFrom');
+    const dateTo = document.getElementById('customDateTo');
+    
+    if (value === 'custom') {
+        dateFrom.style.display = 'block';
+        dateTo.style.display = 'block';
+    } else {
+        dateFrom.style.display = 'none';
+        dateTo.style.display = 'none';
+    }
+}
+
+let hasAdjustedHashRow = false;
+function focusHashRow() {
+    if (hasAdjustedHashRow || !window.location.hash) {
+        return;
+    }
+    const targetId = window.location.hash.slice(1);
+    const targetEl = targetId ? document.getElementById(targetId) : null;
+    if (!targetEl) {
+        return;
+    }
+
+    hasAdjustedHashRow = true;
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            targetEl.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+            const originalTransition = targetEl.style.transition;
+            const originalBoxShadow = targetEl.style.boxShadow;
+            targetEl.style.transition = 'box-shadow 0.25s ease';
+            targetEl.style.boxShadow = 'inset 0 0 0 2px #16a34a';
+            setTimeout(() => {
+                targetEl.style.boxShadow = originalBoxShadow;
+                targetEl.style.transition = originalTransition;
+            }, 1600);
+        });
+    });
+}
+
+// Initialize view on page load
+document.addEventListener('DOMContentLoaded', function() {
+    focusHashRow();
+
+    // Initialize custom date inputs
+    const dateRange = document.getElementById('date_range');
+    if (dateRange) {
+        toggleCustomDateInputs(dateRange.value);
+    }
+    
+    // Initialize tooltips for notes icons
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    const notesModalEl = document.getElementById('manageNotesModal');
+    const notesModalTitle = document.getElementById('manageNotesModalLabel');
+    const notesModalBody = document.getElementById('manageNotesModalBody');
+
+    if (notesModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const notesModal = new bootstrap.Modal(notesModalEl);
+
+        const decodeNote = (rawValue) => {
+            if (!rawValue) return '';
+            try {
+                return JSON.parse(`"${rawValue}"`);
+            } catch (err) {
+                return rawValue;
+            }
+        };
+
+        document.body.addEventListener('click', function(event) {
+            const trigger = event.target.closest('.manage-view-notes-btn');
+            if (!trigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            notesModalTitle.textContent = trigger.getAttribute('data-note-title') || 'Request Notes';
+            let noteBody = decodeNote(trigger.getAttribute('data-note-body') || '').trim();
+            let donorBody = decodeNote(trigger.getAttribute('data-donor-note') || '').trim();
+            let declineBody = decodeNote(trigger.getAttribute('data-decline-note') || '').trim();
+
+            const stripLeadingHeader = (value, header) => {
+                if (!value) return '';
+                let cleaned = value;
+                const dashed = new RegExp(`^\\s*---\\s*${header}.*?---\\s*(\\n|\\r\\n)?`, 'i');
+                const colon = new RegExp(`^\\s*${header}\\s*:\\s*(\\n|\\r\\n)?`, 'i');
+                cleaned = cleaned.replace(dashed, '');
+                cleaned = cleaned.replace(colon, '');
+                return cleaned.trim();
+            };
+
+            noteBody = stripLeadingHeader(noteBody, 'Recipient Note');
+            donorBody = stripLeadingHeader(donorBody, 'Donor Note');
+            declineBody = stripLeadingHeader(declineBody, 'Decline Note');
+
+            const escapeHtml = (value) => {
+                const div = document.createElement('div');
+                div.textContent = value || '';
+                return div.innerHTML;
+            };
+
+            const toHtml = (value) => escapeHtml(value).replace(/\n/g, '<br>');
+            const buildSection = (typeClass, iconClass, title, value, emptyText) => `
+                <section class="note-section ${typeClass}">
+                    <div class="note-section-title">
+                        <i class="${iconClass}"></i>
+                        <span>${title}</span>
+                    </div>
+                    <div class="note-section-content">
+                        ${value.length ? toHtml(value) : `<em>${escapeHtml(emptyText)}</em>`}
+                    </div>
+                </section>
+            `;
+
+            notesModalBody.innerHTML = `
+                <div class="note-sections">
+                    ${buildSection('recipient', 'fas fa-user text-primary', 'Recipient Note', noteBody, 'No recipient note')}
+                    ${buildSection('donor', 'fas fa-hand-holding-heart text-info', 'Donor Note', donorBody, 'No donor note')}
+                    ${buildSection('decline', 'fas fa-triangle-exclamation text-danger', 'Decline Note', declineBody, 'No decline note')}
+                </div>
+            `;
+            notesModal.show();
+        });
+    }
+});
+
+console.log('Script fully loaded and ready!');
+function showRemainingStep2(requestId) {
+    const step1 = document.getElementById(`step1-remaining${requestId}`);
+    const step2 = document.getElementById(`step2-remaining${requestId}`);
+
+    // IMPORTANT: scope to THIS modal only
+    const modal = document.getElementById(`fulfillRemainingModal${requestId}`);
+    const selected = modal.querySelector('input[name="fulfillment_option"]:checked');
+
+    if (!selected) {
+        alert("Please select how you want to fulfill the remaining quantity.");
+        return;
+    }
+
+    // Get label text
+    const label = modal.querySelector(`label[for="${selected.id}"]`).innerText;
+
+    document.getElementById(`selectedRemainingOption${requestId}`).innerText = label;
+
+    step1.style.display = "none";
+    step2.style.display = "block";
+}
+
+function showRemainingStep1(requestId) {
+    document.getElementById(`step2-remaining${requestId}`).style.display = "none";
+    document.getElementById(`step1-remaining${requestId}`).style.display = "block";
+}
+
+</script>
+{% endblock %}
+
+
+

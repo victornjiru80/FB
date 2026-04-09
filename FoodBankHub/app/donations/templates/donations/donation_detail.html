@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Donation Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --gray-50: #f9fafb;
+    }
+
+    body { background: var(--gray-50); }
+
+    .detail-wrapper {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .detail-value {
+        color: #111827;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .badge-food { background: #dbeafe; color: #1e40af; }
+    .badge-non-food { background: #fef3c7; color: #92400e; }
+    .badge-monetary { background: #d1fae5; color: #065f46; }
+    .badge-csr { background: #e9d5ff; color: #6b21a8; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-delivered { background: #d1fae5; color: #065f46; }
+    .badge-in-transit { background: #dbeafe; color: #1e40af; }
+
+    .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-outline:hover {
+        border-color: #d1d5db;
+        background: #f9fafb;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    thead {
+        background: #f9fafb;
+    }
+
+    th {
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-wrapper">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-gift"></i> Donation Details
+            </h1>
+        </div>
+
+        <!-- Donation Information -->
+        <div class="detail-card">
+            <h3 class="section-title">Donation Information</h3>
+
+            <div class="detail-row">
+                <div class="detail-label">Date</div>
+                <div class="detail-value">{{ donation.donated_at|date:"F d, Y H:i" }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Donor</div>
+                <div class="detail-value">
+                    {{ donation.donor.donor_profile.full_name|default:donation.donor.email }}
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Food Bank</div>
+                <div class="detail-value">{{ donation.foodbank.foodbank_name }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Type</div>
+                <div class="detail-value">{{ donation.get_donation_type_display }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Category</div>
+                <div class="detail-value">
+                    <span class="badge badge-{{ donation.donation_category }}">
+                        {{ donation.get_donation_category_display }}
+                    </span>
+                </div>
+            </div>
+
+            {% if donation.donation_type == 'item' %}
+            <div class="detail-row">
+                <div class="detail-label">Item Name</div>
+                <div class="detail-value">{{ donation.item_name }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Quantity</div>
+                <div class="detail-value">{{ donation.quantity }} {{ donation.quantity_unit }}</div>
+            </div>
+            {% endif %}
+
+            {% if donation.donation_type == 'money' %}
+            <div class="detail-row">
+                <div class="detail-label">Amount</div>
+                <div class="detail-value"><strong>{{ donation.amount|floatformat:0 }}</strong></div>
+            </div>
+
+            {% if donation.mpesa_phone %}
+            <div class="detail-row">
+                <div class="detail-label">M-Pesa Phone</div>
+                <div class="detail-value">{{ donation.mpesa_phone }}</div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if donation.donation_type == 'subsidized' %}
+            <div class="detail-row">
+                <div class="detail-label">Product Type</div>
+                <div class="detail-value">{{ donation.subsidized_product_type }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Quantity</div>
+                <div class="detail-value">{{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Market Price</div>
+                <div class="detail-value">{{ donation.subsidized_market_price|floatformat:0 }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Subsidized Price</div>
+                <div class="detail-value"><strong>{{ donation.subsidized_price|floatformat:0 }}</strong></div>
+            </div>
+            {% endif %}
+
+            {% if donation.donation_type == 'csr' %}
+            <div class="detail-row">
+                <div class="detail-label">CSR Subcategory</div>
+                <div class="detail-value">{{ donation.get_csr_subcategory_display }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Description</div>
+                <div class="detail-value">{{ donation.csr_description }}</div>
+            </div>
+            {% endif %}
+
+            <div class="detail-row">
+                <div class="detail-label">Delivery Method</div>
+                <div class="detail-value">{{ donation.get_delivery_method_display }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    {% with status=status_display|default:donation.get_status_display status_class=status_class|default:donation.status %}
+                        {% if status_class == 'declined' %}
+                            <span class="badge" style="background: #fee2e2; color: #991b1b;">
+                                <i class="fas fa-times"></i> {{ status|default:'Declined' }}
+                            </span>
+                        {% elif status_class == 'pending' %}
+                            <span class="badge" style="background: #fef3c7; color: #92400e;">
+                                <i class="fas fa-clock"></i> {{ status|default:'Awaiting FB Review' }}
+                            </span>
+                        {% elif status_class == 'accepted' %}
+                            <span class="badge" style="background: #dbeafe; color: #1d4ed8;">
+                                <i class="fas fa-paper-plane"></i> {{ status|default:'Accepted' }}
+                            </span>
+                        {% elif status_class == 'fulfilled' %}
+                            <span class="badge" style="background: #059669; color: white;">
+                                <i class="fas fa-check-circle"></i> {{ status|default:'Fulfilled' }}
+                            </span>
+                        {% elif status_class == 'partial' %}
+                            <span class="badge" style="background: #fef3c7; color: #92400e;">
+                                <i class="fas fa-adjust"></i> {{ status|default:'Partially Fulfilled' }}
+                            </span>
+                        {% else %}
+                            <span class="badge" style="background: #e5e7eb; color: #6b21a8;">
+                                {{ status|default:'Unknown' }}
+                            </span>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            {% if donation.pickup_time %}
+            <div class="detail-row">
+                <div class="detail-label">Pickup Time</div>
+                <div class="detail-value">{{ donation.pickup_time|date:"F d, Y H:i" }}</div>
+            </div>
+            {% endif %}
+
+            {% if donation.message %}
+            <div class="detail-row">
+                <div class="detail-label">Message</div>
+                <div class="detail-value">{{ donation.message }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Allocations -->
+        {% if allocations %}
+        <div class="detail-card">
+            <h3 class="section-title">Allocations to Recipients</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Quantity/Amount</th>
+                        <th>Date Allocated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for allocation in allocations %}
+                    <tr>
+                        <td>{{ allocation.recipient.full_name }}</td>
+                        <td>
+                            {% if allocation.quantity %}
+                                {{ allocation.quantity }} {{ donation.quantity_unit }}
+                            {% elif allocation.amount %}
+                                {{ allocation.amount|floatformat:0 }}
+                            {% endif %}
+                        </td>
+                        <td>{{ allocation.allocated_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div>
+            {% if user.user_type == 'DONOR' %}
+                <a href="{% url 'donor_donations_list' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to My Donations
+                </a>
+            {% elif user.user_type == 'FOODBANK' %}
+                <a href="{% url 'foodbank_donations_list' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to Received Donations
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

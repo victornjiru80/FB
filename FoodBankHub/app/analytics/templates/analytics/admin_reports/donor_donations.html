@@ -1,0 +1,165 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">
+                <i class="fas fa-hand-holding-heart text-info me-2"></i>{{ title }}
+            </h1>
+            <p class="text-muted mb-0">View and export donor donation data</p>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-info">Export Options</h6>
+            <div class="export-buttons">
+                <a href="{% url 'custom_admin:export_report' 'donor_donations' %}?format=csv" 
+                   class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-csv me-1"></i> Export CSV
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'donor_donations' %}?format=excel" 
+                   class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'donor_donations' %}?format=pdf" 
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-info">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Donation Type</label>
+                    <select name="donation_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in donation_type_choices %}
+                        <option value="{{ value }}" {% if donation_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-info me-2">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </a>
+                    <a href="{% url 'custom_admin:donor_donations_report' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by donor email, foodbank name, or item name..." value="{{ search_query }}">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-info">
+                Donor Donations ({{ donations.count }} total)
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Donor</th>
+                            <th>Contact</th>
+                            <th>Foodbank</th>
+                            <th>Type</th>
+                            <th>Item Name</th>
+                            <th>Quantity</th>
+                            <th>Amount (KES)</th>
+                            <th>Subsidized Price</th>
+                            <th>Payment Method</th>
+                            <th>Donation Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donations %}
+                        <tr>
+                            <td>{{ donation.donor.email }}</td>
+                            <td><small>{{ donation.donor.phone_number|default:"-" }}</small></td>
+                            <td>{{ donation.foodbank.foodbank_name }}</td>
+                            <td>
+                                {% if donation.donation_type == 'money' %}
+                                    <span class="badge bg-success">{{ donation.get_donation_type_display }}</span>
+                                {% elif donation.donation_type == 'item' %}
+                                    <span class="badge bg-primary">{{ donation.get_donation_type_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ donation.get_donation_type_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ donation.item_name|default:"-" }}</td>
+                            <td>
+                                {% if donation.quantity %}
+                                    {{ donation.quantity }} {{ donation.quantity_unit }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donation.amount %}
+                                    KES {{ donation.amount|floatformat:2 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donation.subsidized_price %}
+                                    KES {{ donation.subsidized_price|floatformat:2 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td><small>{{ donation.payment_method|default:"-" }}</small></td>
+                            <td><small>{{ donation.donated_at|date:"Y-m-d H:i" }}</small></td>
+                            <td>
+                                {% if donation.is_delivered %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No donor donations found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

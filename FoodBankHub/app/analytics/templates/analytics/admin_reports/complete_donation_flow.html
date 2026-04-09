@@ -1,0 +1,204 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">
+                <i class="fas fa-exchange-alt text-warning me-2"></i>{{ title }}
+            </h1>
+            <p class="text-muted mb-0">Track complete donation flow: Donor → FoodBank → Recipient</p>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-warning">Export Options</h6>
+            <div class="export-buttons">
+                <a href="{% url 'custom_admin:export_report' 'complete_donation_flow' %}?format=csv" 
+                   class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-csv me-1"></i> Export CSV
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'complete_donation_flow' %}?format=excel" 
+                   class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'complete_donation_flow' %}?format=pdf" 
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Acknowledged</label>
+                    <select name="acknowledged" class="form-select">
+                        <option value="">All</option>
+                        <option value="true" {% if acknowledged_filter == 'true' %}selected{% endif %}>Yes</option>
+                        <option value="false" {% if acknowledged_filter == 'false' %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-warning me-2">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'custom_admin:complete_donation_flow_report' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by donor, foodbank, recipient, or item name..." value="{{ search_query }}">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">
+                Complete Donation Flow ({{ allocations.count }} total allocations)
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th colspan="3" class="bg-success text-white text-center">DONOR</th>
+                            <th colspan="2" class="bg-primary text-white text-center">FOODBANK</th>
+                            <th colspan="4" class="bg-info text-white text-center">RECIPIENT</th>
+                            <th colspan="2" class="bg-warning text-center">ALLOCATION</th>
+                        </tr>
+                        <tr>
+                            <th>Donor Email</th>
+                            <th>Type</th>
+                            <th>Item/Amount</th>
+                            <th>Foodbank</th>
+                            <th>Contact</th>
+                            <th>Recipient</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Location</th>
+                            <th>Allocated</th>
+                            <th>Date</th>
+                            <th>Ack.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alloc in allocations %}
+                        <tr>
+                            <!-- Donor Info -->
+                            <td>{{ alloc.donation.donor.email }}</td>
+                            <td>
+                                {% if alloc.donation.donation_type == 'money' %}
+                                    <span class="badge bg-success">Money</span>
+                                {% elif alloc.donation.donation_type == 'item' %}
+                                    <span class="badge bg-primary">Item</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Subsidized</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if alloc.donation.item_name %}
+                                    {{ alloc.donation.item_name }}<br>
+                                    <small>{{ alloc.donation.quantity }} {{ alloc.donation.quantity_unit }}</small>
+                                {% elif alloc.donation.amount %}
+                                    <strong>KES {{ alloc.donation.amount|floatformat:2 }}</strong>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Foodbank Info -->
+                            <td>{{ alloc.donation.foodbank.foodbank_name }}</td>
+                            <td><small>{{ alloc.donation.foodbank.user.email }}</small></td>
+                            
+                            <!-- Recipient Info -->
+                            <td>{{ alloc.recipient.full_name }}</td>
+                            <td><small>{{ alloc.recipient.user.email }}</small></td>
+                            <td><small>{{ alloc.recipient.user.phone_number|default:"-" }}</small></td>
+                            <td><small>{{ alloc.recipient.location|default:"-"|truncatewords:3 }}</small></td>
+                            
+                            <!-- Allocation Info -->
+                            <td>
+                                {% if alloc.quantity %}
+                                    {{ alloc.quantity }}
+                                {% elif alloc.amount %}
+                                    KES {{ alloc.amount|floatformat:2 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td><small>{{ alloc.allocated_at|date:"Y-m-d H:i" }}</small></td>
+                            <td class="text-center">
+                                {% if alloc.is_acknowledged %}
+                                    <i class="fas fa-check-circle text-success" title="Acknowledged"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger" title="Not Acknowledged"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="12" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No donation allocations found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">Flow Legend</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="alert alert-success mb-0">
+                        <strong><i class="fas fa-user me-2"></i>DONOR:</strong> Person/Organization who donates
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-primary mb-0">
+                        <strong><i class="fas fa-building me-2"></i>FOODBANK:</strong> Receives and manages donations
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-info mb-0">
+                        <strong><i class="fas fa-hands-helping me-2"></i>RECIPIENT:</strong> Receives allocated items/funds
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

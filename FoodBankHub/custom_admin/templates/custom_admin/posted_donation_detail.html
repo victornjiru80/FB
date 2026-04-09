@@ -1,0 +1,195 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'custom_admin:posted_donations_management' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Posted Donations
+        </a>
+    </div>
+
+    <!-- Donation Details Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Posted Donation Details - #{{ donation.id }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Donor Information -->
+                <div class="col-md-6 mb-4">
+                    <h6 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Donor Information</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Name:</th>
+                            <td>
+                                {% if donor_profile %}
+                                    {% if donor_profile.is_organization %}
+                                        {{ donor_profile.organization_name }}
+                                    {% else %}
+                                        {{ donor_profile.full_name }}
+                                    {% endif %}
+                                {% else %}
+                                    {{ donation.donor.email }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ donation.donor.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ donation.donor.phone_number|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type:</th>
+                            <td>
+                                {% if donor_profile and donor_profile.is_organization %}
+                                    <span class="badge bg-info">Organization</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Individual</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Location:</th>
+                            <td>{{ donor_profile.location|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Food Bank Information -->
+                <div class="col-md-6 mb-4">
+                    <h6 class="text-success mb-3"><i class="fas fa-building me-2"></i>Food Bank Information</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Name:</th>
+                            <td>{{ donation.foodbank.foodbank_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Contact Person:</th>
+                            <td>{{ donation.foodbank.contact_person }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ donation.foodbank.user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ donation.foodbank.user.phone_number|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ donation.foodbank.address|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Donation Details -->
+                <div class="col-md-12 mb-4">
+                    <h6 class="text-warning mb-3"><i class="fas fa-gift me-2"></i>Donation Details</h6>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="20%">Donation Type:</th>
+                            <td>
+                                {% if donation.donation_type == 'item' %}
+                                    <span class="badge bg-primary">Item</span>
+                                {% elif donation.donation_type == 'money' %}
+                                    <span class="badge bg-success">Money</span>
+                                {% elif donation.donation_type == 'subsidized' %}
+                                    <span class="badge bg-warning text-dark">Subsidized</span>
+                                {% elif donation.donation_type == 'csr' %}
+                                    <span class="badge bg-info">CSR</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Other</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Category:</th>
+                            <td>{{ donation.get_donation_category_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Mode:</th>
+                            <td>{{ donation.get_donation_mode_display }}</td>
+                        </tr>
+                        {% if donation.donation_type == 'item' %}
+                        <tr>
+                            <th>Item Name:</th>
+                            <td><strong>{{ donation.item_name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Quantity:</th>
+                            <td><strong>{{ donation.quantity }} {{ donation.get_quantity_unit_display }}</strong></td>
+                        </tr>
+                        {% elif donation.donation_type == 'money' %}
+                        <tr>
+                            <th>Amount:</th>
+                            <td><strong class="text-success">KES {{ donation.amount|floatformat:2 }}</strong></td>
+                        </tr>
+                        {% elif donation.donation_type == 'subsidized' %}
+                        <tr>
+                            <th>Product Type:</th>
+                            <td><strong>{{ donation.subsidized_product_type }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Quantity:</th>
+                            <td><strong>{{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit|default:"units" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Subsidized Price:</th>
+                            <td><strong class="text-success">KES {{ donation.subsidized_price|floatformat:2 }}</strong></td>
+                        </tr>
+                        {% if donation.subsidized_market_price %}
+                        <tr>
+                            <th>Market Price:</th>
+                            <td>KES {{ donation.subsidized_market_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endif %}
+                        <tr>
+                            <th>Delivery Method:</th>
+                            <td>
+                                {% if donation.delivery_method == 'pickup' %}
+                                    <span class="badge bg-info">Pickup</span>
+                                {% elif donation.delivery_method == 'dropoff' %}
+                                    <span class="badge bg-primary">Dropoff</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if donation.pickup_time %}
+                        <tr>
+                            <th>Pickup/Delivery Time:</th>
+                            <td>{{ donation.pickup_time|date:"F d, Y h:i A" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Status:</th>
+                            <td><span class="badge bg-success">{{ donation.get_status_display }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Delivery Status:</th>
+                            <td><span class="badge bg-success"><i class="fas fa-check-circle"></i> Delivered</span></td>
+                        </tr>
+                        <tr>
+                            <th>Donated At:</th>
+                            <td>{{ donation.donated_at|date:"F d, Y h:i A" }}</td>
+                        </tr>
+                        {% if donation.message %}
+                        <tr>
+                            <th>Message/Notes:</th>
+                            <td>{{ donation.message }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

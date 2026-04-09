@@ -1,0 +1,983 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - {{ user.foodbank_profile.foodbank_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-dark: #059669;
+        --primary-light: #d1fae5;
+        --secondary: #3b82f6;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --success: #10b981;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background: #f9fafb;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    /* Override Bootstrap margins that might be adding space */
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-12 {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .container-fluid {
+        margin: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    .dashboard-container {
+        padding-top: 1rem;
+        min-height: 100vh;
+        background: #f8fafc;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: 0;
+    }
+
+    .dashboard-header {
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.25rem 0;
+        margin-bottom: 0.5rem;
+        margin-top: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .dashboard-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        color: #1e293b;
+    }
+
+    .dashboard-subtitle {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .compact-stats {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.25rem;
+        flex-wrap: wrap;
+    }
+
+    .compact-stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        min-width: 80px;
+        flex: 1;
+    }
+
+    .compact-stat:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .compact-stat-number {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1;
+    }
+
+    .compact-stat-label {
+        font-size: 0.7rem;
+        color: #64748b;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        line-height: 1;
+    }
+
+    .compact-stat.primary .compact-stat-number { color: #3b82f6; }
+    .compact-stat.warning .compact-stat-number { color: #d97706; }
+    .compact-stat.success .compact-stat-number { color: #16a34a; }
+    .compact-stat.info .compact-stat-number { color: #0284c7; }
+
+    .main-content {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 1rem;
+        align-items: start;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-top: -0.25rem;
+    }
+
+    /* Ensure messages don't interfere with dashboard grid */
+    .messages-container {
+        position: absolute !important;
+        top: 60px !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1050 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .requests-section {
+        background: white;
+        border-radius: 12px;
+        padding: 0.75rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .requests-section:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .view-all-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .view-all-link:hover {
+        color: #2563eb;
+        text-decoration: underline;
+    }
+
+    .requests-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+
+    .requests-table th {
+        background: #f8fafc;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .requests-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+        vertical-align: middle;
+    }
+
+    .requests-table tr:hover {
+        background: #f8fafc;
+    }
+
+    .priority-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .priority-urgent {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .priority-high {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+    }
+
+    .priority-normal {
+        background: #f0f9ff;
+        color: #0284c7;
+        border: 1px solid #bae6fd;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-block;
+        min-width: 70px;
+        text-align: center;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fde68a;
+    }
+
+    .status-approved {
+        background: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+
+    .status-rejected {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.7rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        margin: 0.125rem;
+    }
+
+    .btn-view {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-approve {
+        background: #16a34a;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background: #15803d;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-reject {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background: #b91c1c;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .quick-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .quick-actions:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .quick-actions h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        padding: 0.625rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        justify-content: center;
+    }
+
+    .btn-primary-action {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary-action:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-secondary-action {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary-action:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        transform: translateY(-1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h4 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #475569;
+    }
+
+    .empty-state p {
+        margin-bottom: 1rem;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 1200px) {
+        .main-content {
+            grid-template-columns: 1fr 250px;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            order: -1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding-top: 70px;
+        }
+
+        .dashboard-header {
+            padding: 1rem 0;
+        }
+
+        .dashboard-title {
+            font-size: 1.25rem;
+        }
+
+        .compact-stats {
+            flex-direction: column;
+        }
+
+        .compact-stat {
+            min-width: auto;
+        }
+
+        .requests-section {
+            padding: 1rem;
+        }
+
+        .requests-table {
+            font-size: 0.75rem;
+        }
+
+        .requests-table th,
+        .requests-table td {
+            padding: 0.5rem 0.25rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.65rem;
+        }
+    }
+
+    /* Profile Completion Notification */
+    .profile-notification {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-left: 4px solid #f59e0b;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+
+    .notification-icon {
+        font-size: 2rem;
+        color: #d97706;
+        flex-shrink: 0;
+    }
+
+    .notification-text {
+        flex: 1;
+    }
+
+    .notification-text h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #92400e;
+    }
+
+    .notification-text p {
+        margin: 0;
+        color: #92400e;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .notification-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .notification-actions .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .notification-actions .btn-primary {
+        background: #d97706;
+        color: white;
+        border: none;
+    }
+
+    .notification-actions .btn-primary:hover {
+        background: #b45309;
+        transform: translateY(-1px);
+    }
+
+    .notification-actions .btn-outline {
+        background: transparent;
+        color: #92400e;
+        border: 1px solid #d97706;
+    }
+
+    .notification-actions .btn-outline:hover {
+        background: #d97706;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .notification-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .notification-actions {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="container-fluid px-4">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="dashboard-title">Welcome back, {{ user.foodbank_profile.foodbank_name }}</h1>
+                    <p class="dashboard-subtitle">Manage your food bank operations efficiently</p>
+                    
+                    <!-- Compact Stats -->
+                    <div class="compact-stats">
+                        <div class="compact-stat primary">
+                            <div class="compact-stat-number">{{ linked_requests.count|default:"0" }}</div>
+                            <div class="compact-stat-label"> Recipient Requests</div>
+                        </div>
+                        <div class="compact-stat primary">
+                            <div class="compact-stat-number">{{ total_requests|default:"0" }}</div>
+                            <div class="compact-stat-label"> My Requests</div>
+                        </div>
+                        <div class="compact-stat warning">
+                            <div class="compact-stat-number">{{ urgent_requests|default:"0" }}</div>
+                            <div class="compact-stat-label">Urgent</div>
+                        </div>
+                        <div class="compact-stat success">
+                            <div class="compact-stat-number">{{ total_donations|default:"0" }}</div>
+                            <div class="compact-stat-label">Donations</div>
+                        </div>
+                        <div class="compact-stat info">
+                            <div class="compact-stat-number">{{ fulfilled_requests|default:"0" }}</div>
+                            <div class="compact-stat-label">Fulfilled</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Completion Notification -->
+    {% if profile_incomplete %}
+    <div class="profile-notification">
+        <div class="container-fluid px-4">
+            <div class="notification-content">
+                <div class="notification-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="notification-text">
+                    <h4>Complete Your Public Profile</h4>
+                    <p>Your profile is {{ profile_completion }}% complete. A complete profile helps donors learn about your food bank and increases donations.</p>
+                </div>
+                <div class="notification-actions">
+                    <a href="{% url 'manage_foodbank_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Complete Profile
+                    </a>
+                    <a href="{% url 'foodbank_public_profile' foodbank_profile.id %}" class="btn btn-outline" target="_blank">
+                        <i class="fas fa-eye"></i> Preview
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container-fluid px-4" style="width: 100%; max-width: 100%; margin: 0; padding-left: 1.5rem; padding-right: 1.5rem; padding-top: 0; margin-top: 0;">
+        <div class="main-content" style="margin-top: 0; padding-top: 0;">
+            <!-- Main Content: Recent Requests -->
+            <div class="requests-section">
+                <div class="section-header">
+                    <h2 class="section-title">Requests Made to Your Foodbank</h2>
+                   <!-- <a href="{% url 'foodbank_requests' %}" class="view-all-link">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a> -->
+                </div>
+
+                <h2 class="section-title">Pending Requests</h2>
+                {% if pending_rec_requests %}
+                <div class="table-responsive">
+                    <table class="requests-table">
+                        <thead>
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Location</th>
+                                <th>Delivery Method</th>
+                                <th>Anonymous?</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-requests-tbody">
+                            {% for req in pending_rec_requests %}
+                            <tr id="request-row-{{ req.id }}">
+                                <td>
+                                    {% if req.is_anonymous %}
+                                        <span class="badge bg-info">Anonymous</span>
+                                    {% else %}
+                                        {{ req.recipient.full_name }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.title }}</td>
+                                <td>{{ req.description|truncatechars:50 }}</td>
+                                <td>{{ req.quantity }} {{ req.quantity_unit }}</td>
+                                <td>{{ req.location|default:"-" }}</td>
+                                <td>{{ req.delivery_method|default:"-" }}</td>
+                                <td>{% if req.is_anonymous %}Yes{% else %}No{% endif %}</td>
+                                <td>{{ req.created_at|date:"d M Y H:i" }}</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm mb-1 accept-btn" data-id="{{ req.id }}">
+                                        <i class="fas fa-check"></i> Accept
+                                    </button>
+                                    <button class="btn btn-danger btn-sm mb-1 decline-btn" data-id="{{ req.id }}">
+                                        <i class="fas fa-times"></i> Decline
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>No Pending Requests</h4>
+                    <p>You don't have any pending recipient requests at the moment.</p>
+                </div>
+                {% endif %}
+                <hr>
+
+                <div class="section-header mt-4">
+                    <h2 class="section-title">Approved Requests</h2>
+                    <a href="{% url 'view_approved_requests' %}" class="view-all-link">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                {% if approved_requests %}
+                <div class="table-responsive">
+                    <table class="requests-table">
+                        <thead>
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Location</th>
+                                <th>Delivery Method</th>
+                                <th>Accepted On</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approved-requests-tbody">
+                            {% for req in approved_requests %}
+                            <tr>
+                                <td>
+                                    {% if req.is_anonymous %}
+                                        <span class="badge bg-info">Anonymous</span>
+                                    {% else %}
+                                        {{ req.recipient.full_name }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.title }}</td>
+                                <td>{{ req.description|truncatechars:50 }}</td>
+                                <td>{{ req.quantity }} {{ req.quantity_unit }}</td>
+                                <td>{{ req.location|default:"-" }}</td>
+                                <td>{{ req.delivery_method|default:"-" }}</td>
+                                <td>{{ req.updated_at|date:"d M Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h4>No Approved Requests</h4>
+                    <p>You haven't approved any requests yet.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar: Quick Actions -->
+            <div class="sidebar">
+                <div class="action-buttons">
+                    <a href="{% url 'create_foodbank_request' %}" class="btn-action btn-primary-action">
+                        <i class="fas fa-plus"></i>
+                        Create Request to Donor
+                    </a>
+                    <a href="{% url 'view_approved_requests' %}" class="btn-action btn-secondary-action">
+                        <i class="fas fa-clipboard-check"></i>
+                        Approved Requests ({{ approved_requests.count }})
+                    </a>
+                    <a href="{% url 'foodbank_requests' %}" class="btn-action btn-secondary-action">
+                        <i class="fas fa-list"></i>
+                        View My Requests
+                    </a>
+                    <a href="{% url 'foodbank_donations' %}" class="btn-action btn-secondary-action">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        Manage Donations
+                    </a>
+                    <a href="{% url 'foodbank_analytics' %}" class="btn-action btn-secondary-action">
+                        <i class="fas fa-chart-bar"></i>
+                        View Analytics
+                    </a>
+                    <a href="{% url 'foodbank_testimonials_list' %}" class="btn-action btn-secondary-action">
+                        <i class="fas fa-comments"></i>
+                        Our Testimonials
+                    </a>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Accept request
+    document.querySelectorAll(".accept-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const requestId = this.dataset.id;
+            const row = document.getElementById(`request-row-${requestId}`);
+
+            if (!row) {
+                console.error("Row not found for request ID:", requestId);
+                return;
+            }
+
+            // Disable button to prevent double-clicks
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            fetch(`/request/${requestId}/accept/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove from Pending table
+                    row.remove();
+
+                    // Check if pending table is now empty
+                    const pendingTbody = document.getElementById("pending-requests-tbody");
+                    if (pendingTbody && pendingTbody.children.length === 0) {
+                        pendingTbody.closest('.table-responsive').outerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h4>No Pending Requests</h4>
+                                <p>You don't have any pending recipient requests at the moment.</p>
+                            </div>
+                        `;
+                    }
+
+                    // Add to Approved table
+                    const approvedTbody = document.getElementById("approved-requests-tbody");
+                    if (approvedTbody) {
+                        // Remove empty state if it exists
+                        const emptyState = approvedTbody.closest('.requests-section').querySelector('.empty-state');
+                        if (emptyState) {
+                            emptyState.remove();
+                        }
+
+                        // Create new row for approved table
+                        const cells = row.querySelectorAll('td');
+                        const newRow = document.createElement('tr');
+                        newRow.innerHTML = `
+                            <td>${cells[0].innerHTML}</td>
+                            <td>${cells[1].innerHTML}</td>
+                            <td>${cells[2].innerHTML}</td>
+                            <td>${cells[3].innerHTML}</td>
+                            <td>${cells[4].innerHTML}</td>
+                            <td>${cells[5].innerHTML}</td>
+                            <td>Just now</td>
+                        `;
+                        
+                        // Make sure table is visible
+                        const approvedTableContainer = approvedTbody.closest('.table-responsive');
+                        if (approvedTableContainer) {
+                            approvedTableContainer.style.display = 'block';
+                        }
+                        
+                        approvedTbody.insertBefore(newRow, approvedTbody.firstChild);
+                    }
+
+                    // Show success message
+                    showNotification('Request accepted successfully!', 'success');
+                } else {
+                    showNotification('Failed to accept request. Please try again.', 'error');
+                    // Re-enable button
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-check"></i> Accept';
+                }
+            })
+            .catch(err => {
+                console.error("Accept request error:", err);
+                showNotification('An error occurred. Please try again.', 'error');
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check"></i> Accept';
+            });
+        });
+    });
+
+    // Decline request
+    document.querySelectorAll(".decline-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const requestId = this.dataset.id;
+            const row = document.getElementById(`request-row-${requestId}`);
+
+            if (!row) {
+                console.error("Row not found for request ID:", requestId);
+                return;
+            }
+
+            // Confirm before declining
+            if (!confirm('Are you sure you want to decline this request?')) {
+                return;
+            }
+
+            // Disable button
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            fetch(`/request/${requestId}/decline/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove from table
+                    row.remove();
+
+                    // Check if table is now empty
+                    const pendingTbody = document.getElementById("pending-requests-tbody");
+                    if (pendingTbody && pendingTbody.children.length === 0) {
+                        pendingTbody.closest('.table-responsive').outerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h4>No Pending Requests</h4>
+                                <p>You don't have any pending recipient requests at the moment.</p>
+                            </div>
+                        `;
+                    }
+
+                    showNotification('Request declined.', 'info');
+                } else {
+                    showNotification('Failed to decline request. Please try again.', 'error');
+                    // Re-enable button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-times"></i> Decline';
+                }
+            })
+            .catch(err => {
+                console.error("Decline request error:", err);
+                showNotification('An error occurred. Please try again.', 'error');
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-times"></i> Decline';
+            });
+        });
+    });
+});
+
+// Helper for CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                       type === 'error' ? 'alert-danger' : 'alert-info';
+    
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    // Auto dismiss after 3 seconds
+    setTimeout(() => {
+        alert.remove();
+    }, 3000);
+}
+</script>
+{% endblock %} 

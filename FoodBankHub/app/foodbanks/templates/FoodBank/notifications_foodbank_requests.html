@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Request Notifications - Foodbank{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Request Notifications</h2>
+    {% if notifications %}
+    <ul class="list-group mb-4">
+        {% for note in notifications %}
+        <li class="list-group-item d-flex justify-content-between align-items-start {% if not note.is_read %}list-group-item-warning{% endif %}">
+            <div>
+                {% if note.notification_type == 'urgent_request' %}
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                {% elif note.notification_type == 'request_fulfilled' %}
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                {% elif note.notification_type == 'request_expiring' %}
+                    <i class="fas fa-hourglass-end text-warning me-2"></i>
+                {% else %}
+                    <i class="fas fa-bullhorn text-primary me-2"></i>
+                {% endif %}
+                {{ note.message }}<br>
+                <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+            <div>
+                {% if not note.is_read %}
+                <a href="{% url 'mark_notification_read' note.pk %}" class="btn btn-sm btn-outline-primary">Mark as read</a>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="alert alert-info">No request notifications yet.</div>
+    {% endif %}
+</div>
+{% endblock %} 

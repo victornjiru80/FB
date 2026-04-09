@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Account Deletion - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white text-center">
+                    <h3><i class="fas fa-user-times me-2"></i>Delete My Account</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> Account deletion is permanent and requires administrator approval.
+                    </div>
+
+                    {% if deletion_request %}
+                        {% if deletion_request.status == 'pending' %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-clock me-2"></i>
+                                <strong>Status:</strong> Your deletion request is pending review.
+                                <div class="small text-muted mt-1">
+                                    Submitted on {{ deletion_request.requested_at|date:"M d, Y H:i" }}.
+                                </div>
+                            </div>
+                        {% elif deletion_request.status == 'rejected' %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>Status:</strong> Your deletion request was rejected.
+                                {% if deletion_request.admin_notes %}
+                                    <div class="mt-2">
+                                        <strong>Reason:</strong>
+                                        <div class="mt-1">{{ deletion_request.admin_notes }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if deletion_request.processed_at %}
+                                    <div class="small text-muted mt-2">
+                                        Reviewed on {{ deletion_request.processed_at|date:"M d, Y H:i" }}.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% elif deletion_request.status == 'approved' %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Status:</strong> Your deletion request was approved.
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <h5 class="mb-3">What happens next?</h5>
+                    <ul class="mb-4">
+                        <li>Your account will be <strong>deactivated immediately</strong> upon admin approval</li>
+                        <li>All your personal data will be <strong>permanently deleted</strong></li>
+                        <li>Any active donations or requests will be <strong>cancelled</strong></li>
+                        <li>An administrator will review your request within <strong>3-5 business days</strong></li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> If you change your mind, you can contact support to cancel your deletion request before it's approved.
+                    </div>
+                    
+                    <form method="POST" class="text-center">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancel
+                            </a>
+                            {% if deletion_request and deletion_request.status == 'pending' %}
+                                <button type="submit" class="btn btn-danger" disabled>
+                                    <i class="fas fa-clock me-1"></i> Request Pending
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-user-times me-1"></i> Request Deletion
+                                </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,539 @@
+{% extends 'custom_admin/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-arrow-right me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Manage donations made to specific foodbank requests (recipient requests)</p>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'custom_admin:specified_donations_management' %}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Request Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All Foodbanks</option>
+                        {% for fb in foodbanks %}
+                        <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Recipient, donor, location..." value="{{ current_filters.search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Request Type</label>
+                    <select name="request_type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in request_type_choices %}
+                        <option value="{{ value }}" {% if current_filters.request_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="request_category" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in request_category_choices %}
+                        <option value="{{ value }}" {% if current_filters.request_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Delivery</label>
+                    <select name="delivery" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in delivery_choices %}
+                        <option value="{{ value }}" {% if current_filters.delivery == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Donation Type</label>
+                    <select name="donation_type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in donation_type_choices %}
+                        <option value="{{ value }}" {% if current_filters.donation_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <a href="{% if clear_url %}{{ clear_url }}{% else %}{% url 'custom_admin:specified_donations_management' %}{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Combined Requests & Donations Table -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Specified Donations (Recipient Requests)</h5>
+            <div>
+                <a href="{% url 'custom_admin:export_specified_donations_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="fas fa-file-csv me-1"></i>Export to CSV
+                </a>
+                <a href="{% url 'custom_admin:export_specified_donations_excel' %}?{{ request.GET.urlencode }}" class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-excel me-1"></i>Export to Excel
+                </a>
+                <a href="{% url 'custom_admin:export_specified_donations_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger btn-sm" target="_blank">
+                    <i class="fas fa-file-pdf me-1"></i>Export to PDF
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover compact-table mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>S/No</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Donor</th>
+                            <th>Recipient</th>
+                            <th>Foodbank</th>
+                            <th>Quantity</th>
+                            <th>Delivery</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th>Notes</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in request_page_obj %}
+                        {% with fb_request=request.linked_foodbank_request donation=request.linked_donation %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:request_page_obj.start_index }}</td>
+                            <td>
+                                {% with category=donation.donation_category|default:request.request_category|default:request.request_type %}
+                                    {% if category == 'food' %}
+                                        <span class="badge" style="background: #dbeafe; color: #1e40af;">Food</span>
+                                    {% elif category == 'non_food' %}
+                                        <span class="badge" style="background: #fef3c7; color: #92400e;">Non-Food</span>
+                                    {% elif category == 'monetary' %}
+                                        <span class="badge" style="background: #e0f2fe; color: #0369a1;">Monetary</span>
+                                    {% elif category == 'csr' %}
+                                        <span class="badge" style="background: #e9d5ff; color: #6b21a8;">CSR</span>
+                                    {% elif category == 'other' %}
+                                        <span class="badge" style="background: #f3f4f6; color: #6b7280;">Other</span>
+                                    {% else %}
+                                        <span class="badge" style="background: #f3f4f6; color: #6b7280;">Other</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% if request.is_anonymous %}
+                                    <span class="badge" style="background: #f3f4f6; color: #111827;">Anonymous</span>
+                                {% else %}
+                                    {% if donation %}
+                                        {% if donation.donation_type == 'item' %}
+                                            <span class="badge" style="background: #d1fae5; color: #065f46;">Free Goods</span>
+                                        {% elif donation.donation_type == 'money' %}
+                                            <span class="badge" style="background: #dbeafe; color: #1e40af;">Monetary</span>
+                                        {% elif donation.donation_type == 'subsidized' %}
+                                            <span class="badge" style="background: #fef3c7; color: #92400e;">Subsidized</span>
+                                        {% elif donation.donation_type == 'csr' %}
+                                            <span class="badge" style="background: #e9d5ff; color: #6b21a8;">CSR</span>
+                                        {% elif donation.donation_type == 'other' %}
+                                            <span class="badge" style="background: #f3f4f6; color: #6b7280;">Other</span>
+                                        {% else %}
+                                            <span class="badge" style="background: #f3f4f6; color: #6b7280;">{{ donation.get_donation_type_display }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge" style="background: #e5e7eb; color: #6b7280;">Request</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="text-wrap-cell" style="max-width: 220px; white-space: normal; word-wrap: break-word;">
+                                    {{ request.description }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if donation %}
+                                    {% with profile=donation.donor.donor_profile %}
+                                        {% if profile and profile.organization_name %}
+                                            <strong>{{ profile.organization_name }}</strong>
+                                        {% elif profile and profile.full_name %}
+                                            <strong>{{ profile.full_name }}</strong>
+                                        {% else %}
+                                            <strong>{{ donation.donor.email }}</strong>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-muted" style="font-style: italic;">Not donated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ request.recipient.full_name }}</strong>
+                                    <small class="text-muted d-block">{{ request.recipient.user.email }}</small>
+                                </div>
+                            </td>
+                            <td>{{ request.foodbank_name }}</td>
+                            <td>
+                                <div>
+                                    <strong>{{ request.quantity }} {{ request.get_unit_display }}</strong>
+                                    <small class="text-muted d-block">Requested</small>
+                                </div>
+                                {% for row in request.fulfillment_breakdown %}
+                                    <div class="mt-1">
+                                        {% if row.type == 'item' %}
+                                            <span class="text-success">{{ row.qty }} {{ row.unit }}</span>
+                                        {% elif row.type == 'money' %}
+                                            <span class="text-success">KES {{ row.amount|floatformat:0 }}{% if row.qty %} (for {{ row.qty }} {{ row.unit }}){% endif %}</span>
+                                        {% elif row.type == 'subsidized' %}
+                                            <span class="text-success">KES {{ row.amount|floatformat:0 }}{% if row.qty %} (for {{ row.qty }} {{ row.unit }}){% endif %}</span>
+                                        {% endif %}
+                                        <small class="text-muted d-block">fulfilled</small>
+                                    </div>
+                                {% endfor %}
+                                {% if request.quantity_fulfilled > 0 %}
+                                    <div class="mt-1">
+                                        <span class="text-success fw-bold">{{ request.quantity_fulfilled }} {{ request.get_unit_display }}</span>
+                                        <small class="text-muted d-block">Total Fulfilled</small>
+                                    </div>
+                                    {% if request.status == 'partial' %}
+                                        <div class="mt-1">
+                                            <span class="text-warning">{{ request.get_remaining_quantity }} {{ request.get_unit_display }} remaining</span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                                {% for fb_req in request.foodbank_request_created.all %}
+                                    {% for donation in fb_req.donations.all %}
+                                        {% if donation.status == 'pending' and donation.donation_type == 'item' %}
+                                            <div class="mt-1">
+                                                <span class="text-info fw-bold">{{ donation.quantity|default:0 }} {{ donation.quantity_unit|default:request.get_unit_display }}</span>
+                                                <small class="text-muted d-block">Donated (Awaiting Approval)</small>
+                                            </div>
+                                        {% endif %}
+                                        {% if donation.donation_type == 'money' and donation.status == 'pending' %}
+                                            <div class="mt-1">
+                                                <span class="text-info fw-bold">KES {{ donation.amount|floatformat:0 }}{% with qty=donation.foodbank_request.quantity_needed|default:request.get_donation_quantity_context unit=request.get_unit_display %}{% if qty %} (for {{ qty }} {{ unit }}){% endif %}{% endwith %}</span>
+                                                <small class="text-muted d-block">Donated (Awaiting Approval)</small>
+                                            </div>
+                                        {% elif donation.donation_type == 'subsidized' and donation.status == 'pending' %}
+                                            <div class="mt-1">
+                                                <span class="text-info fw-bold">KES {{ donation.subsidized_price|floatformat:0 }}{% with qty=donation.subsidized_quantity|default:donation.foodbank_request.quantity_needed|default:request.get_donation_quantity_context unit=donation.subsidized_quantity_unit|default:request.get_unit_display %}{% if qty %} (for {{ qty }} {{ unit }}){% endif %}{% endwith %}</span>
+                                                <small class="text-muted d-block">Donated (Awaiting Approval)</small>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ request.get_delivery_method_display }}</td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;" title="{{ request.location }}">
+                                    {{ request.location|default:'-' }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ request|neutral_status_specified }}</span>
+                            </td>
+                            <td>
+                                <small>{{ request.time_of_request|date:"M d, Y" }}</small>
+                                <br><small class="text-muted">{{ request.time_of_request|date:"H:i" }}</small>
+                                {% if request.fulfilled_at %}
+                                    <br><small class="text-success"><i class="fas fa-check"></i> {{ request.fulfilled_at|date:"M d" }}</small>
+                                {% endif %}
+                            </td>
+                            <td style="max-width: 220px; white-space: normal;">
+                                {% if request.additional_notes %}
+                                    <i class="fas fa-sticky-note text-info me-1"></i>{{ request.additional_notes|truncatechars:100 }}
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 view-notes-btn" data-notes="{{ request.additional_notes|escapejs }}" title="View full notes" aria-label="View full notes">
+                                        <i class="fas fa-expand-alt"></i>
+                                    </button>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donation %}
+                                <button type="button" class="btn btn-sm btn-outline-primary view-details-btn" data-donation-id="{{ donation.id }}" data-bs-toggle="modal" data-bs-target="#donationDetailsModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="14" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No specified donations found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if request_page_obj.has_other_pages %}
+            <nav aria-label="Requests pagination" class="mt-4 p-3">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if request_page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?requests_page={{ request_page_obj.previous_page_number }}{% if pagination_query_string %}&{{ pagination_query_string }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ request_page_obj.number }} of {{ request_page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if request_page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?requests_page={{ request_page_obj.next_page_number }}{% if pagination_query_string %}&{{ pagination_query_string }}{% endif %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Donation Details Modal -->
+<div class="modal fade" id="donationDetailsModal" tabindex="-1" aria-labelledby="donationDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="donationDetailsModalLabel">
+                    <i class="fas fa-info-circle me-2"></i>Donation Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="donationDetailsContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading donation details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="exportPdfBtn">
+                    <i class="fas fa-file-pdf me-2"></i>Export to PDF
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Notes Modal -->
+<div class="modal fade" id="requestNotesModal" tabindex="-1" aria-labelledby="requestNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestNotesModalLabel">
+                    <i class="fas fa-sticky-note me-2"></i>Request notes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="requestNotesModalBody" style="white-space: pre-wrap;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const notesModalEl = document.getElementById('requestNotesModal');
+    const notesModalBody = document.getElementById('requestNotesModalBody');
+    function decodeEscapeJs(str) {
+        if (!str) return '';
+        return str.replace(/\\u([0-9a-fA-F]{4})/g, function(_, hex) {
+            return String.fromCharCode(parseInt(hex, 16));
+        });
+    }
+    document.querySelectorAll('.view-notes-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const raw = this.getAttribute('data-notes') || '';
+            const notes = decodeEscapeJs(raw);
+            if (notesModalBody) notesModalBody.textContent = notes;
+            if (notesModalEl) bootstrap.Modal.getOrCreateInstance(notesModalEl).show();
+        });
+    });
+
+    const viewButtons = document.querySelectorAll('.view-details-btn');
+    let currentDonationId = null;
+
+    viewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const donationId = this.dataset.donationId;
+            currentDonationId = donationId;
+            const modalContent = document.getElementById('donationDetailsContent');
+
+            modalContent.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading donation details...</p>
+                </div>
+            `;
+
+            fetch(`/admin/donations/direct/${donationId}/details/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        modalContent.innerHTML = generateDetailsHTML(data.donation);
+                    } else {
+                        modalContent.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                ${data.message || 'Failed to load donation details'}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            An error occurred while loading donation details
+                        </div>
+                    `;
+                    console.error('Error:', error);
+                });
+        });
+    });
+
+    document.getElementById('exportPdfBtn').addEventListener('click', function() {
+        if (currentDonationId) {
+            window.open(`/admin/donations/direct/${currentDonationId}/export-pdf/`, '_blank');
+        }
+    });
+});
+
+function generateDetailsHTML(donation) {
+    return `
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-gift me-2"></i>Donation Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2"><strong>Donation ID:</strong> #${donation.id}</div>
+                    <div class="col-md-6 mb-2"><strong>Type:</strong> ${donation.donation_type}</div>
+                    <div class="col-md-6 mb-2"><strong>Details:</strong> ${donation.details || 'N/A'}</div>
+                    <div class="col-md-6 mb-2"><strong>Status:</strong> <span class="badge ${donation.status_class}">${donation.status}</span></div>
+                    <div class="col-md-6 mb-2"><strong>Created:</strong> ${donation.created_at}</div>
+                    <div class="col-md-6 mb-2"><strong>Delivery Method:</strong> ${donation.delivery_method || 'N/A'}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-user me-2"></i>Donor Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2"><strong>Name:</strong> ${donation.donor_name}</div>
+                    <div class="col-md-6 mb-2"><strong>Email:</strong> ${donation.donor_email}</div>
+                    <div class="col-md-6 mb-2"><strong>Phone:</strong> ${donation.donor_phone || 'N/A'}</div>
+                    ${donation.donor_organization ? `<div class="col-md-6 mb-2"><strong>Organization:</strong> ${donation.donor_organization}</div>` : ''}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="fas fa-warehouse me-2"></i>Foodbank Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2"><strong>Foodbank:</strong> ${donation.foodbank_name}</div>
+                    <div class="col-md-6 mb-2"><strong>Contact:</strong> ${donation.foodbank_contact || 'N/A'}</div>
+                </div>
+            </div>
+        </div>
+
+        ${donation.request_title ? `
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Request Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 mb-2"><strong>Title:</strong> ${donation.request_title}</div>
+                    ${donation.request_description ? `<div class="col-md-12 mb-2"><strong>Description:</strong> ${donation.request_description}</div>` : ''}
+                    ${donation.recipient_name ? `<div class="col-md-6 mb-2"><strong>Recipient:</strong> ${donation.recipient_name}</div>` : ''}
+                </div>
+            </div>
+        </div>
+        ` : ''}
+
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Tracking History & Comments</h6>
+            </div>
+            <div class="card-body">
+                ${donation.tracking_history && donation.tracking_history.length > 0 ? `
+                    <div class="timeline">
+                        ${donation.tracking_history.map(event => `
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="badge ${event.badge_class}">${event.status}</span>
+                                        <p class="mb-1 mt-2">${event.description}</p>
+                                        ${event.comment ? `
+                                            <div class="alert alert-light mt-2 mb-0">
+                                                <small><i class="fas fa-comment me-1"></i><strong>Comment:</strong> ${event.comment}</small>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <small class="text-muted text-end" style="min-width: 150px;">
+                                        <i class="fas fa-clock me-1"></i>${event.timestamp}<br>
+                                        <i class="fas fa-user me-1"></i>${event.updated_by}
+                                    </small>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p class="text-muted">No tracking history available</p>'}
+            </div>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

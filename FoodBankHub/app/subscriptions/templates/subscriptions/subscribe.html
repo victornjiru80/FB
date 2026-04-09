@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscribe - {{ user.foodbank_profile.foodbank_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-dark: #059669;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #3b82f6;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+    }
+
+    body { background: var(--gray-50); }
+
+    .subscribe-wrapper {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label .required {
+        color: #ef4444;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        cursor: pointer;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .file-input-label:hover {
+        border-color: var(--primary);
+        background: #f0fdf4;
+    }
+
+    .file-input-label i {
+        font-size: 2rem;
+        color: #9ca3af;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-name {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .plan-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .plan-card {
+        border: 3px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .plan-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    .plan-card.selected {
+        border-color: var(--primary);
+        background: #f0fdf4;
+    }
+
+    .plan-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .plan-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-duration {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin-top: 1rem;
+    }
+
+    .plan-features li {
+        padding: 0.5rem 0;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .plan-features li i {
+        color: var(--primary);
+        margin-right: 0.5rem;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-info {
+        background: #dbeafe;
+        border-left: 4px solid #3b82f6;
+        color: #1e40af;
+    }
+
+    .alert-warning {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        color: #92400e;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-outline {
+        background: white;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-outline:hover {
+        border-color: #d1d5db;
+        background: #f9fafb;
+    }
+
+    @media (max-width: 768px) {
+        .plan-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscribe-wrapper">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-shopping-cart"></i> Subscribe to Continue
+            </h1>
+            <p class="page-subtitle">Submit your payment evidence for verification</p>
+        </div>
+
+        <!-- Info Alert -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>How it works:</strong> Select your plan, upload your payment evidence (M-Pesa message or bank transfer screenshot), and submit. Our admin team will verify your payment within 24 hours and activate your subscription.
+        </div>
+
+        <!-- Subscription Form -->
+        <form method="post" enctype="multipart/form-data" id="subscription-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Please fix the following errors:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Plan Selection -->
+            <div class="form-card">
+                <h3 class="form-section-title">1. Choose Your Plan</h3>
+                
+                {% if form.plan_type.errors %}
+                <div class="alert alert-danger" style="margin-bottom: 1rem;">
+                    {% for error in form.plan_type.errors %}
+                        <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="plan-cards">
+                    <label class="plan-card" id="monthly-card">
+                        <input type="radio" name="plan_type" value="monthly" required>
+                        <div class="plan-name">Monthly Plan</div>
+                        <div class="plan-price">KSH 2,000</div>
+                        <div class="plan-duration">per month</div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Full platform access</li>
+                            <li><i class="fas fa-check"></i> Unlimited requests</li>
+                            <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                        </ul>
+                    </label>
+
+                    <label class="plan-card" id="yearly-card">
+                        <input type="radio" name="plan_type" value="yearly" required>
+                        <div class="plan-name">Yearly Plan</div>
+                        <div class="plan-price">KSH 10,000</div>
+                        <div class="plan-duration">per year</div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Full platform access</li>
+                            <li><i class="fas fa-check"></i> Unlimited requests</li>
+                            <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                            <li><i class="fas fa-star"></i> <strong>Save KSH 14,000!</strong></li>
+                        </ul>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="form-card">
+                <h3 class="form-section-title">2. Payment Details</h3>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Payment Method <span class="required">*</span>
+                    </label>
+                    {{ form.payment_method }}
+                    {% if form.payment_method.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.payment_method.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="form-text">How did you make the payment?</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Amount Paid (KSH) <span class="required">*</span>
+                    </label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.amount.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="form-text">Monthly: KSH 2,000 | Yearly: KSH 10,000</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Transaction Reference <span class="required">*</span>
+                    </label>
+                    {{ form.transaction_reference }}
+                    {% if form.transaction_reference.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.transaction_reference.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="form-text">M-Pesa code or bank reference number</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Payment Date <span class="required">*</span>
+                    </label>
+                    {{ form.payment_date }}
+                    {% if form.payment_date.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.payment_date.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Additional Notes (Optional)
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.notes.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Evidence -->
+            <div class="form-card">
+                <h3 class="form-section-title">3. Upload Payment Evidence</h3>
+
+                {% if form.payment_evidence.errors %}
+                <div class="alert alert-danger" style="margin-bottom: 1rem;">
+                    {% for error in form.payment_evidence.errors %}
+                        <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="payment_evidence" id="payment_evidence" 
+                               accept="image/*" required>
+                        <label for="payment_evidence" class="file-input-label" id="file-label">
+                            <div style="text-align: center;">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div style="margin-top: 0.5rem; color: #6b7280;">
+                                    <strong>Click to upload</strong> or drag and drop
+                                </div>
+                                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                                    PNG, JPG up to 5MB
+                                </div>
+                            </div>
+                        </label>
+                        <div id="file-name" class="file-name" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="{% url 'subscription_status' %}" class="btn btn-outline">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Submit for Verification
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Plan selection
+document.querySelectorAll('.plan-card').forEach(card => {
+    card.addEventListener('click', function() {
+        document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+        this.querySelector('input[type="radio"]').checked = true;
+        
+        // Auto-populate amount based on selected plan
+        const planType = this.querySelector('input[type="radio"]').value;
+        const amountField = document.querySelector('input[name="amount"]');
+        
+        if (planType === 'monthly') {
+            amountField.value = '2000';
+        } else if (planType === 'yearly') {
+            amountField.value = '10000';
+        }
+        
+        // Disable the amount field
+        amountField.setAttribute('readonly', 'readonly');
+        amountField.style.backgroundColor = '#f9fafb';
+        amountField.style.cursor = 'not-allowed';
+    });
+});
+
+// File upload
+document.getElementById('payment_evidence').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name;
+    if (fileName) {
+        document.getElementById('file-name').textContent = '✓ ' + fileName;
+        document.getElementById('file-name').style.display = 'block';
+        document.getElementById('file-label').style.borderColor = '#10b981';
+        document.getElementById('file-label').style.background = '#f0fdf4';
+    }
+});
+</script>
+{% endblock %}

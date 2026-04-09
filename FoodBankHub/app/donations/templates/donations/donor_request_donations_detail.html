@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request-Based Donations - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-dark: #059669;
+    }
+
+    body { background: #f9fafb; }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .collapse { margin-top: 1rem; }
+    .border-top { border-color: #dee2e6 !important; margin-top: 1rem; padding-top: 1rem; }
+    .btn[data-bs-toggle="collapse"] i { transition: transform 0.3s ease; }
+    .btn[data-bs-toggle="collapse"]:not(.collapsed) i { transform: rotate(180deg); }
+
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    th { padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; }
+    td { padding: 1rem; border-bottom: 1px solid #e5e7eb; color: #6b7280; }
+    tr:hover { background: #f9fafb; }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1.5rem;
+    }
+
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+    }
+
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-hand-holding-heart me-2"></i>Request-Based Donations
+        </h1>
+        <p class="page-subtitle">Comprehensive view of donations made to specific food bank requests</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_count }}</div>
+            <div class="stat-label">Total Donations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ pending_count }}</div>
+            <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ accepted_count }}</div>
+            <div class="stat-label">Accepted</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ declined_count }}</div>
+            <div class="stat-label">Declined</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ allocated_count }}</div>
+            <div class="stat-label">Allocated to Recipients</div>
+        </div>
+    </div>
+
+    <div class="filters-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                <i class="fas fa-chevron-down me-1"></i>Advanced Filters
+            </button>
+        </div>
+
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+                        <option value="declined" {% if status_filter == 'declined' %}selected{% endif %}>Declined</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Allocation Status</label>
+                    <select name="allocation" class="form-select">
+                        <option value="all" {% if allocation_filter == 'all' %}selected{% endif %}>All</option>
+                        <option value="allocated" {% if allocation_filter == 'allocated' %}selected{% endif %}>Allocated</option>
+                        <option value="pending" {% if allocation_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" value="{{ search_query }}" placeholder="Search requests...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2"><i class="fas fa-filter"></i> Filter</button>
+                    <a href="{% url 'donor_request_donations_detail' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
+                </div>
+            </div>
+
+            <div class="collapse" id="advancedFilters">
+                <div class="row g-3 border-top">
+                    <div class="col-md-3">
+                        <label class="form-label">Date Range</label>
+                        <select name="date_range" id="date_range" class="form-select" onchange="toggleCustomDateInputs(this.value)">
+                            <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
+                            <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+                            <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+                            <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+                            <option value="3months" {% if date_filter == '3months' %}selected{% endif %}>Last 3 Months</option>
+                            <option value="custom" {% if date_filter == 'custom' %}selected{% endif %}>Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="customDateFrom" style="display: {% if date_filter == 'custom' %}block{% else %}none{% endif %};">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-3" id="customDateTo" style="display: {% if date_filter == 'custom' %}block{% else %}none{% endif %};">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Food Bank</label>
+                        <select name="foodbank" class="form-select">
+                            <option value="all" {% if foodbank_filter == 'all' %}selected{% endif %}>All Food Banks</option>
+                            {% for fb in foodbanks %}
+                            <option value="{{ fb.id }}" {% if foodbank_filter == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Amount/Quantity</label>
+                        <select name="amount" class="form-select">
+                            <option value="all" {% if amount_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="small" {% if amount_filter == 'small' %}selected{% endif %}>Small</option>
+                            <option value="medium" {% if amount_filter == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="large" {% if amount_filter == 'large' %}selected{% endif %}>Large</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-card">
+        {% if donations %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Food Bank</th>
+                        <th>Request</th>
+                        <th>Your Donation</th>
+                        <th>Status</th>
+                        <th>Allocation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in donations %}
+                    <tr>
+                        <td>{{ donation.donated_at|date:"M d, Y" }}<br><small>{{ donation.donated_at|time:"H:i" }}</small></td>
+                        <td><strong>{{ donation.foodbank.foodbank_name }}</strong></td>
+                        <td>
+                            <strong>{{ donation.foodbank_request.title|truncatechars:40 }}</strong>
+                            <br><small style="color: #9ca3af;">{{ donation.foodbank_request.description|truncatechars:50 }}</small>
+                        </td>
+                        <td>
+                            {% if donation.donation_type == 'item' %}
+                                {{ donation.quantity }} {{ donation.quantity_unit }} of {{ donation.item_name }}
+                            {% elif donation.donation_type == 'money' %}
+                                <strong style="color: #059669;">{{ donation.amount|floatformat:0 }}</strong>
+                            {% else %}
+                                {{ donation.message|default:"-" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if donation.status == 'pending' %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e;">Pending</span>
+                            {% elif donation.status == 'accepted' %}
+                                <span class="badge" style="background: #dcfce7; color: #166534;">Accepted</span>
+                            {% else %}
+                                <span class="badge" style="background: #fee2e2; color: #991b1b;">Declined</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if donation.allocations.exists %}
+                                <span class="badge" style="background: #059669; color: white;">
+                                    <i class="fas fa-check-double"></i> Allocated
+                                </span>
+                                <br><small style="color: #6b7280;">
+                                    {% with allocation=donation.allocations.first %}
+                                        {{ allocation.recipient.full_name|truncatechars:20 }}
+                                    {% endwith %}
+                                </small>
+                            {% else %}
+                                {% if donation.status == 'accepted' %}
+                                    <span class="badge" style="background: #dbeafe; color: #1d4ed8;">Pending</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if donations.has_other_pages %}
+        <div class="pagination">
+            {% if donations.has_previous %}
+                <a href="?page=1{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if allocation_filter != 'all' %}&allocation={{ allocation_filter }}{% endif %}{% if foodbank_filter != 'all' %}&foodbank={{ foodbank_filter }}{% endif %}{% if date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if date_filter == 'custom' %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                <a href="?page={{ donations.previous_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if allocation_filter != 'all' %}&allocation={{ allocation_filter }}{% endif %}{% if foodbank_filter != 'all' %}&foodbank={{ foodbank_filter }}{% endif %}{% if date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if date_filter == 'custom' %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+            {% endif %}
+            <span class="current">Page {{ donations.number }} of {{ donations.paginator.num_pages }}</span>
+            {% if donations.has_next %}
+                <a href="?page={{ donations.next_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if allocation_filter != 'all' %}&allocation={{ allocation_filter }}{% endif %}{% if foodbank_filter != 'all' %}&foodbank={{ foodbank_filter }}{% endif %}{% if date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if date_filter == 'custom' %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                <a href="?page={{ donations.paginator.num_pages }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if allocation_filter != 'all' %}&allocation={{ allocation_filter }}{% endif %}{% if foodbank_filter != 'all' %}&foodbank={{ foodbank_filter }}{% endif %}{% if date_filter != 'all' %}&date_range={{ date_filter }}{% endif %}{% if date_filter == 'custom' %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <i class="fas fa-hand-holding-heart" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+            <h3>No Donations Found</h3>
+            <p>No request-based donations match your current filters.</p>
+            <a href="{% url 'view_foodbank_requests' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-search me-2"></i>Browse Requests
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleCustomDateInputs(value) {
+    const dateFrom = document.getElementById('customDateFrom');
+    const dateTo = document.getElementById('customDateTo');
+    if (value === 'custom') {
+        dateFrom.style.display = 'block';
+        dateTo.style.display = 'block';
+    } else {
+        dateFrom.style.display = 'none';
+        dateTo.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateRange = document.getElementById('date_range');
+    if (dateRange) {
+        toggleCustomDateInputs(dateRange.value);
+    }
+});
+</script>
+{% endblock %}

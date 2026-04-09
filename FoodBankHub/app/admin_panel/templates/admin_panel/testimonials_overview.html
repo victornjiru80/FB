@@ -1,0 +1,116 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Testimonials{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1">
+                <i class="fas fa-comments text-primary me-2"></i>
+                Testimonials
+            </h2>
+            <p class="text-muted mb-0">Manage recipient, donor, and foodbank testimonials</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-user-circle text-primary me-2"></i>Recipients</h5>
+                        <div>
+                            <span class="badge bg-success">{{ recipient_displayed_count }} Displayed</span>
+                            <span class="badge bg-warning text-dark ms-1">{{ recipient_pending_count }} Pending</span>
+                        </div>
+                    </div>
+
+                    {% if recipient_displayed_preview %}
+                        <div class="small text-muted mb-2">Currently displayed</div>
+                        {% for t in recipient_displayed_preview %}
+                            <div class="border rounded p-2 mb-2">
+                                <div class="small text-muted">
+                                    {% if t.recipient.is_organization %}
+                                        {{ t.recipient.organization_name }}
+                                    {% else %}
+                                        {{ t.recipient.full_name }}
+                                    {% endif %}
+                                </div>
+                                <div class="small">{{ t.message|truncatewords:18 }}</div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted small">No displayed recipient testimonials.</div>
+                    {% endif %}
+
+                    <a class="btn btn-outline-primary mt-3 w-100" href="{% url 'custom_admin:testimonials_category_status' 'recipient' 'displayed' %}">
+                        Manage Recipients
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-hand-holding-heart text-danger me-2"></i>Donors</h5>
+                        <div>
+                            <span class="badge bg-success">{{ donor_displayed_count }} Displayed</span>
+                            <span class="badge bg-warning text-dark ms-1">{{ donor_pending_count }} Pending</span>
+                        </div>
+                    </div>
+
+                    {% if donor_displayed_preview %}
+                        <div class="small text-muted mb-2">Currently displayed</div>
+                        {% for t in donor_displayed_preview %}
+                            <div class="border rounded p-2 mb-2">
+                                <div class="small text-muted">{{ t.donor.full_name|default:t.donor.user.email }}</div>
+                                <div class="small">{{ t.message|truncatewords:18 }}</div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted small">No displayed donor testimonials.</div>
+                    {% endif %}
+
+                    <a class="btn btn-outline-primary mt-3 w-100" href="{% url 'custom_admin:testimonials_category_status' 'donor' 'displayed' %}">
+                        Manage Donors
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-building text-success me-2"></i>Foodbanks</h5>
+                        <div>
+                            <span class="badge bg-success">{{ foodbank_displayed_count }} Displayed</span>
+                            <span class="badge bg-warning text-dark ms-1">{{ foodbank_pending_count }} Pending</span>
+                        </div>
+                    </div>
+
+                    {% if foodbank_displayed_preview %}
+                        <div class="small text-muted mb-2">Currently displayed</div>
+                        {% for t in foodbank_displayed_preview %}
+                            <div class="border rounded p-2 mb-2">
+                                <div class="small text-muted">{{ t.foodbank.foodbank_name|default:t.foodbank.user.email }}</div>
+                                <div class="small">{{ t.message|truncatewords:18 }}</div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted small">No displayed foodbank testimonials.</div>
+                    {% endif %}
+
+                    <a class="btn btn-outline-primary mt-3 w-100" href="{% url 'custom_admin:testimonials_category_status' 'foodbank' 'displayed' %}">
+                        Manage Foodbanks
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1172 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Donate to {{ foodbank.foodbank_name }} - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'donate' %}" class="btn btn-outline-secondary btn-sm mb-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Food Bank Selection
+                    </a>
+                    <h1 class="h2 mb-0">Donate to {{ foodbank.foodbank_name }}</h1>
+                    <p class="text-muted">Choose your donation category and make a meaningful contribution</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Food Bank Info Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card foodbank-info-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="foodbank-icon me-3">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ foodbank.foodbank_name }}</h5>
+                                    <p class="text-muted mb-0">{{ foodbank.address }}</p>
+                                    {% if foodbank.about_text %}
+                                        <small class="text-muted">{{ foodbank.about_text|truncatechars:100 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{% url 'foodbank_public_profile' foodbank.id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Full Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Category Selection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-heart me-2"></i>Choose Your Donation Category
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="donation-categories">
+                        <div class="category-card" data-category="food">
+                            <div class="category-icon">
+                                <i class="fas fa-apple-alt"></i>
+                            </div>
+                            <h5>Food Donations</h5>
+                            <p class="text-muted">Donate food items either for free or at subsidized rates</p>
+                            <div class="category-options">
+                                <button class="btn btn-outline-success mode-btn" data-mode="free">
+                                    <i class="fas fa-gift me-2"></i>Free Donation
+                                </button>
+                                <button class="btn btn-outline-warning mode-btn" data-mode="subsidized">
+                                    <i class="fas fa-tags me-2"></i>Subsidized Rate
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="category-card" data-category="non_food">
+                            <div class="category-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <h5>Non-Food Donations</h5>
+                            <p class="text-muted">Donate non-food items like clothing, supplies, etc.</p>
+                            <div class="category-options">
+                                <button class="btn btn-outline-success mode-btn" data-mode="free">
+                                    <i class="fas fa-gift me-2"></i>Free Donation
+                                </button>
+                                <button class="btn btn-outline-warning mode-btn" data-mode="subsidized">
+                                    <i class="fas fa-tags me-2"></i>Subsidized Rate
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="category-card" data-category="monetary">
+                            <div class="category-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <h5>Monetary Donations</h5>
+                            <p class="text-muted">Make direct cash contributions to support food banks</p>
+                            <div class="category-options">
+                                <button class="btn btn-outline-primary mode-btn" data-mode="money">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Cash Donation
+                                </button>
+                            </div>
+                        </div>
+
+                       
+                        <div class="category-card" data-category="csr">
+                            <div class="category-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <h5>CSR Donations</h5>
+                            <p class="text-muted">Corporate social responsibility initiatives</p>
+                            <div class="category-options">
+                                {% with selected_csr=form.csr_subcategory.value|default:'' %}
+                                <select class="form-select" id="csr-subcategory">
+                                    <option value="">Select CSR Type</option>
+                                    <option value="philanthropy" {% if selected_csr == 'philanthropy' %}selected{% endif %}>Philanthropy</option>
+                                    <option value="volunteerism" {% if selected_csr == 'volunteerism' %}selected{% endif %}>Volunteerism</option>
+                                    <option value="environmental" {% if selected_csr == 'environmental' %}selected{% endif %}>Environmental/Sustainability</option>
+                                    <option value="humanitarian" {% if selected_csr == 'humanitarian' %}selected{% endif %}>Humanitarianism</option>
+                                    <option value="other" {% if selected_csr == 'other' %}selected{% endif %}>Other</option>
+                                </select>
+                                {% endwith %}
+                            </div>
+                        </div>
+
+                        <div class="category-card" data-category="other">
+                            <div class="category-icon">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <h5>Other Donations</h5>
+                            <p class="text-muted">Special donations requiring discussion with recipients</p>
+                            <div class="category-options">
+                                <button class="btn btn-outline-info mode-btn" data-mode="discussion">
+                                    <i class="fas fa-comments me-2"></i>Discuss Terms
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Form -->
+    <div class="row" id="donation-form-section" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card donation-form-card">
+                <div class="card-header">
+                    <h4 class="mb-0" id="form-title">
+                        <i class="fas fa-edit me-2"></i>Donation Details
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Display Form Errors -->
+                    {% if form.errors or form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <div><strong>{{ field|title }}:</strong> {{ error }}</div>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" id="donationForm">
+                        {% csrf_token %}
+
+                        <input type="hidden" name="submission_token" value="{{ submission_token }}">
+                        
+                        <!-- Hidden fields for category and mode -->
+                        <input type="hidden" name="donation_category" id="selected_category" value="{{ form.donation_category.value|default:'' }}">
+                        <input type="hidden" name="donation_mode" id="selected_mode" value="{{ form.donation_mode.value|default:'' }}">
+                        <input type="hidden" name="csr_subcategory" id="selected_csr_subcategory" value="{{ form.csr_subcategory.value|default:'' }}">
+                        
+                        <!-- Food/Non-Food Free Donation Fields -->
+                        <div id="free-donation-fields" class="donation-section" style="display: none;">
+                            <div class="section-header">
+                                <h5><i class="fas fa-gift text-success me-2"></i>Free Donation Details</h5>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="item_name" class="form-label">Item Name</label>
+                                    <input type="text" name="item_name" id="item_name" class="form-control">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" name="quantity" id="quantity" class="form-control" 
+                                           min="1" placeholder="Amount">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="quantity_unit" class="form-label">Unit</label>
+                                    <select name="quantity_unit" id="quantity_unit" class="form-select">
+                                        <option value="">Select unit</option>
+                                        {% for value, label in quantity_units %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="custom-unit-wrapper mt-2" id="custom-unit-quantity-wrapper" style="display: none;">
+                                        <label for="custom-unit-quantity-input" class="form-label small">Custom unit</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="custom-unit-quantity-input" name="custom_quantity_unit" placeholder="e.g., trays, crates">
+                                            <button type="button" class="btn btn-outline-primary" id="custom-unit-quantity-save">Save</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text text-muted" id="custom-unit-quantity-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Food/Non-Food Subsidized Donation Fields -->
+                        <div id="subsidized-donation-fields" class="donation-section" style="display: none;">
+                            <div class="section-header">
+                                <h5><i class="fas fa-tags text-warning me-2"></i>Subsidized Donation Details</h5>
+                                <p class="text-muted">Offer your items at a discounted rate to help more people</p>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_product_type" class="form-label">Product Type</label>
+                                    <input type="text" name="subsidized_product_type" id="subsidized_product_type" 
+                                           class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_market_price" class="form-label">Market Price (KES)</label>
+                                    <input type="number" name="subsidized_market_price" id="subsidized_market_price" 
+                                           class="form-control" min="1" step="0.01" placeholder="Original market price">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_price" class="form-label">Your Subsidized Price (KES)</label>
+                                    <input type="number" name="subsidized_price" id="subsidized_price" 
+                                           class="form-control" min="1" step="0.01" placeholder="Your discounted price">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="subsidized_quantity" class="form-label">Quantity</label>
+                                    <input type="number" name="subsidized_quantity" id="subsidized_quantity" 
+                                           class="form-control" min="1" placeholder="Amount">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="subsidized_quantity_unit" class="form-label">Unit</label>
+                                    <select name="subsidized_quantity_unit" id="subsidized_quantity_unit" class="form-select">
+                                        <option value="">Select unit</option>
+                                        {% for value, label in quantity_units %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="custom-unit-wrapper mt-2" id="custom-unit-subsidized-wrapper" style="display: none;">
+                                        <label for="custom-unit-subsidized-input" class="form-label small">Custom unit</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="custom-unit-subsidized-input" name="custom_subsidized_quantity_unit" placeholder="e.g., packs, bundles">
+                                            <button type="button" class="btn btn-outline-primary" id="custom-unit-subsidized-save">Save</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text text-muted" id="custom-unit-subsidized-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="discount-calculator">
+                                <div class="alert alert-info" id="discount-info" style="display: none;">
+                                    <i class="fas fa-calculator me-2"></i>
+                                    <span id="discount-text"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monetary Donation Fields -->
+                        <div id="monetary-donation-fields" class="donation-section" style="display: none;">
+                            <div class="section-header">
+                                <h5><i class="fas fa-dollar-sign text-primary me-2"></i>Monetary Donation Details</h5>
+                                <p class="text-muted">Make a direct cash contribution to support the food bank's operations</p>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="amount" class="form-label">Donation Amount (KES) <span class="text-danger">*</span></label>
+                                    <input type="number" name="amount" id="amount" class="form-control" 
+                                           min="1" max="9999999999999.99" step="0.01" placeholder="Enter amount">
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Your monetary donation will help the food bank purchase supplies and support their operations.
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="impact-calculator">
+                                        <h6 class="text-muted">Estimated Impact</h6>
+                                        <div class="impact-display" id="impact-display">
+                                            <div class="impact-item">
+                                                <i class="fas fa-utensils text-success"></i>
+                                                <span id="meals-count">0</span> meals
+                                            </div>
+                                            <div class="impact-item">
+                                                <i class="fas fa-users text-info"></i>
+                                                <span id="people-count">0</span> people helped
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="monetary_notes" class="form-label">Additional Notes (Optional)</label>
+                                <textarea name="message" id="monetary_notes" class="form-control" rows="3" 
+                                          placeholder="Add any special instructions or notes about your donation..."></textarea>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    You can include payment method preferences, timing, or any other relevant information.
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Next Steps:</strong> After submitting, the food bank will contact you with payment instructions 
+                                and coordinate the donation process.
+                            </div>
+                            
+                            <!-- Submit Button for Monetary Donations -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submit-btn-monetary">
+                                    <i class="fas fa-dollar-sign me-2"></i>Submit Donation
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CSR Donation Fields -->
+                        <div id="csr-donation-fields" class="donation-section" style="display: none;">
+                            <div class="section-header">
+                                <h5><i class="fas fa-building text-primary me-2"></i>CSR Donation Details</h5>
+                                <p class="text-muted">Your selected CSR initiative will be shared with the food bank for coordination.</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Selected CSR Type</label>
+                                <input type="text" id="csr-display" class="form-control" readonly>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="csr_description" class="form-label">CSR Initiative Description</label>
+                                <textarea name="csr_description" id="csr_description" class="form-control" rows="4" 
+                                        placeholder="Describe your CSR initiative: goals, timeline, expected impact, etc."></textarea>
+                            </div>
+
+                            {% with selected_csr=form.csr_subcategory.value|default:'' %}
+                            <div class="mb-3 csr-custom-type {% if selected_csr == 'other' %}show{% endif %}" id="csr-custom-type-wrapper">
+                                <label for="csr_custom_subcategory" class="form-label">Custom CSR Type</label>
+                                <input type="text"
+                                       name="csr_custom_subcategory"
+                                       id="csr_custom_subcategory"
+                                       class="form-control"
+                                       placeholder="e.g., STEM scholarships, medical camps"
+                                       value="{{ form.csr_custom_subcategory.value|default:'' }}"
+                                       {% if selected_csr != 'other' %}disabled{% endif %}>
+                                <div class="form-text">
+                                    Specify your CSR initiative label when it's not in the preset list.
+                                </div>
+                            </div>
+                            {% endwith %}
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="csr_quantity" class="form-label">Estimated Quantity</label>
+                                    <input type="number"
+                                           name="quantity"
+                                           id="csr_quantity"
+                                           class="form-control"
+                                           min="1"
+                                           placeholder="Amount">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="csr_quantity_unit" class="form-label">Unit</label>
+                                    <input type="text"
+                                           name="quantity_unit"
+                                           id="csr_quantity_unit"
+                                           class="form-control"
+                                           placeholder="e.g., boxes, kits, meals">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="csr_estimated_amount" class="form-label">Estimated Monetary Value</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">KES</span>
+                                        <input type="number"
+                                               name="amount"
+                                               id="csr_estimated_amount"
+                                               class="form-control"
+                                               min="1"
+                                               step="0.01"
+                                               placeholder="e.g., 500000">
+                                    </div>
+                                    <small class="text-muted">Useful if your initiative combines goods and cash support.</small>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Note:</strong> A food bank representative will contact you to coordinate your CSR partnership.
+                            </div>
+                        </div>
+
+                        <!-- Other Donation Fields -->
+                        <div id="other-donation-fields" class="donation-section" style="display: none;">
+                            <div class="section-header">
+                                <h5><i class="fas fa-handshake text-info me-2"></i>Special Donation Details</h5>
+                                <p class="text-muted">Describe your donation and we'll connect you with interested recipients</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="other_description" class="form-label">Donation Description</label>
+                                <textarea name="other_description" id="other_description" class="form-control" rows="4" 
+                                          placeholder="Describe your donation in detail. What are you offering? What are the terms? Any special conditions?"></textarea>
+                            </div>
+
+                            <div class="row gy-3">
+                                <div class="col-md-4">
+                                    <label for="other_quantity" class="form-label">Available Quantity</label>
+                                    <input type="number"
+                                           name="quantity"
+                                           id="other_quantity"
+                                           class="form-control"
+                                           min="1"
+                                           placeholder="Amount">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="other_quantity_unit" class="form-label">Unit</label>
+                                    <input type="text"
+                                           name="quantity_unit"
+                                           id="other_quantity_unit"
+                                           class="form-control"
+                                           placeholder="e.g., kits, sessions, hours">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="other_estimated_amount" class="form-label">Monetary Component</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">KES</span>
+                                        <input type="number"
+                                               name="amount"
+                                               id="other_estimated_amount"
+                                               class="form-control"
+                                               min="1"
+                                               step="0.01"
+                                               placeholder="e.g., 25000">
+                                    </div>
+                                    <small class="text-muted">Include if your special donation involves a cash contribution.</small>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>How it works:</strong> After you submit this donation, we'll notify potential recipients. 
+                                Interested recipients can start a discussion with you to work out the details.
+                            </div>
+                        </div>
+
+                        <!-- Common Fields -->
+                        <div id="common-fields" style="display: none;">
+                            <!-- Delivery Method -->
+                            <div class="mb-4">
+                                <label for="delivery_method" class="form-label fw-bold">Delivery Method</label>
+                                <select name="delivery_method" id="delivery_method" class="form-select">
+                                    <option value="">Select delivery method</option>
+                                    {% for value, label in delivery_methods %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Additional Notes -->
+                            <div class="mb-4">
+                                <label for="message" class="form-label">Additional Notes (Optional)</label>
+                                <textarea name="message" id="message" class="form-control" rows="3" 
+                                          placeholder="Any special instructions or notes about your donation"></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                                    <i class="fas fa-heart me-2"></i>Complete Donation
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.foodbank-info-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.foodbank-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.donation-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.category-card {
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.category-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+    transform: translateY(-2px);
+}
+
+.category-card.selected {
+    border-color: #007bff;
+    background: linear-gradient(135deg, #f8f9ff, #e7f3ff);
+}
+
+.category-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+}
+
+.category-card h5 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.category-options {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mode-btn {
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    transform: scale(1.05);
+}
+
+.mode-btn.selected {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.donation-form-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.donation-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.csr-custom-type {
+    display: none;
+}
+
+.csr-custom-type.show {
+    display: block;
+}
+
+.section-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.section-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.discount-calculator {
+    margin-top: 1rem;
+}
+
+#discount-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.impact-calculator {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.impact-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.impact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.impact-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.mpesa-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.payment-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.step-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.input-group-text {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+@media (max-width: 768px) {
+    .donation-categories {
+        grid-template-columns: 1fr;
+    }
+    
+    .category-options {
+        flex-direction: row;
+        justify-content: center;
+    }
+    
+    .mode-btn {
+        flex: 1;
+        margin: 0 0.25rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('donationForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function () {
+        const submitButtons = form.querySelectorAll('button[type="submit"]');
+        submitButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('disabled');
+            btn.setAttribute('aria-disabled', 'true');
+        });
+    }, { once: true });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('donationForm');
+    const categoryCards = document.querySelectorAll('.category-card');
+    const modeButtons = document.querySelectorAll('.mode-btn');
+    const formSection = document.getElementById('donation-form-section');
+    const formTitle = document.getElementById('form-title');
+    const selectedCategory = document.getElementById('selected_category');
+    const selectedMode = document.getElementById('selected_mode');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitBtnMonetary = document.getElementById('submit-btn-monetary');
+    
+    // Donation sections
+    const freeDonationFields = document.getElementById('free-donation-fields');
+    const subsidizedDonationFields = document.getElementById('subsidized-donation-fields');
+    const monetaryDonationFields = document.getElementById('monetary-donation-fields');
+    const otherDonationFields = document.getElementById('other-donation-fields');
+    const commonFields = document.getElementById('common-fields');
+    const csrSubcategorySelect = document.getElementById('csr-subcategory');
+    const csrDonationFields = document.getElementById('csr-donation-fields');
+    const csrDisplay = document.getElementById('csr-display');
+    const selectedCsrSubcategory = document.getElementById('selected_csr_subcategory');
+    const csrCustomWrapper = document.getElementById('csr-custom-type-wrapper');
+    const csrCustomInput = document.getElementById('csr_custom_subcategory');
+    const deliveryMethodSelect = document.getElementById('delivery_method');
+    const quantityUnitSelect = document.getElementById('quantity_unit');
+    const subsidizedUnitSelect = document.getElementById('subsidized_quantity_unit');
+    const quantityCustomWrapper = document.getElementById('custom-unit-quantity-wrapper');
+    const quantityCustomInput = document.getElementById('custom-unit-quantity-input');
+    const quantityCustomSave = document.getElementById('custom-unit-quantity-save');
+    const quantityCustomFeedback = document.getElementById('custom-unit-quantity-feedback');
+    const subsidizedCustomWrapper = document.getElementById('custom-unit-subsidized-wrapper');
+    const subsidizedCustomInput = document.getElementById('custom-unit-subsidized-input');
+    const subsidizedCustomSave = document.getElementById('custom-unit-subsidized-save');
+    const subsidizedCustomFeedback = document.getElementById('custom-unit-subsidized-feedback');
+    const allSections = [
+        freeDonationFields,
+        subsidizedDonationFields,
+        monetaryDonationFields,
+        otherDonationFields,
+        commonFields,
+        csrDonationFields
+    ];
+
+    function setSectionDisabled(section, disabled) {
+        if (!section) return;
+        section.querySelectorAll('input, select, textarea').forEach(el => {
+            if (disabled) {
+                el.setAttribute('disabled', 'disabled');
+            } else {
+                el.removeAttribute('disabled');
+            }
+        });
+    }
+
+    function hideAllSections() {
+        allSections.forEach(section => {
+            section.style.display = 'none';
+            setSectionDisabled(section, true);
+        });
+    }
+
+    function showSection(section) {
+        if (!section) return;
+        section.style.display = 'block';
+        setSectionDisabled(section, false);
+    }
+
+    function toggleCustomUnit(selectEl, wrapperEl, inputEl, feedbackEl) {
+        if (!selectEl || !wrapperEl || !inputEl) return;
+        if (selectEl.value === 'other') {
+            wrapperEl.style.display = 'block';
+            inputEl.removeAttribute('disabled');
+            if (feedbackEl) feedbackEl.textContent = 'Enter a custom unit, then click Save. It will apply only to this donation.';
+        } else {
+            wrapperEl.style.display = 'none';
+            inputEl.value = '';
+            delete selectEl.dataset.customUnitValue;
+            inputEl.setAttribute('disabled', 'disabled');
+            if (feedbackEl) feedbackEl.textContent = '';
+        }
+    }
+
+    function saveCustomUnit(inputEl, feedbackEl, selectEl) {
+        const label = (inputEl?.value || '').trim();
+        if (!label) {
+            if (feedbackEl) feedbackEl.textContent = 'Please enter a unit label before saving.';
+            return;
+        }
+        if (selectEl) {
+            selectEl.dataset.customUnitValue = label;
+        }
+        if (feedbackEl) feedbackEl.textContent = 'Custom unit saved for this donation only.';
+    }
+
+    // Ensure all sections start hidden/disabled
+    hideAllSections();
+
+    if (quantityUnitSelect) {
+        quantityUnitSelect.addEventListener('change', () => {
+            toggleCustomUnit(quantityUnitSelect, quantityCustomWrapper, quantityCustomInput, quantityCustomFeedback);
+        });
+        toggleCustomUnit(quantityUnitSelect, quantityCustomWrapper, quantityCustomInput, quantityCustomFeedback);
+    }
+
+    if (subsidizedUnitSelect) {
+        subsidizedUnitSelect.addEventListener('change', () => {
+            toggleCustomUnit(subsidizedUnitSelect, subsidizedCustomWrapper, subsidizedCustomInput, subsidizedCustomFeedback);
+        });
+        toggleCustomUnit(subsidizedUnitSelect, subsidizedCustomWrapper, subsidizedCustomInput, subsidizedCustomFeedback);
+    }
+
+    if (quantityCustomSave) {
+        quantityCustomSave.addEventListener('click', () => {
+            saveCustomUnit(quantityCustomInput, quantityCustomFeedback, quantityUnitSelect);
+        });
+    }
+
+    if (subsidizedCustomSave) {
+        subsidizedCustomSave.addEventListener('click', () => {
+            saveCustomUnit(subsidizedCustomInput, subsidizedCustomFeedback, subsidizedUnitSelect);
+        });
+    }
+
+    function clearUnitOverrides() {
+        if (!form) return;
+        form.querySelectorAll('input[data-custom-unit-override="1"]').forEach(el => el.remove());
+        if (quantityUnitSelect) quantityUnitSelect.removeAttribute('disabled');
+        if (subsidizedUnitSelect) subsidizedUnitSelect.removeAttribute('disabled');
+    }
+
+    function applyCustomUnitOverride(selectEl, inputEl, feedbackEl, fieldName) {
+        if (!form || !selectEl || selectEl.disabled || selectEl.value !== 'other') {
+            return true;
+        }
+        const savedValue = (selectEl.dataset.customUnitValue || '').trim();
+        const typedValue = (inputEl?.value || '').trim();
+        const customValue = savedValue || typedValue;
+        if (!customValue) {
+            if (feedbackEl) feedbackEl.textContent = 'Please enter and save a custom unit before submitting.';
+            return false;
+        }
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = fieldName;
+        hidden.value = customValue;
+        hidden.setAttribute('data-custom-unit-override', '1');
+        form.appendChild(hidden);
+        selectEl.setAttribute('disabled', 'disabled');
+        return true;
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            clearUnitOverrides();
+            const quantityOk = applyCustomUnitOverride(
+                quantityUnitSelect,
+                quantityCustomInput,
+                quantityCustomFeedback,
+                'quantity_unit'
+            );
+            const subsidizedOk = applyCustomUnitOverride(
+                subsidizedUnitSelect,
+                subsidizedCustomInput,
+                subsidizedCustomFeedback,
+                'subsidized_quantity_unit'
+            );
+            if (!quantityOk || !subsidizedOk) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    function toggleCsrCustomInput(selectedValue) {
+        if (!csrCustomWrapper || !csrCustomInput) return;
+        if (selectedValue === 'other') {
+            csrCustomWrapper.classList.add('show');
+            csrCustomInput.removeAttribute('disabled');
+            csrCustomInput.setAttribute('required', 'required');
+        } else {
+            csrCustomWrapper.classList.remove('show');
+            csrCustomInput.setAttribute('disabled', 'disabled');
+            csrCustomInput.removeAttribute('required');
+        }
+    }
+
+    function setCsrDisplayText(selectedValue, selectedText) {
+        if (!csrDisplay) return;
+        if (selectedValue === 'other' && csrCustomInput) {
+            const customValue = csrCustomInput.value.trim();
+            csrDisplay.value = customValue || selectedText || 'Custom CSR Initiative';
+        } else {
+            csrDisplay.value = selectedText || '';
+        }
+    }
+
+    // Listen for CSR subcategory change
+    if (csrSubcategorySelect) {
+        csrSubcategorySelect.addEventListener('change', function() {
+            const selectedValue = this.value;
+            const selectedText = this.options[this.selectedIndex].text;
+            toggleCsrCustomInput(selectedValue);
+
+            if (selectedValue) {
+                // Set global state
+                currentCategory = 'csr';
+                currentMode = 'csr'; // treat as its own mode
+
+                // Update hidden fields
+                selectedCategory.value = 'csr';
+                selectedMode.value = 'csr';
+                selectedCsrSubcategory.value = selectedValue;
+
+                // Update display
+                setCsrDisplayText(selectedValue, selectedText);
+
+                // Show form
+                updateForm();
+            } else {
+                // If "Select CSR Type" is chosen, hide form
+                if (formSection.style.display !== 'none') {
+                    formSection.style.display = 'none';
+                }
+            }
+        });
+
+        // Initialize custom input and display state on page load
+        const initialValue = csrSubcategorySelect.value || selectedCsrSubcategory.value;
+        toggleCsrCustomInput(initialValue || '');
+        const initialText = csrSubcategorySelect.options[csrSubcategorySelect.selectedIndex]?.text || '';
+        setCsrDisplayText(initialValue, initialText);
+
+        if (csrCustomInput) {
+            csrCustomInput.addEventListener('input', function() {
+                if (selectedCsrSubcategory.value === 'other') {
+                    const fallbackText = csrSubcategorySelect.options[csrSubcategorySelect.selectedIndex]?.text || 'Other';
+                    setCsrDisplayText('other', fallbackText);
+                }
+            });
+        }
+    }
+        
+    // Discount calculator elements
+    const marketPriceInput = document.getElementById('subsidized_market_price');
+    const subsidizedPriceInput = document.getElementById('subsidized_price');
+    const discountInfo = document.getElementById('discount-info');
+    const discountText = document.getElementById('discount-text');
+
+    let currentCategory = '';
+    let currentMode = '';
+
+    // Handle mode button clicks
+    modeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Remove selected class from all buttons in this category
+            const categoryCard = this.closest('.category-card');
+            const categoryButtons = categoryCard.querySelectorAll('.mode-btn');
+            categoryButtons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            this.classList.add('selected');
+            
+            // Get category and mode
+            currentCategory = categoryCard.dataset.category;
+            currentMode = this.dataset.mode;
+            
+            // Update form
+            updateForm();
+        });
+    });
+    function updateForm() {
+        if (!currentCategory || !currentMode) return;
+        
+        // Update hidden fields
+        selectedCategory.value = currentCategory;
+        // For monetary donations, don't set a mode (it's only a category)
+        if (currentMode === 'money') {
+            selectedMode.value = '';  // Empty mode for monetary
+        } else {
+            selectedMode.value = currentMode;
+        }
+        
+        // Hide all sections
+        hideAllSections();
+        
+        // Update form title and show appropriate sections
+        if (currentMode === 'free') {
+            formTitle.innerHTML = `<i class="fas fa-gift me-2"></i>Free ${currentCategory === 'food' ? 'Food' : 'Non-Food'} Donation`;
+            showSection(freeDonationFields);
+            showSection(commonFields);
+            submitBtn.innerHTML = '<i class="fas fa-heart me-2"></i>Donate for Free';
+            // Delivery method required for physical donations
+            if (deliveryMethodSelect) deliveryMethodSelect.required = true;
+        } else if (currentMode === 'subsidized') {
+            formTitle.innerHTML = `<i class="fas fa-tags me-2"></i>Subsidized ${currentCategory === 'food' ? 'Food' : 'Non-Food'} Donation`;
+            showSection(subsidizedDonationFields);
+            showSection(commonFields);
+            submitBtn.innerHTML = '<i class="fas fa-tags me-2"></i>Offer at Subsidized Rate';
+            // Delivery method required for physical donations
+            if (deliveryMethodSelect) deliveryMethodSelect.required = true;
+        } else if (currentMode === 'money') {
+            formTitle.innerHTML = '<i class="fas fa-dollar-sign me-2"></i>Monetary Donation';
+            showSection(monetaryDonationFields);
+            if (submitBtnMonetary) {
+                submitBtnMonetary.innerHTML = '<i class="fas fa-dollar-sign me-2"></i>Submit Donation';
+            }
+            // Delivery method NOT required for monetary donations
+            if (deliveryMethodSelect) deliveryMethodSelect.required = false;
+        } else if (currentMode === 'discussion') {
+            formTitle.innerHTML = '<i class="fas fa-handshake me-2"></i>Special Donation';
+            showSection(otherDonationFields);
+            showSection(commonFields);
+            submitBtn.innerHTML = '<i class="fas fa-comments me-2"></i>Submit for Discussion';
+            // Delivery method required for physical donations
+            if (deliveryMethodSelect) deliveryMethodSelect.required = true;
+        }else if (currentMode === 'csr') {
+            formTitle.innerHTML = '<i class="fas fa-building me-2"></i>CSR Donation';
+            showSection(csrDonationFields);
+            showSection(commonFields);
+            submitBtn.innerHTML = '<i class="fas fa-handshake me-2"></i>Submit CSR Initiative';
+            // Delivery method NOT required for CSR donations
+            if (deliveryMethodSelect) deliveryMethodSelect.required = false;
+        }
+        
+        // Show form section
+        formSection.style.display = 'block';
+        formSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Discount calculator
+    function calculateDiscount() {
+        const marketPrice = parseFloat(marketPriceInput.value) || 0;
+        const subsidizedPrice = parseFloat(subsidizedPriceInput.value) || 0;
+        
+        if (marketPrice > 0 && subsidizedPrice > 0 && subsidizedPrice < marketPrice) {
+            const discount = ((marketPrice - subsidizedPrice) / marketPrice) * 100;
+            const savings = marketPrice - subsidizedPrice;
+            
+            discountText.innerHTML = `
+                <strong>Discount:</strong> ${discount.toFixed(1)}% off • 
+                <strong>Savings:</strong> KES ${savings.toFixed(2)} per unit • 
+                <strong>Impact:</strong> More people can afford your donation!
+            `;
+            discountInfo.style.display = 'block';
+        } else {
+            discountInfo.style.display = 'none';
+        }
+    }
+
+    // Add event listeners for discount calculation
+    if (marketPriceInput && subsidizedPriceInput) {
+        marketPriceInput.addEventListener('input', calculateDiscount);
+        subsidizedPriceInput.addEventListener('input', calculateDiscount);
+    }
+
+    // Impact calculator for monetary donations
+    function calculateImpact() {
+        const amountInput = document.getElementById('amount');
+        const mealsCount = document.getElementById('meals-count');
+        const peopleCount = document.getElementById('people-count');
+        
+        if (amountInput && mealsCount && peopleCount) {
+            const amount = parseFloat(amountInput.value) || 0;
+            
+            // Rough estimates: 1 meal = 50 KES, 1 person = 3 meals per day
+            const estimatedMeals = Math.floor(amount / 50);
+            const estimatedPeople = Math.floor(estimatedMeals / 3);
+            
+            mealsCount.textContent = estimatedMeals;
+            peopleCount.textContent = estimatedPeople;
+        }
+    }
+    // form validation
+    function validateForm() {
+    const errors = [];
+    
+    // Category and mode validation
+    if (!currentCategory || !currentMode) {
+        errors.push("Please select a donation category");
+    }
+    
+    // Subsidized price validation
+    if (currentMode === 'subsidized') {
+        const marketPrice = parseFloat(marketPriceInput.value);
+        const subsidizedPrice = parseFloat(subsidizedPriceInput.value);
+        
+        if (subsidizedPrice >= marketPrice) {
+            errors.push("Subsidized price must be less than market price");
+        }
+        if ((marketPrice - subsidizedPrice) / marketPrice < 0.1) {
+            errors.push("Minimum discount of 10% required");
+        }
+    }
+    
+    return errors;
+}
+
+    // Add event listener for amount input
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.id === 'amount') {
+            calculateImpact();
+        }
+    });
+
+    // Form submission
+    document.getElementById('donationForm').addEventListener('submit', function(e) {
+        console.log('Form submit triggered');
+        console.log('Current category:', currentCategory);
+        console.log('Current mode:', currentMode);
+        
+        // Validate that category is selected (mode can be empty for monetary)
+        if (!currentCategory) {
+            e.preventDefault();
+            alert('Please select a donation category before submitting.');
+            console.log('Form submission prevented - missing category');
+            return false;
+        }
+        
+        // Mode is required except for monetary donations
+        if (!currentMode && currentCategory !== 'monetary') {
+            e.preventDefault();
+            alert('Please select a donation mode before submitting.');
+            console.log('Form submission prevented - missing mode');
+            return false;
+        }
+        
+        // Set donation_type based on mode or category
+        let donationType = 'item';
+        if (currentMode === 'subsidized') {
+            donationType = 'subsidized';
+        } else if (currentMode === 'money' || currentCategory === 'monetary') {
+            donationType = 'money';
+        } else if (currentMode === 'discussion') {
+            donationType = 'other';
+        } else if (currentMode === 'csr') {
+            donationType = 'csr';
+        }
+        
+        // Create hidden input for donation_type
+        const donationTypeInput = document.createElement('input');
+        donationTypeInput.type = 'hidden';
+        donationTypeInput.name = 'donation_type';
+        donationTypeInput.value = donationType;
+        this.appendChild(donationTypeInput);
+        
+        // Debug: Log form data
+        console.log('Form submission data:', {
+            category: currentCategory,
+            mode: currentMode,
+            donationType: donationType
+        });
+        console.log('Form will now submit');
+    });
+});
+</script>
+{% endblock %}

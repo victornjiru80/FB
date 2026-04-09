@@ -1,0 +1,708 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Donation Analytics - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="back-navigation">
+                <a href="{% url 'dashboard' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+            <div class="page-title">
+                <h1>Donation Analytics</h1>
+                <p>Track donation impact and request fulfillment across the platform</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="stats-overview">
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ fulfillment_rate|floatformat:1 }}%</div>
+                    <div class="stat-label">Fulfillment Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analytics -->
+    <div class="analytics-content">
+        <div class="analytics-container">
+            <!-- Request Status Breakdown -->
+            <div class="analytics-card">
+                <div class="card-header">
+                    <h3>Request Status</h3>
+                    <p>Current status of all food bank requests</p>
+                </div>
+                <div class="card-body">
+                    <div class="request-stats">
+                        <div class="stat-item">
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width: {% widthratio active_requests total_requests 100 %}%; background: var(--warning);"></div>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value">{{ active_requests }}</span>
+                                <span class="stat-title">Active Requests</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width: {% widthratio fulfilled_requests total_requests 100 %}%; background: var(--success);"></div>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value">{{ fulfilled_requests }}</span>
+                                <span class="stat-title">Fulfilled Requests</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donation Types -->
+            <div class="analytics-card">
+                <div class="card-header">
+                    <h3>Donation Types</h3>
+                    <p>Breakdown of donation categories</p>
+                </div>
+                <div class="card-body">
+                    <div class="donation-types">
+                        {% for donation_type in donation_types %}
+                            <div class="type-item">
+                                <div class="type-icon">
+                                    {% if donation_type.donation_type == 'item' %}
+                                        <i class="fas fa-box"></i>
+                                    {% elif donation_type.donation_type == 'money' %}
+                                        <i class="fas fa-dollar-sign"></i>
+                                    {% else %}
+                                        <i class="fas fa-tags"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="type-info">
+                                    <div class="type-count">{{ donation_type.count }}</div>
+                                    <div class="type-label">{{ donation_type.donation_type|title }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Food Banks -->
+            <div class="analytics-card">
+                <div class="card-header">
+                    <h3>Top Performing Food Banks</h3>
+                    <p>Food banks receiving the most donations</p>
+                </div>
+                <div class="card-body">
+                    <div class="top-foodbanks">
+                        {% for foodbank in top_foodbanks %}
+                            <div class="foodbank-item">
+                                <div class="foodbank-rank">{{ forloop.counter }}</div>
+                                <div class="foodbank-info">
+                                    <div class="foodbank-name">{{ foodbank.foodbank_name }}</div>
+                                    <div class="foodbank-stats">
+                                        <span class="donation-count">{{ foodbank.donation_count }} donations</span>
+                                        {% if foodbank.total_impact %}
+                                            <span class="impact">{{ foodbank.total_impact }} items</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Donations -->
+            <div class="analytics-card full-width">
+                <div class="card-header">
+                    <h3>Recent Donation Activity</h3>
+                    <p>Latest donations across the platform</p>
+                </div>
+                <div class="card-body">
+                    <div class="recent-donations">
+                        {% for donation in recent_donations %}
+                            <div class="donation-item">
+                                <div class="donation-icon">
+                                    {% if donation.donation_type == 'item' %}
+                                        <i class="fas fa-box"></i>
+                                    {% elif donation.donation_type == 'money' %}
+                                        <i class="fas fa-dollar-sign"></i>
+                                    {% else %}
+                                        <i class="fas fa-tags"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="donation-details">
+                                    <div class="donation-main">
+                                        <span class="donor-email">{{ donation.donor.email }}</span>
+                                        <span class="donation-type">{{ donation.get_donation_display }}</span>
+                                    </div>
+                                    <div class="donation-meta">
+                                        <span class="foodbank">to {{ donation.foodbank.foodbank_name }}</span>
+                                        {% if donation.foodbank_request %}
+                                            <span class="request-link">for "{{ donation.foodbank_request.title }}"</span>
+                                        {% else %}
+                                            <span class="general-donation">general donation</span>
+                                        {% endif %}
+                                        <span class="donation-time">{{ donation.donated_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+                                <div class="donation-impact">
+                                    <span class="impact-number">{{ donation.get_estimated_impact }}</span>
+                                    <span class="impact-label">people helped</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Trends -->
+            {% if monthly_trends %}
+                <div class="analytics-card full-width">
+                    <div class="card-header">
+                        <h3>Monthly Trends</h3>
+                        <p>Donation activity over the last 6 months</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="monthly-trends">
+                            {% for trend in monthly_trends %}
+                                <div class="trend-item">
+                                    <div class="trend-month">{{ trend.month|date:"M Y" }}</div>
+                                    <div class="trend-stats">
+                                        <div class="trend-bar">
+                                            <div class="donations-bar" style="height: {% widthratio trend.donations 50 100 %}%"></div>
+                                        </div>
+                                        <div class="trend-numbers">
+                                            <span class="donations">{{ trend.donations }} donations</span>
+                                            <span class="donors">{{ trend.unique_donors }} donors</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Analytics Page Styles */
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #1e40af;
+    --primary-light: #eff6ff;
+    --secondary: #6b7280;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #06b6d4;
+    --light: #f8fafc;
+    --dark: #111827;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --transition: all 0.2s ease;
+}
+
+.analytics-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Page Header */
+.page-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 2rem 0;
+    box-shadow: var(--shadow);
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.back-navigation {
+    margin-bottom: 1rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-600);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.back-link:hover {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.page-title h1 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 700;
+    font-size: 2.5rem;
+}
+
+.page-title p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 1.125rem;
+}
+
+/* Stats Overview */
+.stats-overview {
+    padding: 2rem 0;
+}
+
+.stats-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Analytics Content */
+.analytics-content {
+    padding: 0 0 2rem 0;
+}
+
+.analytics-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.analytics-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.analytics-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.card-header h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.card-header p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Request Stats */
+.request-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stat-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 120px;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--gray-800);
+    font-size: 1.125rem;
+}
+
+.stat-title {
+    color: var(--gray-600);
+    font-size: 0.8rem;
+}
+
+/* Donation Types */
+.donation-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.type-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.type-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem auto;
+    color: var(--white);
+    font-size: 1.25rem;
+}
+
+.type-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.type-label {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+/* Top Food Banks */
+.top-foodbanks {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.foodbank-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.foodbank-rank {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.foodbank-info {
+    flex: 1;
+}
+
+.foodbank-name {
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.foodbank-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.donation-count,
+.impact {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+/* Recent Donations */
+.recent-donations {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.donation-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.donation-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--success);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.donation-details {
+    flex: 1;
+}
+
+.donation-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.donor-email {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.donation-type {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.donation-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.request-link {
+    color: var(--warning);
+    font-weight: 500;
+}
+
+.general-donation {
+    color: var(--info);
+    font-weight: 500;
+}
+
+.donation-impact {
+    text-align: center;
+    min-width: 100px;
+}
+
+.impact-number {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.impact-label {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+}
+
+/* Monthly Trends */
+.monthly-trends {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.trend-item {
+    min-width: 120px;
+    text-align: center;
+}
+
+.trend-month {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 1rem;
+}
+
+.trend-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.trend-bar {
+    width: 20px;
+    height: 100px;
+    background: var(--gray-200);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.donations-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 10px;
+    transition: height 0.3s ease;
+}
+
+.trend-numbers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.donations,
+.donors {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+}
+
+.donations {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content {
+        padding: 0 1rem;
+    }
+    
+    .page-title h1 {
+        font-size: 2rem;
+    }
+    
+    .stats-container,
+    .analytics-container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .donation-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .donation-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .donation-meta {
+        flex-wrap: wrap;
+    }
+    
+    .monthly-trends {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+</style>
+{% endblock %}

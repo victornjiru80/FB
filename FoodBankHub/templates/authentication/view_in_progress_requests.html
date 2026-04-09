@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4>Requests In Progress</h4>
+
+  {% for request in in_progress_requests %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>{{ request.title }}</h5>
+
+        {% if request.linked_donor_request %}
+          <p>Linked donor request: <strong>{{ request.linked_donor_request.title }}</strong></p>
+          <p>Status: 
+            {% if request.linked_donor_request.status == 'fulfilled' %}
+              <span class="badge bg-success">Fulfilled</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">In Progress</span>
+            {% endif %}
+          </p>
+
+          {% if request.linked_donor_request.status == 'fulfilled' %}
+            <form method="POST" action="{% url 'mark_received' request.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success">Mark as Received</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <p class="text-muted">No donor request linked yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <p>No requests in progress at the moment.</p>
+  {% endfor %}
+</div>
+{% endblock %}

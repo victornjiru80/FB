@@ -1,0 +1,1146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FBHMS{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/password_strength.css' %}" rel="stylesheet">
+    <link href="{% static 'css/foodbank_navbar.css' %}" rel="stylesheet">
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        html {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Ensure smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Modern Navbar Styles - Matching Homepage */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            padding: 1rem 0;
+            transition: all 0.4s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .navbar.scrolled {
+            padding: 0.7rem 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.12);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 2rem;
+            color: #0d6efd !important;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 0;
+            margin-left: 1rem;
+            transition: all 0.3s ease;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-1px);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+
+
+        .nav-link {
+            font-weight: 600;
+            color: #2d3748 !important;
+            padding: 0.7rem 1.2rem !important;
+            margin: 0 0.3rem;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-link:hover, .nav-link:focus {
+            color: #0d6efd !important;
+            background: rgba(13, 110, 253, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+        }
+
+        .nav-link.active {
+            color: #0d6efd !important;
+            background: rgba(13, 110, 253, 0.15);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+        }
+
+        .navbar-toggler {
+            border: none;
+            padding: 0.7rem;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+            background: rgba(13, 110, 253, 0.1);
+        }
+
+        .navbar-toggler:hover {
+            background: rgba(13, 110, 253, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .navbar-toggler-icon {
+            background-image: none;
+            position: relative;
+            width: 26px;
+            height: 2px;
+            background-color: #2d3748;
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 2px;
+            background-color: #2d3748;
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .navbar-toggler-icon::before {
+            transform: translateY(-9px);
+        }
+
+        .navbar-toggler-icon::after {
+            transform: translateY(9px);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+            background-color: transparent;
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+            transform: rotate(45deg);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+            transform: rotate(-45deg);
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 1rem;
+            padding: 0.8rem;
+            margin-top: 0.8rem;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 1050;
+            position: absolute;
+            top: 100%;
+            left: auto;
+            right: 0;
+            min-width: 200px;
+        }
+
+        .dropdown-item {
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.8rem;
+            font-weight: 600;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            letter-spacing: 0.2px;
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background: rgba(13, 110, 253, 0.12);
+            color: #0d6efd;
+            transform: translateX(3px);
+        }
+
+        .dropdown-item.active {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: white;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+        
+        /* Ensure dropdowns don't overlap with navbar */
+        .nav-item.dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu.show {
+            display: block !important;
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+        
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Force dropdowns to be click-based only - but not for foodbank navbar */
+        .dropdown-menu:not(.foodbank-navbar .dropdown-menu) {
+            display: none !important;
+        }
+        
+        .dropdown-menu.show:not(.foodbank-navbar .dropdown-menu) {
+            display: block !important;
+        }
+        
+        /* Allow Bootstrap to handle foodbank navbar dropdowns */
+        .foodbank-navbar .dropdown-menu {
+            display: none;
+        }
+        
+        .foodbank-navbar .dropdown-menu.show {
+            display: block;
+        }
+        
+        /* Ensure proper z-index and positioning */
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            z-index: 1050;
+            top: 100%;
+            left: auto;
+            right: 0;
+        }
+
+        .auth-buttons .btn {
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-buttons .btn-outline-primary {
+            border-width: 2px;
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .auth-buttons .btn-outline-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.25);
+            background: #0d6efd;
+            color: white;
+        }
+
+        .auth-buttons .btn-primary {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            border: none;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+        }
+
+        .auth-buttons .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+            background: linear-gradient(135deg, #0a58ca, #084298);
+        }
+
+        .auth-buttons .btn-success {
+            background: linear-gradient(135deg, #198754, #146c43);
+            border: none;
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
+        }
+
+        .auth-buttons .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 135, 84, 0.4);
+            background: linear-gradient(135deg, #146c43, #0f5132);
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(15px);
+                padding: 1.5rem;
+                border-radius: 1rem;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                margin-top: 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+            .nav-link {
+                padding: 1rem 1.2rem !important;
+                margin: 0.3rem 0;
+                border-radius: 1rem;
+                font-weight: 600;
+            }
+
+            .auth-buttons {
+                margin-top: 1.5rem;
+                padding-top: 1.5rem;
+                border-top: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            .auth-buttons .btn {
+                width: 100%;
+                margin: 0.8rem 0;
+                padding: 1rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* Scroll Progress Indicator */
+        .scroll-progress {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-progress.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scroll-progress-circle {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scroll-progress-circle svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .scroll-progress-circle circle {
+            fill: none;
+            stroke-width: 4;
+        }
+
+        .scroll-progress-circle circle:first-child {
+            stroke: rgba(13, 110, 253, 0.1);
+        }
+
+        .scroll-progress-circle circle:last-child {
+            stroke: #0d6efd;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s ease;
+        }
+
+        .scroll-progress-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0d6efd;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .scroll-progress:hover .scroll-progress-icon {
+            transform: translate(-50%, -60%);
+        }
+
+        .scroll-progress:hover circle:last-child {
+            stroke: #0b5ed7;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-progress {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        /* Recipient Navbar Specific Styles */
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #6c757d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+        }
+        .badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Fix dropdown flicker on hover/click --- */
+        .foodbank-navbar .dropdown-menu {
+        margin-top: 0; /* eliminate vertical gap between toggle and menu */
+        transform: translateY(4px); /* slight animation offset */
+        transition: transform 0.15s ease, opacity 0.15s ease;
+        opacity: 0;
+        visibility: hidden;
+        }
+
+        /* When menu is visible */
+        .foodbank-navbar .dropdown-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
+        z-index: 2050;
+        }
+
+        /* Keep dropdown from closing too fast */
+        .foodbank-navbar .dropdown:hover .dropdown-menu {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        }
+
+        /* Ensure parent doesn’t clip the dropdown */
+        .foodbank-navbar, 
+        .foodbank-navbar .container-fluid {
+        overflow: visible !important;
+        }
+
+        .nav-link {
+            transition: all 0.2s ease;
+        }
+        .nav-link:hover {
+            transform: translateY(-1px);
+        }
+        .dropdown-item {
+            transition: all 0.2s ease;
+        }
+        .dropdown-item:hover {
+            transform: translateX(4px);
+        }
+        @media (max-width: 991.98px) {
+            .navbar-nav {
+                padding-top: 1rem;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body {% if user.is_authenticated %}class="authenticated"{% endif %}>
+    <div class="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    {% if user.is_authenticated and user.user_type == 'DONOR' %}
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+                <strong>FoodBank Hub</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDonor">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarDonor">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'donate' %}">
+                            <i class="fas fa-hand-holding-heart me-1"></i> Donate
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'donation_history' %}">
+                            <i class="fas fa-history me-1"></i> History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reports_dashboard' %}">
+                            <i class="fas fa-chart-line me-1"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown position-relative">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifications_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ unread_notifications_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            <li class="dropdown-header fw-bold text-primary">Notifications</li>
+                            <li><a class="dropdown-item" href="{% url 'notifications_acknowledgements' %}"><i class="fas fa-thumbs-up me-2 text-success"></i> Acknowledgements</a></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications_requests' %}"><i class="fas fa-exclamation-circle me-2 text-warning"></i> New Donation Requests</a></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications_system_updates' %}"><i class="fas fa-info-circle me-2 text-info"></i> System Updates</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> {{ user.donor_profile.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="settingsDropdown">
+                            <li class="dropdown-header fw-bold text-primary">Settings & Support</li>
+                            <li><a class="dropdown-item" href="{% url 'donor_settings' %}"><i class="fas fa-user-cog me-2"></i> Update Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fas fa-key me-2"></i> Change Password</a></li>
+                            <li><a class="dropdown-item" href="{% url 'contact_support' %}"><i class="fas fa-headset me-2"></i> Contact Support</a></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'request_account_deletion' %}"><i class="fas fa-user-times me-2"></i> Delete My Account</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% elif user.is_authenticated and user.user_type == 'FOODBANK' %}
+    <!-- Elegant Foodbank navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top foodbank-navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+                <strong>FoodBank Hub</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFoodbank">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarFoodbank">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'foodbank_requests' %}">
+                            <i class="fas fa-bullhorn me-1"></i> Direct Request
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'foodbank_donations' %}">
+                            <i class="fas fa-hand-holding-heart me-1"></i> Receive Donations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'foodbank_analytics' %}">
+                            <i class="fas fa-chart-bar me-1"></i> Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reports_dashboard' %}">
+                            <i class="fas fa-chart-line me-1"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar me-2">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="d-none d-lg-inline">
+                                {{ user.foodbank_profile.foodbank_name }}
+                            </span>
+                        </a> 
+                         <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="settingsDropdown">
+                            <li class="dropdown-header fw-bold text-primary">Settings & Support</li>
+                            <li><a class="dropdown-item py-2" href="{% url 'foodbank_settings' %}"><i class="fas fa-user-cog me-2"></i> Settings</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'change_foodbank_password' %}"><i class="fas fa-key me-2"></i> Change Password</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                    <!-- Dark Mode Toggle -->
+                    <li class="nav-item">
+                        <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </button>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifications_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ unread_notifications_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            <li class="dropdown-header fw-bold text-primary">Notifications</li>
+                            <li><a class="dropdown-item" href="{% url 'notifications_foodbank' %}"><i class="fas fa-bell me-2 text-primary"></i> All Notifications</a></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications_foodbank_requests' %}"><i class="fas fa-bullhorn me-2 text-warning"></i> Request Alerts</a></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications_foodbank_system' %}"><i class="fas fa-info-circle me-2 text-info"></i> System Updates</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% elif user.is_authenticated and user.user_type == 'RECIPIENT' %}
+    <!-- Recipient navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center fw-bold text-dark" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils me-2 text-primary"></i>
+                FoodBank Hub
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarRecipient" aria-controls="navbarRecipient" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarRecipient">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipient_requests_view' %}active fw-semibold{% endif %}" href="{% url 'recipient_requests_view' %}">
+                            <i class="fas fa-list me-1"></i> My Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipient_foodbanks_list' %}active fw-semibold{% endif %}" href="{% url 'recipient_foodbanks_list' %}">
+                            <i class="fas fa-building me-1"></i> Food Banks
+                        </a>
+                    </li>
+                    <!--<li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'available_random_donations' %}active fw-semibold{% endif %}" href="{% url 'available_random_donations' %}">
+                            <i class="fas fa-gift me-1"></i> Donations
+                        </a>
+                    </li> -->
+                    <li class="nav-item position-relative">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'recipient_notifications' %}active fw-semibold{% endif %}" href="{% url 'recipient_notifications' %}">
+                            <i class="fas fa-bell me-1"></i> Notifications
+                            {% if unread_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                {{ unread_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'create_testimonial' %}active fw-semibold{% endif %}" href="{% url 'create_testimonial' %}">
+                            <i class="fas fa-comment-dots me-1"></i> Testimonial
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar me-2">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="d-none d-lg-inline">
+                                {% if user.recipient_profile.is_organization %}
+                                    {{ user.recipient_profile.organization_name|default:user.email|truncatechars:15 }}
+                                {% else %}
+                                    {{ user.recipient_profile.full_name|default:user.email|truncatechars:15 }}
+                                {% endif %}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="settingsDropdown">
+                            <li class="dropdown-header fw-bold text-primary border-bottom">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {% if user.recipient_profile.is_organization %}
+                                    {{ user.recipient_profile.organization_name|default:user.email }}
+                                {% else %}
+                                    {{ user.recipient_profile.full_name|default:user.email }}
+                                {% endif %}
+                            </li>
+                            <li><a class="dropdown-item py-2" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt me-2 text-muted"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'create_recipient_request' %}"><i class="fas fa-plus me-2 text-muted"></i> New Request</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'recipient_settings' %}"><i class="fas fa-user-cog me-2 text-muted"></i> Update Profile</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'change_recipient_password' %}"><i class="fas fa-key me-2 text-muted"></i> Change Password</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2" href="#"><i class="fas fa-headset me-2 text-muted"></i> Contact Support</a></li>
+                            <li><a class="dropdown-item py-2" href="#"><i class="fas fa-shield-alt me-2 text-muted"></i> Privacy Settings</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- Public navbar for non-authenticated users -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                FBHMS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!--<li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>-->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if selected_type == 'food' %}active{% endif %}" href="{% url 'home' %}?donation_type=food">
+                            <i class="fas fa-utensils me-1"></i>Food
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if selected_type == 'nonfood' %}active{% endif %}" href="{% url 'home' %}?donation_type=nonfood">
+                            <i class="fas fa-box me-1"></i>Non-Food
+                        </a>
+                    </li>
+                    {% if request.user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard/">Admin Dashboard</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="auth-buttons">
+                    {% if request.resolver_match.url_name == 'login' %}
+                        <!-- Login page shows Register button -->
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'register_donor' %}">
+                                    <i class="fas fa-hand-holding-heart me-2"></i>As Donor
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'register_foodbank' %}">
+                                    <i class="fas fa-warehouse me-2"></i>As Food Bank
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'register_recipient' %}">
+                                    <i class="fas fa-utensils me-2"></i>As Recipient
+                                </a></li>
+                            </ul>
+                        </div>
+                    {% elif request.resolver_match.url_name == 'register_donor' or request.resolver_match.url_name == 'register_foodbank' or request.resolver_match.url_name == 'register_recipient' %}
+                        <!-- Registration pages show Login button -->
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    {% else %}
+                        <!-- Home page shows both Login and Register -->
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'login' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-plus me-1"></i>Register
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'register_donor' %}">
+                                        <i class="fas fa-hand-holding-heart me-2"></i>As Donor
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'register_foodbank' %}">
+                                        <i class="fas fa-warehouse me-2"></i>As Food Bank
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'register_recipient' %}">
+                                        <i class="fas fa-utensils me-2"></i>As Recipient
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Ultra Compact Footer -->
+    <footer style="background: #f8f9fa; border-top: 1px solid #e9ecef; padding: 0.75rem 0; margin-top: 2rem;">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-heart text-primary me-1" style="font-size: 0.8rem;"></i>
+                    <span class="fw-bold text-dark" style="font-size: 0.85rem;">FoodBank Hub</span>
+                    <span class="text-muted ms-1" style="font-size: 0.75rem;">&copy; {% now "Y" %}</span>
+                </div>
+                <div class="d-flex">
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'home' %}" class="text-muted text-decoration-none me-2" style="font-size: 0.75rem;">Home</a>
+                        <a href="{% url 'login' %}" class="text-muted text-decoration-none me-2" style="font-size: 0.75rem;">Login</a>
+                        <a href="{% url 'register_donor' %}" class="text-muted text-decoration-none" style="font-size: 0.75rem;">Register</a>
+                    {% else %}
+                        <a href="#" class="text-muted text-decoration-none me-2" style="font-size: 0.75rem;">Privacy</a>
+                        <a href="#" class="text-muted text-decoration-none" style="font-size: 0.75rem;">Support</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" role="button" aria-label="Scroll to top">
+        <div class="scroll-progress-circle">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45"></circle>
+                <circle cx="50" cy="50" r="45"></circle>
+            </svg>
+            <div class="scroll-progress-icon">
+                <i class="fas fa-chevron-up"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/password_strength.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/session_timeout.js' %}"></script>
+    {% endif %}
+    <script>
+        // CSRF Token Helper for AJAX requests
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+        }
+        
+        // Add CSRF token to all AJAX requests
+        if (typeof $ !== 'undefined') {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", getCSRFToken());
+                    }
+                }
+            });
+        }
+        
+        // For vanilla JavaScript fetch requests
+        window.csrfFetch = function(url, options = {}) {
+            options.headers = options.headers || {};
+            options.headers['X-CSRFToken'] = getCSRFToken();
+            return fetch(url, options);
+        };
+        
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            const scrollY = window.scrollY;
+            
+            // Check if it's the FoodBank navbar
+            if (navbar.classList.contains('foodbank-navbar')) {
+                // Elegant FoodBank navbar scroll effect
+                if (scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                    
+                    // Check if dark mode is active
+                    if (navbar.classList.contains('dark-mode')) {
+                        // Dark mode scroll effect
+                        const opacity = Math.min(0.98, 0.95 + (scrollY / 500) * 0.03);
+                        const shadow = Math.min(0.3, 0.2 + (scrollY / 500) * 0.1);
+                        
+                        navbar.style.background = `rgba(15, 23, 42, ${opacity})`;
+                        navbar.style.boxShadow = `0 4px 6px -1px rgba(0, 0, 0, ${shadow}), 0 2px 4px -1px rgba(0, 0, 0, ${shadow * 0.6})`;
+                    } else {
+                        // Light mode scroll effect
+                        const opacity = Math.min(0.98, 0.95 + (scrollY / 500) * 0.03);
+                        const shadow = Math.min(0.15, 0.1 + (scrollY / 500) * 0.05);
+                        
+                        navbar.style.background = `rgba(248, 250, 252, ${opacity})`;
+                        navbar.style.boxShadow = `0 4px 6px -1px rgba(0, 0, 0, ${shadow}), 0 2px 4px -1px rgba(0, 0, 0, ${shadow * 0.6})`;
+                    }
+                } else {
+                    navbar.classList.remove('scrolled');
+                    if (navbar.classList.contains('dark-mode')) {
+                        // Dark mode default
+                        navbar.style.background = 'linear-gradient(135deg, #0f172a, #1e293b, #334155)';
+                        navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)';
+                    } else {
+                        // Light mode default
+                        navbar.style.background = 'linear-gradient(135deg, #f8fafc, #e2e8f0, #f1f5f9)';
+                        navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+                    }
+                }
+            } else {
+                // Default navbar scroll effect
+                if (scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                    
+                    // Add dynamic opacity based on scroll position
+                    const opacity = Math.min(0.98, 0.85 + (scrollY / 500) * 0.13);
+                    const blur = Math.min(15, 8 + (scrollY / 500) * 7);
+                    const shadow = Math.min(0.1, 0.05 + (scrollY / 500) * 0.05);
+                    
+                    navbar.style.background = `rgba(255, 255, 255, ${opacity})`;
+                    navbar.style.backdropFilter = `blur(${blur}px)`;
+                    navbar.style.boxShadow = `0 2px 10px rgba(0, 0, 0, ${shadow})`;
+                } else {
+                    navbar.classList.remove('scrolled');
+                    navbar.style.background = 'rgba(255, 255, 255, 0.85)';
+                    navbar.style.backdropFilter = 'blur(8px)';
+                    navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                }
+            }
+        });
+
+        // Enhanced FoodBank navbar interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const foodbankNavbar = document.querySelector('.foodbank-navbar');
+            
+            if (foodbankNavbar) {
+                // Add hover effects to stat items
+                const statItems = foodbankNavbar.querySelectorAll('.stat-item');
+                statItems.forEach(item => {
+                    item.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-3px) scale(1.05)';
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0) scale(1)';
+                    });
+                });
+
+                // Enhanced dropdown animations (working with Bootstrap)
+                const dropdowns = foodbankNavbar.querySelectorAll('.dropdown');
+                dropdowns.forEach(dropdown => {
+                    const menu = dropdown.querySelector('.dropdown-menu');
+                    const toggle = dropdown.querySelector('.dropdown-toggle');
+                    
+                    // Ensure proper positioning
+                    menu.style.position = 'absolute';
+                    menu.style.zIndex = '1050';
+                    
+                    // Listen for Bootstrap dropdown events
+                    dropdown.addEventListener('show.bs.dropdown', function() {
+                        menu.style.opacity = '0';
+                        menu.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            menu.style.opacity = '1';
+                            menu.style.visibility = 'visible';
+                        }, 10);
+                    });
+                    
+                    dropdown.addEventListener('hide.bs.dropdown', function() {
+                        menu.style.opacity = '0';
+                        menu.style.visibility = 'hidden';
+                    });
+                });
+
+                // Add active state management for FoodBank navbar
+                const currentPath = window.location.pathname;
+                const navLinks = foodbankNavbar.querySelectorAll('.nav-link');
+                
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === currentPath) {
+                        link.classList.add('active');
+                    }
+                    
+                    // Add click effect
+                    link.addEventListener('click', function() {
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            }
+        });
+
+        // Dark Mode Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const foodbankNavbar = document.querySelector('.foodbank-navbar');
+            
+            if (themeToggle && foodbankNavbar) {
+                // Check for saved theme preference or default to light mode
+                const currentTheme = localStorage.getItem('foodbank-theme') || 'light';
+                
+                // Apply the saved theme
+                if (currentTheme === 'dark') {
+                    foodbankNavbar.classList.add('dark-mode');
+                    themeIcon.className = 'fas fa-sun';
+                    themeToggle.title = 'Switch to Light Mode';
+                }
+                
+                // Theme toggle click handler
+                themeToggle.addEventListener('click', function() {
+                    if (foodbankNavbar.classList.contains('dark-mode')) {
+                        // Switch to light mode
+                        foodbankNavbar.classList.remove('dark-mode');
+                        themeIcon.className = 'fas fa-moon';
+                        themeToggle.title = 'Toggle Dark Mode';
+                        localStorage.setItem('foodbank-theme', 'light');
+                        
+                        // Update scroll effect for light mode
+                        if (window.scrollY > 10) {
+                            foodbankNavbar.style.background = 'rgba(248, 250, 252, 0.95)';
+                            foodbankNavbar.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                        } else {
+                            foodbankNavbar.style.background = 'linear-gradient(135deg, #f8fafc, #e2e8f0, #f1f5f9)';
+                            foodbankNavbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+                        }
+                    } else {
+                        // Switch to dark mode
+                        foodbankNavbar.classList.add('dark-mode');
+                        themeIcon.className = 'fas fa-sun';
+                        themeToggle.title = 'Switch to Light Mode';
+                        localStorage.setItem('foodbank-theme', 'dark');
+                        
+                        // Update scroll effect for dark mode
+                        if (window.scrollY > 10) {
+                            foodbankNavbar.style.background = 'rgba(15, 23, 42, 0.95)';
+                            foodbankNavbar.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)';
+                        } else {
+                            foodbankNavbar.style.background = 'linear-gradient(135deg, #0f172a, #1e293b, #334155)';
+                            foodbankNavbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)';
+                        }
+                    }
+                    
+                    // Add smooth transition effect
+                    foodbankNavbar.style.transition = 'all 0.3s ease';
+                    
+                    // Remove transition after animation completes
+                    setTimeout(() => {
+                        foodbankNavbar.style.transition = '';
+                    }, 300);
+                });
+            }
+        });
+
+        // Set active nav link based on current page
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Hide loading screen when page is loaded
+        window.addEventListener('load', function() {
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+        });
+
+        // Fallback: Hide loading screen after 3 seconds if it's still showing
+        setTimeout(function() {
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement && loadingElement.style.display !== 'none') {
+                loadingElement.style.display = 'none';
+                console.warn('Loading screen hidden by fallback timeout');
+            }
+        }, 3000);
+
+        // Hide loading screen when DOM is ready (additional fallback)
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const loadingElement = document.querySelector('.loading');
+                if (loadingElement && loadingElement.style.display !== 'none') {
+                    loadingElement.style.display = 'none';
+                }
+            }, 1000);
+        });
+
+        // Scroll Progress Indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            const scrollProgress = document.querySelector('.scroll-progress');
+            const circle = scrollProgress.querySelector('circle:last-child');
+            const circumference = 2 * Math.PI * 45; // 2πr where r=45
+
+            // Set the stroke-dasharray and initial stroke-dashoffset
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+
+            // Update progress on scroll
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrollPercent = (scrollTop / scrollHeight) * 100;
+                
+                // Calculate the stroke-dashoffset
+                const offset = circumference - (scrollPercent / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+
+                // Show/hide the progress indicator
+                if (scrollTop > 300) {
+                    scrollProgress.classList.add('visible');
+                } else {
+                    scrollProgress.classList.remove('visible');
+                }
+            });
+
+            // Scroll to top when clicked
+            scrollProgress.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Add hover effect
+            scrollProgress.addEventListener('mouseenter', function() {
+                this.querySelector('.scroll-progress-icon').style.transform = 'translate(-50%, -60%)';
+            });
+
+            scrollProgress.addEventListener('mouseleave', function() {
+                this.querySelector('.scroll-progress-icon').style.transform = 'translate(-50%, -50%)';
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

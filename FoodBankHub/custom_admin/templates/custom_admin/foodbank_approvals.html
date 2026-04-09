@@ -1,0 +1,468 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Food Bank Approvals</h1>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="badge bg-warning text-dark fs-6">{{ pending_count }} Pending</span>
+        <span class="text-muted small">Download Reports:</span>
+        <a href="{% url 'custom_admin:export_foodbank_approvals_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-danger">
+            <i class="fas fa-file-pdf me-1"></i>PDF
+        </a>
+        <a href="{% url 'custom_admin:export_foodbank_approvals_excel' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-success">
+            <i class="fas fa-file-excel me-1"></i>Excel
+        </a>
+        <a href="{% url 'custom_admin:export_foodbank_approvals_csv' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-file-csv me-1"></i>CSV
+        </a>
+        <a href="{% url 'custom_admin:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-success">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Approved</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ approved_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-danger">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Rejected</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ rejected_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-info">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-building fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-filter me-2"></i>Filters & Search
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       placeholder="Name, email, address..." 
+                       value="{{ search|default:'' }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="service_type" class="form-label">Service Type</label>
+                <select class="form-select" id="service_type" name="service_type">
+                    <option value="">All Types</option>
+                    {% for value, label in service_type_choices %}
+                    <option value="{{ value }}" {% if service_type_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="has_documents" class="form-label">Documents</label>
+                <select class="form-select" id="has_documents" name="has_documents">
+                    <option value="">All</option>
+                    <option value="yes" {% if has_documents == 'yes' %}selected{% endif %}>Has Documents</option>
+                    <option value="no" {% if has_documents == 'no' %}selected{% endif %}>No Documents</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" 
+                       value="{{ date_from|default:'' }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" 
+                       value="{{ date_to|default:'' }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label for="sort" class="form-label">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="-application_date" {% if sort_by == '-application_date' %}selected{% endif %}>Newest First</option>
+                    <option value="application_date" {% if sort_by == 'application_date' %}selected{% endif %}>Oldest First</option>
+                    <option value="foodbank_name" {% if sort_by == 'foodbank_name' %}selected{% endif %}>Name A-Z</option>
+                    <option value="-foodbank_name" {% if sort_by == '-foodbank_name' %}selected{% endif %}>Name Z-A</option>
+                    <option value="contact_person" {% if sort_by == 'contact_person' %}selected{% endif %}>Contact A-Z</option>
+                    <option value="-contact_person" {% if sort_by == '-contact_person' %}selected{% endif %}>Contact Z-A</option>
+                </select>
+            </div>
+            
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Apply Filters
+                </button>
+                <a href="{% url 'custom_admin:foodbank_approvals' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Applications Table -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-list me-2"></i>
+            Food Bank Applications
+            {% if page_obj %}
+                <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+            {% endif %}
+        </h6>
+        {% if status_filter == 'pending' %}
+            <span class="badge bg-warning text-dark">{{ pending_count }} Pending Review</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>S/No</th>
+                            <th>Food Bank</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Service Type</th>
+                            <th>Status</th>
+                            <th>Applied</th>
+                            <th>Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registration in page_obj %}
+                            <tr>
+                                <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                <td>
+                                    <div class="fw-bold">{{ registration.foodbank_name }}</div>
+                                    {% if registration.address %}
+                                        <small class="text-muted">{{ registration.address }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ registration.contact_person }}</td>
+                                <td>
+                                    <a href="mailto:{{ registration.user.email }}">{{ registration.user.email }}</a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ registration.get_service_type_display }}</span>
+                                </td>
+                                <td>
+                                    {% if registration.is_approved == 'pending' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-hourglass-half me-1"></i>Pending
+                                        </span>
+                                    {% elif registration.is_approved == 'approved' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Approved
+                                        </span>
+                                    {% elif registration.is_approved == 'rejected' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Rejected
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-bold">{{ registration.application_date|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ registration.application_date|timesince }} ago</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        {% if registration.authority_picture %}
+                                            <span class="badge bg-success" title="Authority Picture">
+                                                <i class="fas fa-image"></i>
+                                            </span>
+                                        {% endif %}
+                                        {% if registration.urgent_request_picture %}
+                                            <span class="badge bg-success" title="Urgent Request Picture">
+                                                <i class="fas fa-image"></i>
+                                            </span>
+                                        {% endif %}
+                                        {% if registration.additional_documents %}
+                                            <span class="badge bg-success" title="Additional Documents">
+                                                <i class="fas fa-file"></i>
+                                            </span>
+                                        {% endif %}
+                                        {% if not registration.authority_picture and not registration.urgent_request_picture and not registration.additional_documents %}
+                                            <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'custom_admin:view_foodbank_application' registration.id %}" 
+                                           class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if registration.is_approved == 'pending' %}
+                                            <a href="{% url 'custom_admin:approve_foodbank' registration.id %}" 
+                                               class="btn btn-sm btn-outline-success" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a href="{% url 'custom_admin:reject_foodbank' registration.id %}" 
+                                               class="btn btn-sm btn-outline-danger" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        {% elif registration.is_approved == 'approved' %}
+                                            <span class="btn btn-sm btn-success disabled" title="Already Approved">
+                                                <i class="fas fa-check me-1"></i>Approved
+                                            </span>
+                                            <a href="{% url 'custom_admin:reopen_approved_foodbank' registration.id %}" 
+                                               class="btn btn-sm btn-outline-warning ms-2" 
+                                               title="Reopen for Review"
+                                               onclick="return confirm('Are you sure you want to reopen this approved foodbank for further review? It will be moved back to pending status.')">
+                                                <i class="fas fa-redo me-1"></i>Reopen for Review
+                                            </a>
+                                            {% if registration.approved_by %}
+                                                <div><small class="text-muted">by {{ registration.approved_by.email }}</small></div>
+                                            {% endif %}
+                                        {% elif registration.is_approved == 'rejected' %}
+                                            <span class="btn btn-sm btn-danger disabled" title="Already Rejected">
+                                                <i class="fas fa-times me-1"></i>Rejected
+                                            </span>
+                                            <a href="{% url 'custom_admin:reopen_foodbank_application' registration.id %}" 
+                                               class="btn btn-sm btn-outline-warning ms-2" 
+                                               title="Reopen Application"
+                                               onclick="return confirm('Are you sure you want to reopen this rejected application? It will be moved back to pending status.')">
+                                                <i class="fas fa-redo me-1"></i>Reopen
+                                            </a>
+                                            {% if registration.approved_by %}
+                                                <div><small class="text-muted">by {{ registration.approved_by.email }}</small></div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if service_type_filter %}&service_type={{ service_type_filter }}{% endif %}{% if has_documents %}&has_documents={{ has_documents }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if service_type_filter %}&service_type={{ service_type_filter }}{% endif %}{% if has_documents %}&has_documents={{ has_documents }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if service_type_filter %}&service_type={{ service_type_filter }}{% endif %}{% if has_documents %}&has_documents={{ has_documents }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if service_type_filter %}&service_type={{ service_type_filter }}{% endif %}{% if has_documents %}&has_documents={{ has_documents }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if service_type_filter %}&service_type={{ service_type_filter }}{% endif %}{% if has_documents %}&has_documents={{ has_documents }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+                    </small>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Applications Found</h5>
+                <p class="text-muted">No food bank applications match your current filters.</p>
+                <a href="{% url 'custom_admin:foodbank_approvals' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-times me-2"></i>Clear Filters
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Decisions -->
+{% if recent_decisions %}
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-history me-2"></i>
+            Recent Decisions
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Food Bank</th>
+                        <th>Decision</th>
+                        <th>Decided By</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for decision in recent_decisions %}
+                        <tr>
+                            <td>{{ decision.foodbank_name }}</td>
+                            <td>
+                                {% if decision.is_approved == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if decision.approved_by %}
+                                    {{ decision.approved_by.email }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ decision.approval_date|timesince }} ago</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15);
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation for approve/reject actions
+    document.querySelectorAll('.btn-outline-success, .btn-outline-danger').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            const action = this.title.toLowerCase();
+            if (!confirm(`Are you sure you want to ${action} this application?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

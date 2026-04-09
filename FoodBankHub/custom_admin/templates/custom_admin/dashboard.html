@@ -1,0 +1,572 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block header_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'custom_admin:foodbank_approvals' %}" class="btn btn-sm btn-primary">
+        <i class="fas fa-clipboard-check me-1"></i>Approvals
+    </a>
+</div>
+<div class="btn-group me-2">
+    <a href="{% url 'custom_admin:support_messages' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-headset me-1"></i>Support
+    </a>
+</div>
+<div class="btn-group me-2">
+    <a href="{% url 'custom_admin:payment_verification' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-check-circle me-1"></i>Payments
+    </a>
+</div>
+<div class="btn-group me-2">
+    <a href="{% url 'custom_admin:user_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-users me-1"></i>Users
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-1">{{ dashboard_salutation }}</h4>
+    <p class="text-muted mb-0">Welcome to your admin dashboard.</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card primary">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-accent"><i class="fas fa-users"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Total Users</div>
+                        <div class="ca-kpi-value">{{ total_users }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-success"><i class="fas fa-hand-holding-heart"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Total Donations</div>
+                        <div class="ca-kpi-value">{{ total_donations }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-warning"><i class="fas fa-wallet"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Total Donated Amount</div>
+                        <div class="ca-kpi-value">KES {{ total_donated_amount|floatformat:0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card info">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-info"><i class="fas fa-credit-card"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Subscription Revenue</div>
+                        <div class="ca-kpi-value">KES {{ total_subscription_revenue|floatformat:0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Types Row -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card primary">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-accent"><i class="fas fa-hand-holding-heart"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Donors</div>
+                        <div class="ca-kpi-value">{{ total_donors }}</div>
+                        <div class="ca-kpi-sub">Registered donors</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-success"><i class="fas fa-building"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Food Banks</div>
+                        <div class="ca-kpi-value">{{ total_foodbanks }}</div>
+                        <div class="ca-kpi-sub">Active registrants</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-warning"><i class="fas fa-user-circle"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Recipients</div>
+                        <div class="ca-kpi-value">{{ total_recipients }}</div>
+                        <div class="ca-kpi-sub">Registered recipients</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card stats-card danger">
+            <div class="card-body">
+                <div class="ca-kpi">
+                    <div class="ca-kpi-icon ca-danger"><i class="fas fa-user-shield"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Administrators</div>
+                        <div class="ca-kpi-value">{{ total_admins }}</div>
+                        <div class="ca-kpi-sub">Staff & superusers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Support Messages Row -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-4">
+        <a href="{% url 'custom_admin:support_messages' %}" class="text-decoration-none">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <div class="ca-kpi">
+                        <div class="ca-kpi-icon ca-accent"><i class="fas fa-headset"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="ca-kpi-label">Support Messages</div>
+                            <div class="ca-kpi-value">{{ total_support_messages }}</div>
+                            <div class="ca-kpi-sub">All messages</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <a href="{% url 'custom_admin:support_messages' %}" class="text-decoration-none">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="ca-kpi">
+                        <div class="ca-kpi-icon ca-warning"><i class="fas fa-bell"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="ca-kpi-label">New Messages</div>
+                            <div class="ca-kpi-value">{{ new_support_messages }}</div>
+                            <div class="ca-kpi-sub">Needs review</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <a href="{% url 'custom_admin:support_messages' %}" class="text-decoration-none">
+            <div class="card stats-card danger">
+                <div class="card-body">
+                    <div class="ca-kpi">
+                        <div class="ca-kpi-icon ca-danger"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="ca-kpi-label">Urgent Messages</div>
+                            <div class="ca-kpi-value">{{ urgent_support_messages }}</div>
+                            <div class="ca-kpi-sub">Immediate action</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Pending Approvals Row -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-4">
+        <a href="{% url 'custom_admin:foodbank_approvals' %}" class="text-decoration-none">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <div class="ca-kpi">
+                        <div class="ca-kpi-icon ca-warning"><i class="fas fa-clipboard-check"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="ca-kpi-label">Pending Approvals</div>
+                            <div class="ca-kpi-value">{{ pending_foodbanks }}</div>
+                            <div class="ca-kpi-sub">Food bank applications</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <a href="{% url 'custom_admin:payment_verification' %}" class="text-decoration-none">
+            <div class="card stats-card info">
+                <div class="card-body">
+                    <div class="ca-kpi">
+                        <div class="ca-kpi-icon ca-info"><i class="fas fa-check-circle"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="ca-kpi-label">Pending Payments</div>
+                            <div class="ca-kpi-value">{{ pending_payments }}</div>
+                            <div class="ca-kpi-sub">Needs verification</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <a href="{% url 'custom_admin:subscription_management' %}" class="text-decoration-none">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <div class="ca-kpi">
+                        <div class="ca-kpi-icon ca-accent"><i class="fas fa-user-check"></i></div>
+                        <div class="flex-grow-1">
+                        <div class="ca-kpi-label">Active Subscriptions</div>
+                        <div class="ca-kpi-value">{{ active_subscriptions }}</div>
+                        <div class="ca-kpi-sub">Includes trial and paid | Total: {{ total_subscriptions }}</div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <div>
+                    <h6 class="m-0 font-weight-bold">User Registrations</h6>
+                    <div class="text-muted small">Last 12 months</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="ca-chart">
+                    <canvas id="registrationChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+        <div class="card">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <div>
+                    <h6 class="m-0 font-weight-bold">User Types</h6>
+                    <div class="text-muted small">Distribution</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="ca-chart ca-chart-sm">
+                    <canvas id="userTypeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header py-3">
+                <ul class="nav nav-tabs" id="activityTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="recent-users-tab" data-bs-toggle="tab" data-bs-target="#recent-users" type="button" role="tab" aria-controls="recent-users" aria-selected="true">Recent Users</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="recent-donations-tab" data-bs-toggle="tab" data-bs-target="#recent-donations" type="button" role="tab" aria-controls="recent-donations" aria-selected="false">Recent Donations</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="recent-requests-tab" data-bs-toggle="tab" data-bs-target="#recent-requests" type="button" role="tab" aria-controls="recent-requests" aria-selected="false">Recent Requests</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="activityTabsContent">
+                    <div class="tab-pane fade show active" id="recent-users" role="tabpanel" aria-labelledby="recent-users-tab" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Type</th>
+                                        <th>Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in recent_users %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'custom_admin:user_detail' user.id %}">{{ user.email }}</a>
+                                        </td>
+                                        <td><span class="badge bg-primary">{{ user.user_type }}</span></td>
+                                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-end pt-3">
+                            <a href="{% url 'custom_admin:user_management' %}" class="btn btn-primary btn-sm">View All Users</a>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="recent-donations" role="tabpanel" aria-labelledby="recent-donations-tab" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Donor</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for donation in recent_donations %}
+                                    <tr>
+                                        <td>{{ donation.donor.email|truncatechars:30 }}</td>
+                                        <td><span class="badge bg-success">{{ donation.donation_type }}</span></td>
+                                        <td>
+                                            {% if donation.amount %}
+                                                KES {{ donation.amount }}
+                                            {% elif donation.subsidized_price %}
+                                                KES {{ donation.subsidized_price }}
+                                            {% else %}
+                                                {{ donation.item_name }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ donation.donated_at|date:"M d" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-end pt-3">
+                            <a href="{% url 'custom_admin:donation_management' %}" class="btn btn-primary btn-sm">View All Donations</a>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="recent-requests" role="tabpanel" aria-labelledby="recent-requests-tab" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Food Bank</th>
+                                        <th>Created</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in recent_requests %}
+                                    <tr>
+                                        <td>{{ req.foodbank.user.email|default:req.foodbank.user.username|truncatechars:30 }}</td>
+                                        <td>{{ req.created_at|date:"M d, Y" }}</td>
+                                        <td><span class="badge bg-warning">{{ req.status|default:"pending" }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-end pt-3">
+                            <a href="{% url 'custom_admin:foodbank_requests_enhanced' %}" class="btn btn-primary btn-sm">View All Requests</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donations by Type Chart -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header py-3">
+                <div>
+                    <h6 class="m-0 font-weight-bold">Donations by Type</h6>
+                    <div class="text-muted small">Overview</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="ca-chart ca-chart-sm">
+                    <canvas id="donationTypeChart" width="400" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let registrationChart;
+let userTypeChart;
+let donationTypeChart;
+
+function caGetVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function caTheme() {
+    return document.documentElement.getAttribute('data-theme') || 'dark';
+}
+
+function caDestroyCharts() {
+    if (registrationChart) {
+        registrationChart.destroy();
+        registrationChart = null;
+    }
+    if (userTypeChart) {
+        userTypeChart.destroy();
+        userTypeChart = null;
+    }
+    if (donationTypeChart) {
+        donationTypeChart.destroy();
+        donationTypeChart = null;
+    }
+}
+
+function caRenderCharts() {
+    const grid = caGetVar('--ca-chart-grid') || 'rgba(0,0,0,0.08)';
+    const ticks = caGetVar('--ca-chart-ticks') || 'rgba(0,0,0,0.70)';
+    const legend = caGetVar('--ca-chart-legend') || 'rgba(0,0,0,0.78)';
+    const accent = caGetVar('--sb-accent') || '#a78bfa';
+    const fillAlpha = caTheme() === 'dark' ? 0.12 : 0.16;
+
+    const registrationCanvas = document.getElementById('registrationChart');
+    const userTypeCanvas = document.getElementById('userTypeChart');
+    const donationTypeCanvas = document.getElementById('donationTypeChart');
+    if (!registrationCanvas || !userTypeCanvas || !donationTypeCanvas) return;
+
+    const registrationCtx = registrationCanvas.getContext('2d');
+    registrationChart = new Chart(registrationCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ registration_months|escapejs }}'),
+            datasets: [{
+                label: 'New Users',
+                data: JSON.parse('{{ registration_counts|escapejs }}'),
+                borderColor: accent,
+                backgroundColor: caTheme() === 'dark' ? `rgba(167, 139, 250, ${fillAlpha})` : `rgba(167, 139, 250, ${fillAlpha})`,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: grid },
+                    ticks: { color: ticks }
+                },
+                x: {
+                    grid: { color: grid },
+                    ticks: { color: ticks }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: legend }
+                }
+            }
+        }
+    });
+
+    const userTypeCtx = userTypeCanvas.getContext('2d');
+    userTypeChart = new Chart(userTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: JSON.parse('{{ user_type_labels|escapejs }}'),
+            datasets: [{
+                data: JSON.parse('{{ user_type_data|escapejs }}'),
+                backgroundColor: [
+                    'rgba(167, 139, 250, 0.80)',
+                    'rgba(56, 189, 248, 0.75)',
+                    'rgba(52, 211, 153, 0.75)',
+                    'rgba(251, 113, 133, 0.70)'
+                ],
+                borderColor: grid
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: legend }
+                }
+            }
+        }
+    });
+
+    const donationTypeCtx = donationTypeCanvas.getContext('2d');
+    donationTypeChart = new Chart(donationTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ donation_type_labels|escapejs }}'),
+            datasets: [{
+                label: 'Number of Donations',
+                data: JSON.parse('{{ donation_type_data|escapejs }}'),
+                backgroundColor: [
+                    'rgba(167, 139, 250, 0.80)',
+                    'rgba(56, 189, 248, 0.75)',
+                    'rgba(52, 211, 153, 0.75)'
+                ],
+                borderColor: grid
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: grid },
+                    ticks: { color: ticks }
+                },
+                x: {
+                    grid: { color: grid },
+                    ticks: { color: ticks }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: legend }
+                }
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    caRenderCharts();
+});
+
+window.addEventListener('ca-theme-changed', function() {
+    caDestroyCharts();
+    caRenderCharts();
+});
+</script>
+{% endblock %}

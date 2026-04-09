@@ -1,0 +1,678 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .user-section {
+        margin-bottom: 2rem;
+    }
+    .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .section-header.donor {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    }
+    .section-header.foodbank {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .section-header.recipient {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .section-header.admin {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .section-body {
+        background: var(--ca-card-bg);
+        border: 1px solid var(--ca-card-border);
+        color: var(--ca-text);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        padding: 1.5rem;
+    }
+    .user-card {
+        background: var(--ca-hover-surface);
+        border: 1px solid var(--ca-card-border);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    .user-card:hover {
+        box-shadow: var(--ca-card-shadow);
+        border-color: var(--ca-card-border-hover);
+        transform: translateY(-2px);
+    }
+    .user-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-label {
+        font-size: 0.75rem;
+        color: var(--ca-text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    .info-value {
+        font-size: 0.95rem;
+        color: var(--ca-text);
+        font-weight: 500;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+    }
+    .status-active {
+        background: rgba(52,211,153,0.18);
+        border-color: rgba(52,211,153,0.24);
+        color: var(--ca-badge-text);
+    }
+    .status-inactive {
+        background: rgba(251,113,133,0.18);
+        border-color: rgba(251,113,133,0.24);
+        color: var(--ca-badge-text);
+    }
+    .approval-pending {
+        background: rgba(251,191,36,0.20);
+        border-color: rgba(251,191,36,0.26);
+        color: var(--ca-badge-text);
+    }
+    .approval-approved {
+        background: rgba(52,211,153,0.18);
+        border-color: rgba(52,211,153,0.24);
+        color: var(--ca-badge-text);
+    }
+    .approval-rejected {
+        background: rgba(251,113,133,0.18);
+        border-color: rgba(251,113,133,0.24);
+        color: var(--ca-badge-text);
+    }
+    .search-box {
+        max-width: 500px;
+    }
+    .stats-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .stat-card {
+        flex: 1;
+        min-width: 200px;
+        background: var(--ca-card-bg);
+        border: 1px solid var(--ca-card-border);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--ca-text-muted);
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-users me-2"></i>User Management</h2>
+            <p class="text-muted mb-0">Manage all users by type with detailed registration information</p>
+        </div>
+        <div>
+            <a href="{% url 'custom_admin:export_report' 'user_summary' %}" class="btn btn-primary">
+                <i class="fas fa-download me-2"></i>Export All Users
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number text-primary">{{ total_donors }}</div>
+            <div class="stat-label">Donors</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ total_foodbanks }}</div>
+            <div class="stat-label">Food Banks</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-warning">{{ total_recipients }}</div>
+            <div class="stat-label">Recipients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-danger">{{ total_admins }}</div>
+            <div class="stat-label">Admins</div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" class="form-control search-box" name="search" 
+                           placeholder="Search by name, email, phone, or organization..." 
+                           value="{{ search|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="hidden" name="tab" value="{{ active_tab|default:'donors' }}">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'donors' %}active{% endif %}" href="?tab=donors{% if search %}&search={{ search }}{% endif %}">
+                Donors ({{ total_donors }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'foodbanks' %}active{% endif %}" href="?tab=foodbanks{% if search %}&search={{ search }}{% endif %}">
+                Food Banks ({{ total_foodbanks }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'recipients' %}active{% endif %}" href="?tab=recipients{% if search %}&search={{ search }}{% endif %}">
+                Recipients ({{ total_recipients }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'admins' %}active{% endif %}" href="?tab=admins{% if search %}&search={{ search }}{% endif %}">
+                Admins ({{ total_admins }})
+            </a>
+        </li>
+    </ul>
+
+    <!-- DONORS SECTION -->
+    {% if active_tab == 'donors' %}
+    <div class="user-section">
+        <div class="section-header donor">
+            <div>
+                <h4 class="mb-0"><i class="fas fa-hand-holding-heart me-2"></i>Donors ({{ total_donors }})</h4>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'custom_admin:export_report' 'donors_report' %}" class="btn btn-light btn-sm" title="Generate Donors Report">
+                    <i class="fas fa-file-pdf me-1"></i>Report
+                </a>
+                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#donorsSection">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="section-body collapse show" id="donorsSection">
+            {% if donor_page %}
+                {% for user in donor_page %}
+                <div class="user-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">
+                                {% if user.donor_profile %}
+                                    {{ user.donor_profile.full_name }}
+                                {% else %}
+                                    {{ user.email }}
+                                {% endif %}
+                            </h5>
+                            <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <a href="{% url 'custom_admin:user_detail' user.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {% if user.donor_profile %}
+                    <div class="user-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value">{{ user.donor_profile.full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone Number</span>
+                            <span class="info-value">{{ user.phone_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Account Type</span>
+                            <span class="info-value">{% if user.donor_profile.is_organization %}Organization{% else %}Individual{% endif %}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Organization</span>
+                            <span class="info-value">{{ user.donor_profile.organization_name|default:"Individual" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Location</span>
+                            <span class="info-value">{{ user.donor_profile.location|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date Joined</span>
+                            <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Login</span>
+                            <span class="info-value">{{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Total Donations</span>
+                            <span class="info-value">{{ user.donation_set.count }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if donor_page.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if donor_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=donors&donor_page={{ donor_page.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in donor_page.paginator.page_range %}
+                        <li class="page-item {% if donor_page.number == num %}active{% endif %}">
+                            <a class="page-link" href="?tab=donors&donor_page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if donor_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=donors&donor_page={{ donor_page.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted text-center py-4">No donors found.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FOOD BANKS SECTION -->
+    {% if active_tab == 'foodbanks' %}
+    <div class="user-section">
+        <div class="section-header foodbank">
+            <div>
+                <h4 class="mb-0"><i class="fas fa-building me-2"></i>Food Banks ({{ total_foodbanks }})</h4>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'custom_admin:export_report' 'foodbanks_report' %}" class="btn btn-light btn-sm" title="Generate Food Banks Report">
+                    <i class="fas fa-file-pdf me-1"></i>Report
+                </a>
+                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#foodbanksSection">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="section-body collapse show" id="foodbanksSection">
+            {% if foodbank_page %}
+                {% for user in foodbank_page %}
+                <div class="user-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">
+                                {% if user.foodbank_profile %}
+                                    {{ user.foodbank_profile.foodbank_name }}
+                                {% else %}
+                                    {{ user.email }}
+                                {% endif %}
+                            </h5>
+                            <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                            {% if user.foodbank_profile %}
+                            <span class="status-badge approval-{{ user.foodbank_profile.is_approved }}">
+                                {{ user.foodbank_profile.get_is_approved_display }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'custom_admin:user_detail' user.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {% if user.foodbank_profile %}
+                    <div class="user-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Food Bank Name</span>
+                            <span class="info-value">{{ user.foodbank_profile.foodbank_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Person</span>
+                            <span class="info-value">{{ user.foodbank_profile.contact_person }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone Number</span>
+                            <span class="info-value">{{ user.phone_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Service Type</span>
+                            <span class="info-value">{{ user.foodbank_profile.get_service_type_display|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Address</span>
+                            <span class="info-value">{{ user.foodbank_profile.address|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Public Contact Email</span>
+                            <span class="info-value">{{ user.foodbank_profile.contact_email|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Public Contact Phone</span>
+                            <span class="info-value">{{ user.foodbank_profile.contact_phone|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date Joined</span>
+                            <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Login</span>
+                            <span class="info-value">{{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Application Date</span>
+                            <span class="info-value">{{ user.foodbank_profile.application_date|date:"M d, Y"|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Approval Date</span>
+                            <span class="info-value">{{ user.foodbank_profile.approval_date|date:"M d, Y"|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Approved By</span>
+                            <span class="info-value">{{ user.foodbank_profile.approved_by.email|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Website URL</span>
+                            <span class="info-value">{{ user.foodbank_profile.website_url|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Profile Completion</span>
+                            <span class="info-value">{{ user.foodbank_profile.get_profile_completion_percentage }}%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Documents</span>
+                            <span class="info-value">
+                                {% if user.foodbank_profile.authority_picture %}Authority{% else %}-{% endif %}
+                                {% if user.foodbank_profile.additional_documents %} / Docs{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if foodbank_page.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if foodbank_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=foodbanks&foodbank_page={{ foodbank_page.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in foodbank_page.paginator.page_range %}
+                        <li class="page-item {% if foodbank_page.number == num %}active{% endif %}">
+                            <a class="page-link" href="?tab=foodbanks&foodbank_page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if foodbank_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=foodbanks&foodbank_page={{ foodbank_page.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted text-center py-4">No food banks found.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- RECIPIENTS SECTION -->
+    {% if active_tab == 'recipients' %}
+    <div class="user-section">
+        <div class="section-header recipient">
+            <div>
+                <h4 class="mb-0"><i class="fas fa-user-circle me-2"></i>Recipients ({{ total_recipients }})</h4>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'custom_admin:export_report' 'recipients_report' %}" class="btn btn-light btn-sm" title="Generate Recipients Report">
+                    <i class="fas fa-file-pdf me-1"></i>Report
+                </a>
+                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#recipientsSection">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="section-body collapse show" id="recipientsSection">
+            {% if recipient_page %}
+                {% for user in recipient_page %}
+                <div class="user-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">
+                                {% if user.recipient_profile %}
+                                    {{ user.recipient_profile.full_name }}
+                                {% else %}
+                                    {{ user.email }}
+                                {% endif %}
+                            </h5>
+                            <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <a href="{% url 'custom_admin:user_detail' user.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {% if user.recipient_profile %}
+                    <div class="user-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value">{{ user.recipient_profile.full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone Number</span>
+                            <span class="info-value">{{ user.phone_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Location</span>
+                            <span class="info-value">{{ user.recipient_profile.location|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Account Type</span>
+                            <span class="info-value">{% if user.recipient_profile.is_organization %}Organization{% else %}Individual{% endif %}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Organization</span>
+                            <span class="info-value">{% if user.recipient_profile.is_organization %}{{ user.recipient_profile.organization_name|default:"Organization" }}{% else %}Not organisation{% endif %}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date Joined</span>
+                            <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Login</span>
+                            <span class="info-value">{{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if recipient_page.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if recipient_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=recipients&recipient_page={{ recipient_page.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in recipient_page.paginator.page_range %}
+                        <li class="page-item {% if recipient_page.number == num %}active{% endif %}">
+                            <a class="page-link" href="?tab=recipients&recipient_page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if recipient_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=recipients&recipient_page={{ recipient_page.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted text-center py-4">No recipients found.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ADMINS SECTION -->
+    {% if active_tab == 'admins' %}
+    <div class="user-section">
+        <div class="section-header admin">
+            <div>
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Administrators ({{ total_admins }})</h4>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'custom_admin:export_report' 'admins_report' %}" class="btn btn-light btn-sm" title="Generate Administrators Report">
+                    <i class="fas fa-file-pdf me-1"></i>Report
+                </a>
+                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#adminsSection">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="section-body collapse show" id="adminsSection">
+            {% if admin_page %}
+                {% for user in admin_page %}
+                <div class="user-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">{{ user.email }}</h5>
+                            <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                            {% if user.is_staff %}
+                            <span class="status-badge approval-approved">Staff</span>
+                            {% endif %}
+                            {% if user.is_superuser %}
+                            <span class="status-badge approval-approved">Superuser</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'custom_admin:user_detail' user.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="user-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone Number</span>
+                            <span class="info-value">{{ user.phone_number|default:"-" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date Joined</span>
+                            <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Login</span>
+                            <span class="info-value">{{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if admin_page.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if admin_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=admins&admin_page={{ admin_page.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in admin_page.paginator.page_range %}
+                        <li class="page-item {% if admin_page.number == num %}active{% endif %}">
+                            <a class="page-link" href="?tab=admins&admin_page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if admin_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?tab=admins&admin_page={{ admin_page.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted text-center py-4">No administrators found.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,529 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('filterToggle');
+    const filtersCard = document.getElementById('filtersCard');
+
+    if (toggleBtn && filtersCard) {
+        toggleBtn.addEventListener('click', function () {
+            const isHidden = filtersCard.classList.toggle('d-none');
+            const label = toggleBtn.querySelector('span');
+            if (label) {
+                label.textContent = isHidden ? 'Show Filters' : 'Hide Filters';
+            }
+            toggleBtn.classList.toggle('btn-outline-success', isHidden);
+            toggleBtn.classList.toggle('btn-success', !isHidden);
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const buttons = document.querySelectorAll('.donor-view-notes-btn');
+    const modalTitle = document.getElementById('notesModalLabel');
+    const modalBody = document.getElementById('notesModalBody');
+
+    function decodeUnicode(str) {
+        if (!str) return '';
+        return str
+            .replace(/\\u002D/g, '-')
+            .replace(/\\u000A/g, '\n')
+            .trim();
+    }
+
+    function extractRecipientNote(text) {
+        if (!text) return '';
+        text = decodeUnicode(text);
+        const match = text.match(/--- Recipient Note ---\s*([\s\S]*?)(?=\n\s*---|$)/);
+        return match ? match[1].trim() : '';
+    }
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const title = btn.getAttribute('data-note-title');
+            const rawRecipient = btn.getAttribute('data-recipient-note');
+            const rawDonor = btn.getAttribute('data-donor-note');
+
+            const recipientNote = extractRecipientNote(rawRecipient);
+            const donorNote = decodeUnicode(rawDonor);
+
+            modalTitle.textContent = title;
+
+            modalBody.innerHTML = `
+                <strong>Recipient Note:</strong><br>
+                ${recipientNote ? recipientNote.replace(/\n/g, '<br>') : '<em>No recipient note</em>'}
+                <br><br>
+                <strong>Donor Note:</strong><br>
+                ${donorNote ? donorNote.replace(/\n/g, '<br>') : '<em>No donor note</em>'}
+            `;
+
+            const modal = new bootstrap.Modal(document.getElementById('notesModal'));
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-card .card-body {
+        padding: 0 !important;
+    }
+
+    .donations-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 2px solid #d4dae3;
+    }
+
+    .donations-table thead th {
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        border-bottom: 3px solid #d4dae3;
+        border-top: 2px solid #d4dae3;
+        border-right: 2px solid #d4dae3;
+    }
+
+    .donations-table thead th:first-child {
+        border-left: 2px solid #d4dae3;
+    }
+
+    .donations-table th,
+    .donations-table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        white-space: nowrap;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .donations-table th:first-child,
+    .donations-table td:first-child {
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .donations-table td.long-text {
+        white-space: normal;
+        max-width: 220px;
+    }
+
+    .status-pill {
+        border-radius: 999px;
+        padding: 0.25rem 0.9rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .status-pill.accepted { background: #ecfdf5; color: #047857; }
+    .status-pill.pending { background: #fefce8; color: #92400e; }
+    .status-pill.fulfilled { background: #eff6ff; color: #1d4ed8; }
+    .status-pill.partial { background: #fff7ed; color: #c2410c; }
+    .status-pill.declined { background: #fef2f2; color: #b91c1c; }
+
+    .type-badge {
+        border-radius: 999px;
+        font-size: 0.7rem;
+        padding: 0.25rem 0.7rem;
+    }
+
+    .note-chip {
+        background: #eef2ff;
+        border-radius: 999px;
+        padding: 0.3rem 0.85rem;
+        color: #4338ca;
+        border: 1px solid rgba(67, 56, 202, 0.2);
+        font-size: 0.8rem;
+    }
+
+    .actions-column .btn {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.65rem;
+    }
+
+    @media (max-width: 992px) {
+        .donations-table thead {
+            display: none;
+        }
+        .donations-table tbody tr {
+            display: block;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .donations-table td {
+            display: flex;
+            justify-content: space-between;
+            white-space: normal;
+            padding: 0.35rem 0;
+        }
+        .donations-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            margin-right: 0.75rem;
+            color: #475569;
+        }
+    }
+
+    /* Notes modal in dark mode: solid panel (no glass) so content is clearly visible */
+    html[data-theme="dark"] #notesModal .modal-content {
+        background: #0f1729;
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    html[data-theme="dark"] #notesModal .modal-header {
+        background: #131c2e;
+        border-bottom: 1px solid rgba(255,255,255,0.14);
+        color: var(--ca-text);
+    }
+    html[data-theme="dark"] #notesModal .modal-body {
+        background: #0f1729;
+        color: var(--ca-text);
+    }
+    html[data-theme="dark"] #notesModal .modal-footer {
+        background: #131c2e;
+        border-top: 1px solid rgba(255,255,255,0.14);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-2 pb-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h2 class="mb-0"><i class="fas fa-hand-holding-heart me-2"></i>{{ title }}</h2>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button type="button" id="filterToggle" class="btn btn-sm btn-success rounded-pill d-flex align-items-center gap-2 px-3">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Hide Filters</span>
+                    </button>
+                    {% with query=request.GET.urlencode %}
+                    <div class="btn-group">
+                        <a href="{% url 'custom_admin:export_received_donations_pdf' %}{% if query %}?{{ query }}{% endif %}"
+                           class="btn btn-sm btn-outline-danger rounded-pill d-flex align-items-center gap-2 px-3">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>PDF</span>
+                        </a>
+                        <a href="{% url 'custom_admin:export_received_donations_csv' %}{% if query %}?{{ query }}{% endif %}"
+                           class="btn btn-sm btn-outline-info rounded-pill d-flex align-items-center gap-2 px-3">
+                            <i class="fas fa-file-csv"></i>
+                            <span>CSV</span>
+                        </a>
+                    </div>
+                    {% endwith %}
+                    <a href="{% url 'custom_admin:donations_overview' %}" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 px-3">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters (relevant to table: Type, Category, Foodbank, Date, Delivery status/method, Status, Search) -->
+    <div id="filtersCard" class="card mb-4">
+        <div class="card-body">
+            <form id="filtersForm" method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Donation Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="money" {% if request.GET.type == 'money' %}selected{% endif %}>Money</option>
+                        <option value="item" {% if request.GET.type == 'item' %}selected{% endif %}>Items</option>
+                        <option value="subsidized" {% if request.GET.type == 'subsidized' %}selected{% endif %}>Subsidized</option>
+                        <option value="csr" {% if request.GET.type == 'csr' %}selected{% endif %}>CSR</option>
+                        <option value="other" {% if request.GET.type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        <option value="food" {% if request.GET.category == 'food' %}selected{% endif %}>Food</option>
+                        <option value="non_food" {% if request.GET.category == 'non_food' %}selected{% endif %}>Non-Food</option>
+                        <option value="monetary" {% if request.GET.category == 'monetary' %}selected{% endif %}>Monetary</option>
+                        <option value="csr" {% if request.GET.category == 'csr' %}selected{% endif %}>CSR</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All Foodbanks</option>
+                        {% for fb in foodbanks %}
+                        <option value="{{ fb.id }}" {% if request.GET.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Delivery Status</label>
+                    <select name="delivery_status" class="form-select">
+                        <option value="">Any</option>
+                        <option value="pending" {% if request.GET.delivery_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="scheduled" {% if request.GET.delivery_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="in_transit" {% if request.GET.delivery_status == 'in_transit' %}selected{% endif %}>In Transit</option>
+                        <option value="delivered" {% if request.GET.delivery_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Delivery Method</label>
+                    <select name="delivery_method" class="form-select">
+                        <option value="">Any</option>
+                        <option value="pickup" {% if request.GET.delivery_method == 'pickup' %}selected{% endif %}>Pickup</option>
+                        <option value="dropoff" {% if request.GET.delivery_method == 'dropoff' %}selected{% endif %}>Dropoff</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Donation Status</label>
+                    <select name="status" class="form-select">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>All</option>
+                        <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="fulfilled" {% if request.GET.status == 'fulfilled' %}selected{% endif %}>Fulfilled</option>
+                        <option value="partial" {% if request.GET.status == 'partial' %}selected{% endif %}>Partially Fulfilled</option>
+                        <option value="declined" {% if request.GET.status == 'declined' %}selected{% endif %}>Declined</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Donor, foodbank, item, note" value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-success flex-grow-1"><i class="fas fa-filter me-1"></i>Apply Filters</button>
+                    <a href="{% url 'custom_admin:received_donations_management' %}" class="btn btn-outline-secondary"><i class="fas fa-undo me-1"></i>Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Donations Table -->
+    <div class="card table-card">
+        <div class="card-body p-0">
+            {% if donations %}
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom flex-wrap gap-3">
+                    <div class="text-muted small">Showing {{ page_obj.paginator.count }} records</div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="table mb-0 donations-table">
+                        <thead>
+                            <tr>
+                                <th>S/No</th>
+                                <th>Date</th>
+                                <th>Donor</th>
+                                <th>Foodbank</th>
+                                <th>Recipient</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Quantity/Amount</th>
+                                <th>Status</th>
+                                <th>Delivery</th>
+                                <th>Location</th>
+                                <th>Additional Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donations %}
+                            <tr>
+                                <td data-label="S/No">{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                <td data-label="Date">{{ donation.donated_at|date:"M d, Y" }}</td>
+                                <td data-label="Donor" class="long-text">
+                                    {% if donation.donor.donor_profile and donation.donor.donor_profile.is_organization and donation.donor.donor_profile.organization_name %}
+                                        {{ donation.donor.donor_profile.organization_name }}
+                                    {% elif donation.donor.donor_profile and donation.donor.donor_profile.full_name %}
+                                        {{ donation.donor.donor_profile.full_name }}
+                                    {% else %}
+                                        {{ donation.donor.email }}
+                                    {% endif %}
+                                </td>
+                                <td data-label="Foodbank" class="long-text">
+                                    {{ donation.foodbank.foodbank_name|default:'-' }}
+                                </td>
+                                <td data-label="Recipient">{{ donation.recipient_display }}</td>
+                                <td data-label="Category">
+                                    <span class="badge bg-light text-dark type-badge">
+                                        {% if donation.donation_type == 'item' %}
+                                            Free Goods
+                                        {% else %}
+                                            {{ donation.get_donation_type_display }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td data-label="Type">
+                                    <span class="badge bg-primary-subtle text-primary type-badge">{{ donation.get_donation_category_display }}</span>
+                                </td>
+                                <td data-label="Description" class="long-text">
+                                    {% if donation.donation_type == 'item' %}
+                                        {{ donation.item_name|default:'Item Donation' }}
+                                    {% elif donation.donation_type == 'money' %}
+                                        Monetary Donation
+                                    {% elif donation.donation_type == 'subsidized' %}
+                                        {{ donation.subsidized_product_type|default:'Subsidized Goods' }}
+                                    {% elif donation.donation_type == 'csr' %}
+                                        CSR - {{ donation.get_csr_subcategory_display }}
+                                    {% else %}
+                                        {{ donation.other_description|default:'Donation' }}
+                                    {% endif %}
+                                </td>
+                                <td data-label="Quantity/Amount">
+                                    {% if donation.donation_type == 'item' %}
+                                        <strong>{{ donation.quantity }}</strong> {{ donation.quantity_unit|default:'units' }}
+                                        {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                            {% with req_display=donation.foodbank_request.get_requested_quantity_display %}
+                                            <br><small class="text-muted">(of {% if req_display %}{{ req_display }}{% else %}{{ donation.foodbank_request.quantity_needed }} {{ donation.foodbank_request.quantity_unit|default:"units" }}{% endif %} requested)</small>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% elif donation.donation_type == 'money' %}
+                                        {% with fb_req=donation.foodbank_request %}
+                                            {% if fb_req and fb_req.quantity_needed %}
+                                                {% with req_display=fb_req.get_requested_quantity_display %}
+                                                <strong>{% if req_display %}{{ req_display }}{% else %}{{ fb_req.quantity_needed }} {{ fb_req.quantity_unit|default:'units' }}{% endif %}</strong>
+                                                <span class="text-muted">Requested</span>
+                                                <br>
+                                                {% endwith %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        <strong>{{ donation.amount|default:0|floatformat:0 }}</strong>
+                                        {% if donation.foodbank_request and donation.foodbank_request.quantity_needed %}
+                                            {% with req_display=donation.foodbank_request.get_requested_quantity_display %}
+                                            <br>
+                                            <small class="text-muted">
+                                                (for {% if req_display %}{{ req_display }}{% else %}{{ donation.foodbank_request.quantity_needed }} {{ donation.foodbank_request.quantity_unit|default:'units' }}{% endif %})
+                                            </small>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% elif donation.donation_type == 'subsidized' %}
+                                        {{ donation.subsidized_quantity|default:'-' }} {{ donation.subsidized_quantity_unit|default:'' }}<br>
+                                        <small class="text-muted">{{ donation.subsidized_price|default:0|floatformat:0 }}</small>
+                                    {% elif donation.donation_type == 'csr' or donation.donation_type == 'other' %}
+                                        {% if donation.quantity %}
+                                            <div><strong>{{ donation.quantity }}</strong> {{ donation.quantity_unit|default:'units' }}</div>
+                                        {% endif %}
+                                        {% if donation.amount %}
+                                            <div><small class="text-muted">{{ donation.amount|floatformat:0 }}</small></div>
+                                        {% endif %}
+                                        {% if not donation.quantity and not donation.amount %}
+                                            -
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td data-label="Status">
+                                    <span class="status-pill {{ donation.status_class }}">{{ donation.status_display }}</span>
+                                </td>
+                                <td data-label="Delivery">
+                                    {{ donation.get_delivery_method_display|default:'-' }}
+                                </td>
+                                <td data-label="Location">{{ donation.foodbank.address|default:'-' }}</td>
+                                <td style="padding: 1rem 0.75rem; color: #6b7280; max-width: 200px; min-width: 150px; word-wrap: break-word; white-space: normal;">
+                                    {% if donation.request_management or donation.foodbank_request %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary donor-view-notes-btn"
+                                                data-note-title="Notes for {{ donation.foodbank.foodbank_name|default:'Donation' }}"
+                                                data-recipient-note="{% if donation.request_management and donation.request_management.additional_notes %}{{ donation.request_management.additional_notes|escapejs }}{% elif donation.foodbank_request and donation.foodbank_request.original_request and donation.foodbank_request.original_request.additional_notes %}{{ donation.foodbank_request.original_request.additional_notes|escapejs }}{% else %}No recipient notes{% endif %}"
+                                                data-donor-note="{{ donation.message|default:'No donor note'|escapejs }}">
+                                            <i class="fas fa-sticky-note me-1"></i>View
+                                        </button>
+                                    {% else %}
+                                        <span style="color: #9ca3af;">No notes provided</span>
+                                    {% endif %}
+
+                                </td>
+                                <td data-label="Actions" class="actions-column">
+                                    <a href="{% url 'donation_detail' donation.id %}" class="btn btn-outline-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' and value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' and value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' and value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <p class="text-center text-muted small mt-2 mb-0">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} total donations)
+                    </p>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No donations found</h5>
+                    <p class="text-muted">Donations will appear here when they come in</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Notes Modal -->
+<div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notesModalLabel">Donation Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="notesModalBody">
+                <!-- Notes will appear here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

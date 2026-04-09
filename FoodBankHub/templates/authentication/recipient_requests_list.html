@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Requests - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">My Requests</h2>
+                    <p class="text-muted mb-0">Manage your food assistance requests</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'select_foodbank_for_request' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> New Request
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ requests|length }}</h3>
+                            <p>Total Requests</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="pendingCount">0</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="completedCount">0</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="anonymousCount">0</h3>
+                            <p>Anonymous</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search requests...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="statusFilter" class="form-select">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="completed">Completed</option>
+                                <option value="declined">Declined</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="typeFilter" class="form-select">
+                                <option value="all">All Types</option>
+                                <option value="anonymous">Anonymous</option>
+                                <option value="direct">Direct</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests List -->
+            {% if requests %}
+            <div class="requests-grid" id="requestsGrid">
+    {% for req in requests %}
+                <div class="request-card" data-status="{{ req.status }}" data-type="{% if req.is_anonymous %}anonymous{% else %}direct{% endif %}">
+                    <div class="request-header">
+                        <div class="request-title-section">
+                            <h5 class="request-title">{{ req.title }}</h5>
+                            <div class="request-badges">
+                                {% if req.is_anonymous %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user-secret me-1"></i> Anonymous
+                                </span>
+                                {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-user me-1"></i> Direct
+                                </span>
+                                {% endif %}
+                                <span class="badge status-{{ req.status }}">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="request-actions">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'view_recipient_request_detail' req.id %}"><i class="fas fa-eye me-2"></i> View Details</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'edit_recipient_request' req.id %}"><i class="fas fa-edit me-2"></i> Edit</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger delete-btn" href="#" data-id="{{ req.id }}" data-title="{{ req.title }}"><i class="fas fa-trash me-2"></i> Delete</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="request-body">
+                        <p class="request-description">{{ req.description|truncatewords:30 }}</p>
+                    </div>
+                    
+                    <div class="request-footer">
+                        <div class="request-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>{{ req.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ req.created_at|timesince }} ago</span>
+                            </div>
+                            {% if req.priority %}
+                            <div class="meta-item">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span class="priority-{{ req.priority }}">{{ req.get_priority_display }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+    {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h4>No requests yet</h4>
+                <p class="text-muted">You haven't created any food assistance requests yet.</p>
+                <a href="{% url 'create_recipient_request' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Create Your First Request
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the request "<strong id="deleteRequestTitle"></strong>"?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Stats Cards */
+.stat-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Requests Grid */
+.requests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.request-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.request-card:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.request-title {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    color: #212529;
+    font-size: 1.1rem;
+}
+
+.request-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-accepted, .status-active {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-declined {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.request-body {
+    margin-bottom: 1rem;
+}
+
+.request-description {
+    color: #6c757d;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.request-footer {
+    border-top: 1px solid #f8f9fa;
+    padding-top: 1rem;
+}
+
+.request-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.meta-item i {
+    width: 16px;
+    text-align: center;
+}
+
+.priority-urgent {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.priority-high {
+    color: #ea580c;
+    font-weight: 600;
+}
+
+.priority-medium {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.priority-low {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h4 {
+    margin-bottom: 1rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .requests-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-content h3 {
+        font-size: 1.5rem;
+    }
+    
+    .request-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .request-actions {
+        align-self: flex-end;
+    }
+}
+
+/* Filter and Search */
+#searchInput, #statusFilter, #typeFilter {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+#searchInput:focus, #statusFilter:focus, #typeFilter:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Animation for filtering */
+.request-card.hidden {
+    display: none;
+    animation: fadeOut 0.3s ease;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+}
+</style>
+
+<script>
+// Search and Filter Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const requestsGrid = document.getElementById('requestsGrid');
+    
+    // Calculate initial stats
+    function updateStats() {
+        const requestCards = requestsGrid.querySelectorAll('.request-card');
+        let pendingCount = 0;
+        let completedCount = 0;
+        let anonymousCount = 0;
+        
+        requestCards.forEach(card => {
+            const status = card.dataset.status;
+            const type = card.dataset.type;
+            
+            if (status === 'pending') pendingCount++;
+            if (status === 'completed') completedCount++;
+            if (type === 'anonymous') anonymousCount++;
+        });
+        
+        document.getElementById('pendingCount').textContent = pendingCount;
+        document.getElementById('completedCount').textContent = completedCount;
+        document.getElementById('anonymousCount').textContent = anonymousCount;
+    }
+    
+    // Initial stats calculation
+    if (requestsGrid) {
+        updateStats();
+    }
+    
+    function filterRequests() {
+        if (!requestsGrid) return;
+        
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const typeValue = typeFilter.value;
+        
+        const requestCards = requestsGrid.querySelectorAll('.request-card');
+        
+        requestCards.forEach(card => {
+            const title = card.querySelector('.request-title').textContent.toLowerCase();
+            const description = card.querySelector('.request-description').textContent.toLowerCase();
+            const status = card.dataset.status;
+            const type = card.dataset.type;
+            
+            const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+            const matchesStatus = statusValue === 'all' || status === statusValue;
+            const matchesType = typeValue === 'all' || type === typeValue;
+            
+            if (matchesSearch && matchesStatus && matchesType) {
+                card.style.display = 'block';
+                card.classList.remove('hidden');
+            } else {
+                card.style.display = 'none';
+                card.classList.add('hidden');
+            }
+        });
+    }
+    
+    if (searchInput) searchInput.addEventListener('input', filterRequests);
+    if (statusFilter) statusFilter.addEventListener('change', filterRequests);
+    if (typeFilter) typeFilter.addEventListener('change', filterRequests);
+    
+    // Delete functionality with modal
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteModalElement = document.getElementById('deleteModal');
+    const deleteForm = document.getElementById('deleteForm');
+    const deleteRequestTitle = document.getElementById('deleteRequestTitle');
+    
+    if (deleteModalElement && deleteButtons.length > 0) {
+        const deleteModal = new bootstrap.Modal(deleteModalElement);
+        
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const requestId = this.dataset.id;
+                const requestTitle = this.dataset.title;
+                
+                deleteRequestTitle.textContent = requestTitle;
+                deleteForm.action = `/recipient/requests/${requestId}/delete/`;
+                
+                deleteModal.show();
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

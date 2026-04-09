@@ -1,0 +1,140 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'custom_admin:environmental_impact_reports' %}?days={{ current_filters.days|default:365 }}" class="text-muted text-decoration-none small"><i class="fas fa-arrow-left me-1"></i>Back to Environmental Impact Reports</a>
+            <h2 class="mb-1 mt-2"><i class="fas fa-leaf text-success me-2"></i>{{ title }}</h2>
+            <p class="text-muted mb-0">Donations contributing to environmental impact (accepted only)</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'custom_admin:export_impact_donations_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf me-1"></i>Export PDF</a>
+            <a href="{% url 'custom_admin:export_impact_donations_excel' %}?{{ request.GET.urlencode }}" class="btn btn-success btn-sm"><i class="fas fa-file-excel me-1"></i>Export Excel</a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Period (days)</label>
+                    <select name="days" class="form-select">
+                        <option value="30" {% if current_filters.days == "30" %}selected{% endif %}>30</option>
+                        <option value="90" {% if current_filters.days == "90" %}selected{% endif %}>90</option>
+                        <option value="180" {% if current_filters.days == "180" %}selected{% endif %}>180</option>
+                        <option value="365" {% if current_filters.days == "365" or not current_filters.days %}selected{% endif %}>365</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date from</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date to</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Category</label>
+                    <select name="donation_category" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in donation_categories %}
+                        <option value="{{ value }}" {% if current_filters.donation_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Mode</label>
+                    <select name="donation_mode" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in donation_modes %}
+                        <option value="{{ value }}" {% if current_filters.donation_mode == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Food bank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All</option>
+                        {% for fb in foodbanks %}
+                        <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Donor</label>
+                    <select name="donor" class="form-select">
+                        <option value="">All</option>
+                        {% for d in donors %}
+                        <option value="{{ d.id }}" {% if current_filters.donor == d.id|stringformat:"s" %}selected{% endif %}>{{ d.email }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Donor</th>
+                            <th>Food Bank</th>
+                            <th>Category</th>
+                            <th>Mode</th>
+                            <th>Quantity / Amount</th>
+                            <th>Donated at</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in page_obj %}
+                        <tr>
+                            <td><small>{{ donation.donor.email }}</small></td>
+                            <td><small>{{ donation.foodbank.foodbank_name }}</small></td>
+                            <td><span class="badge bg-secondary">{{ donation.get_donation_category_display }}</span></td>
+                            <td>{{ donation.get_donation_mode_display }}</td>
+                            <td>
+                                {% if donation.quantity %}{{ donation.quantity|floatformat:0 }}{% endif %}
+                                {% if donation.subsidized_quantity %}{{ donation.subsidized_quantity|floatformat:0 }} (subsidized){% endif %}
+                                {% if donation.amount %}KES {{ donation.amount|floatformat:0 }}{% endif %}
+                                {% if not donation.quantity and not donation.subsidized_quantity and not donation.amount %}—{% endif %}
+                            </td>
+                            <td><small>{{ donation.donated_at|date:"M d, Y" }}</small></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No donations found for the selected filters.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for k, v in current_filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Previous</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% for k, v in current_filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

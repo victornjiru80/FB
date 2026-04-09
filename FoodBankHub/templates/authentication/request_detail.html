@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 1.5rem;
+    }
+    .status-badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .info-value {
+        color: #6c757d;
+        text-align: right;
+        max-width: 60%;
+    }
+    .notes-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    .timeline-item {
+        border-left: 3px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #007bff;
+    }
+    .update-form {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-file-alt me-2"></i>{{ title }}</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                {% if user.user_type == 'RECIPIENT' %}
+                                    <a href="{% url 'recipient_requests_view' %}">My Requests</a>
+                                {% else %}
+                                    <a href="{% url 'foodbank_requests_view' %}">Manage Requests</a>
+                                {% endif %}
+                            </li>
+                            <li class="breadcrumb-item active">Request Details</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    {% if user.user_type == 'RECIPIENT' %}
+                        <a href="{% url 'recipient_requests_view' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Requests
+                        </a>
+                    {% else %}
+                        <a href="{% url 'foodbank_requests_view' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Requests
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Request Details Card -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4 class="mb-2">{{ request.description }}</h4>
+                            <div class="d-flex gap-2 mb-2">
+                                <span class="badge {{ request.get_type_badge_class }} status-badge">
+                                    {{ request.get_request_type_display }}
+                                </span>
+                                <span class="badge {{ request.get_status_badge_class }} status-badge">
+                                    {{ request.get_status_display }}
+                                </span>
+                                {% if request.is_overdue %}
+                                    <span class="badge bg-warning status-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Overdue
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="opacity-75">Request ID: #{{ request.id }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Basic Information -->
+                    <div class="info-section">
+                        <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Request Information</h5>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Recipient:</span>
+                            <span class="info-value">{{ request.recipient_name }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Foodbank:</span>
+                            <span class="info-value">{{ request.foodbank_name }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Quantity:</span>
+                            <span class="info-value">{{ request.quantity }} {{ request.get_unit_display }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Delivery Method:</span>
+                            <span class="info-value">{{ request.get_delivery_method_display }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Location:</span>
+                            <span class="info-value">{{ request.location }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Request Date:</span>
+                            <span class="info-value">{{ request.time_of_request|date:"F d, Y \a\t H:i" }}</span>
+                        </div>
+                        
+                        {% if request.fulfilled_at %}
+                        <div class="info-item">
+                            <span class="info-label">Fulfilled Date:</span>
+                            <span class="info-value text-success">{{ request.fulfilled_at|date:"F d, Y \a\t H:i" }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.updated_by %}
+                        <div class="info-item">
+                            <span class="info-label">Last Updated By:</span>
+                            <span class="info-value">{{ request.updated_by.email }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Notes -->
+                    {% if request.additional_notes %}
+                    <div class="notes-section">
+                        <h6><i class="fas fa-sticky-note me-2"></i>Additional Notes for Foodbank</h6>
+                        <p class="mb-0">{{ request.additional_notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Timeline -->
+                    <div class="info-section">
+                        <h5 class="mb-3"><i class="fas fa-history me-2"></i>Request Timeline</h5>
+                        
+                        <div class="timeline-item">
+                            <strong>Request Created</strong>
+                            <br><small class="text-muted">{{ request.time_of_request|date:"F d, Y \a\t H:i" }}</small>
+                            <p class="mb-0 mt-1">Request submitted by {{ request.recipient_name }}</p>
+                        </div>
+                        
+                        {% if request.status != 'pending' %}
+                        <div class="timeline-item">
+                            <strong>Status Updated to {{ request.get_status_display }}</strong>
+                            <br><small class="text-muted">{{ request.updated_at|date:"F d, Y \a\t H:i" }}</small>
+                            {% if request.updated_by %}
+                                <p class="mb-0 mt-1">Updated by {{ request.updated_by.email }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.fulfilled_at %}
+                        <div class="timeline-item">
+                            <strong>Request Fulfilled</strong>
+                            <br><small class="text-muted">{{ request.fulfilled_at|date:"F d, Y \a\t H:i" }}</small>
+                            <p class="mb-0 mt-1">Request marked as fulfilled</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Update Form (for Foodbanks) -->
+                    {% if can_update %}
+                    <div class="update-form">
+                        <h5 class="mb-3"><i class="fas fa-edit me-2"></i>Update Request Status</h5>
+                        
+                        <form id="updateForm" method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select name="status" id="status" class="form-select" required>
+                                        <option value="pending" {% if request.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="fulfilled" {% if request.status == 'fulfilled' %}selected{% endif %}>Fulfilled</option>
+                                        <option value="denied" {% if request.status == 'denied' %}selected{% endif %}>Denied</option>
+                                        <option value="partial" {% if request.status == 'partial' %}selected{% endif %}>Partial</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary d-block">
+                                        <i class="fas fa-save me-2"></i>Update Status
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Additional Notes</label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                          placeholder="Add notes for the recipient...">{{ request.additional_notes }}</textarea>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+{% if can_update %}
+document.getElementById('updateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/api/request/{{ request.id }}/update-status/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showAlert('success', data.message);
+            
+            // Reload page after short delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'An error occurred while updating the request.');
+    });
+});
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+{% endif %}
+</script>
+{% endblock %}

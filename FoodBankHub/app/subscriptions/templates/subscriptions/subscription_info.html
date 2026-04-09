@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscription Plans - FoodBankHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-dark: #059669;
+        --secondary: #3b82f6;
+        --gray-50: #f9fafb;
+    }
+
+    body { background: var(--gray-50); }
+
+    .pricing-wrapper {
+        padding: 3rem 0;
+        min-height: 100vh;
+    }
+
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .pricing-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 1rem;
+    }
+
+    .pricing-subtitle {
+        font-size: 1.25rem;
+        color: #6b7280;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .pricing-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        max-width: 900px;
+        margin: 0 auto 3rem;
+    }
+
+    .pricing-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        position: relative;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .pricing-card.featured {
+        border: 3px solid var(--primary);
+    }
+
+    .featured-badge {
+        position: absolute;
+        top: -12px;
+        right: 20px;
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1rem;
+    }
+
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-duration {
+        color: #6b7280;
+        margin-bottom: 2rem;
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 2rem;
+    }
+
+    .plan-features li {
+        padding: 0.75rem 0;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .plan-features li i {
+        color: var(--primary);
+        font-size: 1.25rem;
+    }
+
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .faq-section {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .faq-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .faq-item {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+
+    .faq-question {
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+
+    .faq-answer {
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .pricing-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .pricing-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pricing-wrapper">
+    <div class="container">
+        <!-- Header -->
+        <div class="pricing-header">
+            <h1 class="pricing-title">Choose Your Plan</h1>
+            <p class="pricing-subtitle">
+                Start with a 3-month free trial, then choose the plan that works best for your food bank
+            </p>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="pricing-cards">
+            <!-- Monthly Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Monthly Plan</div>
+                <div class="plan-price">KSH 2,000</div>
+                <div class="plan-duration">per month</div>
+
+                <ul class="plan-features">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Full platform access</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Unlimited donation requests</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Recipient management</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Analytics dashboard</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Priority support</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Cancel anytime</span>
+                    </li>
+                </ul>
+
+                <a href="{% url 'subscribe' %}" class="btn btn-outline">
+                    Choose Monthly
+                </a>
+            </div>
+
+            <!-- Yearly Plan -->
+            <div class="pricing-card featured">
+                <div class="featured-badge">Best Value</div>
+                <div class="plan-name">Yearly Plan</div>
+                <div class="plan-price">KSH 10,000</div>
+                <div class="plan-duration">per year <span style="color: var(--primary); font-weight: 700;">(Save KSH 14,000!)</span></div>
+
+                <ul class="plan-features">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Full platform access</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Unlimited donation requests</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Recipient management</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Analytics dashboard</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Priority support</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-star"></i>
+                        <span><strong>2 months free</strong></span>
+                    </li>
+                </ul>
+
+                <a href="{% url 'subscribe' %}" class="btn btn-primary">
+                    Choose Yearly
+                </a>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                    What's included in the free trial?
+                </div>
+                <div class="faq-answer">
+                    You get full access to all platform features for 3 months completely free. No credit card required. After the trial, you can choose to subscribe to continue using the platform.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                    How do I pay for my subscription?
+                </div>
+                <div class="faq-answer">
+                    You can pay via M-Pesa, bank transfer, or cash. Simply upload your payment evidence (screenshot or receipt), and our admin team will verify and activate your subscription within 24 hours.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                    Can I cancel my subscription?
+                </div>
+                <div class="faq-answer">
+                    Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your current billing period.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                    What happens if my subscription expires?
+                </div>
+                <div class="faq-answer">
+                    You can still log in to your account, but you won't be able to create requests, manage donations, or access other platform features until you renew your subscription.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                    Is there a discount for yearly plans?
+                </div>
+                <div class="faq-answer">
+                    Yes! The yearly plan costs KSH 10,000 (equivalent to less than KSH 834/month), saving you KSH 14,000 compared to paying monthly.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <i class="fas fa-question-circle" style="color: var(--primary);"></i>
+                    How long does payment verification take?
+                </div>
+                <div class="faq-answer">
+                    Our admin team typically verifies payments within 24 hours. You'll receive a notification once your payment is approved and your subscription is activated.
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="{% url 'subscription_status' %}" class="btn btn-outline" style="display: inline-block; width: auto; padding: 1rem 2rem;">
+                <i class="fas fa-arrow-left"></i> Back to Subscription Status
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

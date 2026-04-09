@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Donate to {{ foodbank.foodbank_name }} - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'donate' %}" class="btn btn-outline-secondary btn-sm mb-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Food Bank Selection
+                    </a>
+                    <h1 class="h2 mb-0">Donate to {{ foodbank.foodbank_name }}</h1>
+                    <p class="text-muted">Make a general donation to support this food bank</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Food Bank Info Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card foodbank-info-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="foodbank-icon me-3">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ foodbank.foodbank_name }}</h5>
+                                    <p class="text-muted mb-0">{{ foodbank.location }}</p>
+                                    {% if foodbank.description %}
+                                        <small class="text-muted">{{ foodbank.description|truncatechars:100 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{% url 'foodbank_public_profile' foodbank.id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Full Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card donation-form-card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-heart me-2"></i>Make Your Donation
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" id="donationForm" data-add-unit-url="{% url 'add_quantity_unit' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Donation Type Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Donation Type</label>
+                            <div class="donation-type-cards">
+                                {% for value, label in donation_types %}
+                                <div class="donation-type-card" data-type="{{ value }}">
+                                    <input type="radio" name="donation_type" value="{{ value }}" 
+                                           id="type_{{ value }}" class="form-check-input" required>
+                                    <label for="type_{{ value }}" class="donation-type-label">
+                                        <div class="type-icon">
+                                            {% if value == 'money' %}
+                                                <i class="fas fa-dollar-sign"></i>
+                                            {% elif value == 'item' %}
+                                                <i class="fas fa-box"></i>
+                                            {% else %}
+                                                <i class="fas fa-tags"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="type-info">
+                                            <h6>{{ label }}</h6>
+                                            <small class="text-muted">
+                                                {% if value == 'money' %}
+                                                    Monetary contribution
+                                                {% elif value == 'item' %}
+                                                    Physical items
+                                                {% else %}
+                                                    Subsidized goods
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Money Donation Fields -->
+                        <div id="money-fields" class="donation-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Amount (KES)</label>
+                                <input type="number" name="amount" id="amount" class="form-control" 
+                                       min="1" step="0.01" placeholder="Enter amount">
+                            </div>
+                        </div>
+
+                        <!-- Item Donation Fields -->
+                        <div id="item-fields" class="donation-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="item_name" class="form-label">Item Name</label>
+                                    <input type="text" name="item_name" id="item_name" class="form-control">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" name="quantity" id="quantity" class="form-control" 
+                                           min="1" placeholder="Amount">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="quantity_unit" class="form-label">Unit</label>
+                                    <select name="quantity_unit" id="quantity_unit" class="form-select">
+                                        <option value="">Select unit</option>
+                                        {% for value, label in quantity_units %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="custom-unit-wrapper mt-2" id="custom-unit-quantity-wrapper" style="display: none;">
+                                        <label for="custom-unit-quantity-input" class="form-label small">Custom unit</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="custom-unit-quantity-input" placeholder="e.g., trays, crates">
+                                            <button type="button" class="btn btn-outline-primary" id="custom-unit-quantity-save">Save</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text text-muted" id="custom-unit-quantity-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subsidized Donation Fields -->
+                        <div id="subsidized-fields" class="donation-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_product_type" class="form-label">Product Type</label>
+                                    <input type="text" name="subsidized_product_type" id="subsidized_product_type" 
+                                           class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_price" class="form-label">Subsidized Price (KES)</label>
+                                    <input type="number" name="subsidized_price" id="subsidized_price" 
+                                           class="form-control" min="1" step="0.01" placeholder="Price per unit">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_quantity" class="form-label">Quantity</label>
+                                    <input type="number" name="subsidized_quantity" id="subsidized_quantity" 
+                                           class="form-control" min="1" placeholder="Amount">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="subsidized_quantity_unit" class="form-label">Unit</label>
+                                    <select name="subsidized_quantity_unit" id="subsidized_quantity_unit" class="form-select">
+                                        <option value="">Select unit</option>
+                                        {% for value, label in quantity_units %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="custom-unit-wrapper mt-2" id="custom-unit-subsidized-wrapper" style="display: none;">
+                                        <label for="custom-unit-subsidized-input" class="form-label small">Custom unit</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="custom-unit-subsidized-input" placeholder="e.g., packs, bundles">
+                                            <button type="button" class="btn btn-outline-primary" id="custom-unit-subsidized-save">Save</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text text-muted" id="custom-unit-subsidized-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Method -->
+                        <div class="mb-4">
+                            <label for="delivery_method" class="form-label fw-bold">Delivery Method</label>
+                            <select name="delivery_method" id="delivery_method" class="form-select" required>
+                                <option value="">Select delivery method</option>
+                                {% for value, label in delivery_methods %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">Additional Notes (Optional)</label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                      placeholder="Any special instructions or notes about your donation"></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-heart me-2"></i>Complete Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.foodbank-info-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.foodbank-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.donation-form-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.donation-type-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.donation-type-card {
+    position: relative;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.donation-type-card:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.donation-type-card input[type="radio"] {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.donation-type-card input[type="radio"]:checked + .donation-type-label {
+    color: #007bff;
+}
+
+.donation-type-card input[type="radio"]:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.donation-type-card.selected {
+    border-color: #007bff;
+    background-color: #e7f3ff;
+}
+
+.donation-type-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    margin: 0;
+}
+
+.type-icon {
+    width: 40px;
+    height: 40px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.donation-type-card.selected .type-icon {
+    background: #007bff;
+    color: white;
+}
+
+.type-info h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.donation-fields {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .donation-type-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .donation-type-label {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const donationTypeRadios = document.querySelectorAll('input[name="donation_type"]');
+    const donationFields = document.querySelectorAll('.donation-fields');
+    const donationTypeCards = document.querySelectorAll('.donation-type-card');
+    const form = document.getElementById('donationForm');
+    const addUnitUrl = form?.dataset?.addUnitUrl || '';
+    const quantityUnitSelect = document.getElementById('quantity_unit');
+    const subsidizedUnitSelect = document.getElementById('subsidized_quantity_unit');
+    const quantityCustomWrapper = document.getElementById('custom-unit-quantity-wrapper');
+    const quantityCustomInput = document.getElementById('custom-unit-quantity-input');
+    const quantityCustomSave = document.getElementById('custom-unit-quantity-save');
+    const quantityCustomFeedback = document.getElementById('custom-unit-quantity-feedback');
+    const subsidizedCustomWrapper = document.getElementById('custom-unit-subsidized-wrapper');
+    const subsidizedCustomInput = document.getElementById('custom-unit-subsidized-input');
+    const subsidizedCustomSave = document.getElementById('custom-unit-subsidized-save');
+    const subsidizedCustomFeedback = document.getElementById('custom-unit-subsidized-feedback');
+
+    function toggleCustomUnit(selectEl, wrapperEl, inputEl, feedbackEl) {
+        if (!selectEl || !wrapperEl || !inputEl) return;
+        if (selectEl.value === 'other') {
+            wrapperEl.style.display = 'block';
+            inputEl.removeAttribute('disabled');
+            if (feedbackEl) feedbackEl.textContent = 'Enter a custom unit, then save to add it to the list.';
+        } else {
+            wrapperEl.style.display = 'none';
+            inputEl.value = '';
+            inputEl.setAttribute('disabled', 'disabled');
+            if (feedbackEl) feedbackEl.textContent = '';
+        }
+    }
+
+    function addUnitToSelect(selectEl, unit) {
+        if (!selectEl || !unit) return;
+        let option = selectEl.querySelector(`option[value="${unit.code}"]`);
+        if (!option) {
+            option = document.createElement('option');
+            option.value = unit.code;
+            option.textContent = unit.label;
+            selectEl.appendChild(option);
+        }
+        selectEl.value = unit.code;
+        selectEl.dispatchEvent(new Event('change'));
+    }
+
+    async function saveCustomUnit(inputEl, feedbackEl, selectEls = []) {
+        if (!addUnitUrl) return;
+        const label = (inputEl?.value || '').trim();
+        if (!label) {
+            if (feedbackEl) feedbackEl.textContent = 'Please enter a unit label before saving.';
+            return;
+        }
+        if (feedbackEl) feedbackEl.textContent = 'Saving...';
+        try {
+            const response = await fetch(addUnitUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: new URLSearchParams({ label })
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                const message = payload.message || 'Unable to save unit. Please try again.';
+                if (feedbackEl) feedbackEl.textContent = message;
+                return;
+            }
+            selectEls.forEach(selectEl => addUnitToSelect(selectEl, payload.unit));
+            if (feedbackEl) feedbackEl.textContent = payload.created ? 'Unit saved. You can now select it.' : 'Unit already exists; selected it for you.';
+            if (inputEl) inputEl.value = '';
+        } catch (error) {
+            if (feedbackEl) feedbackEl.textContent = 'Unable to save unit. Please try again.';
+        }
+    }
+
+    function getCsrfToken() {
+        const tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return tokenInput ? tokenInput.value : '';
+    }
+
+    if (quantityUnitSelect) {
+        quantityUnitSelect.addEventListener('change', () => {
+            toggleCustomUnit(quantityUnitSelect, quantityCustomWrapper, quantityCustomInput, quantityCustomFeedback);
+        });
+        toggleCustomUnit(quantityUnitSelect, quantityCustomWrapper, quantityCustomInput, quantityCustomFeedback);
+    }
+
+    if (subsidizedUnitSelect) {
+        subsidizedUnitSelect.addEventListener('change', () => {
+            toggleCustomUnit(subsidizedUnitSelect, subsidizedCustomWrapper, subsidizedCustomInput, subsidizedCustomFeedback);
+        });
+        toggleCustomUnit(subsidizedUnitSelect, subsidizedCustomWrapper, subsidizedCustomInput, subsidizedCustomFeedback);
+    }
+
+    if (quantityCustomSave) {
+        quantityCustomSave.addEventListener('click', () => {
+            saveCustomUnit(quantityCustomInput, quantityCustomFeedback, [quantityUnitSelect, subsidizedUnitSelect]);
+        });
+    }
+
+    if (subsidizedCustomSave) {
+        subsidizedCustomSave.addEventListener('click', () => {
+            saveCustomUnit(subsidizedCustomInput, subsidizedCustomFeedback, [quantityUnitSelect, subsidizedUnitSelect]);
+        });
+    }
+
+    donationTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Hide all fields
+            donationFields.forEach(field => {
+                field.style.display = 'none';
+            });
+
+            // Remove selected class from all cards
+            donationTypeCards.forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Show relevant fields and highlight selected card
+            const selectedType = this.value;
+            const fieldsToShow = document.getElementById(selectedType + '-fields');
+            const cardToHighlight = this.closest('.donation-type-card');
+            
+            if (fieldsToShow) {
+                fieldsToShow.style.display = 'block';
+            }
+            
+            if (cardToHighlight) {
+                cardToHighlight.classList.add('selected');
+            }
+        });
+    });
+
+    // Handle card clicks
+    donationTypeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

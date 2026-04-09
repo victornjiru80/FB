@@ -1,0 +1,322 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-user-shield me-2 text-danger"></i>Administrators Management</h2>
+            <p class="text-muted mb-0">Manage all administrator accounts and permissions</p>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-download me-2"></i>Export Admins
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'custom_admin:export_admins_pdf' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">
+                    <i class="fas fa-file-pdf me-2 text-danger"></i>Export as PDF
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'custom_admin:export_admins_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">
+                    <i class="fas fa-file-excel me-2 text-success"></i>Export as Excel
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Statistics Card -->
+    <div class="card mb-4 border-danger">
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h3 class="text-danger mb-0">{{ total_count }}</h3>
+                    <p class="text-muted mb-0">Total Administrators</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-primary mb-0">{{ page_obj.paginator.count }}</h3>
+                    <p class="text-muted mb-0">Filtered Results</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-info mb-0">{{ page_obj.number }}</h3>
+                    <p class="text-muted mb-0">Current Page</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-success mb-0">{{ page_obj.paginator.num_pages }}</h3>
+                    <p class="text-muted mb-0">Total Pages</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Search by email or phone..." 
+                           value="{{ search|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="is_active" class="form-label">Status</label>
+                    <select class="form-select" id="is_active" name="is_active">
+                        <option value="">All Status</option>
+                        <option value="true" {% if is_active == 'true' %}selected{% endif %}>Active</option>
+                        <option value="false" {% if is_active == 'false' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="sort_by" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort_by" name="sort_by">
+                        <option value="newest" {% if sort_by == 'newest' or not sort_by %}selected{% endif %}>Newest First</option>
+                        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" 
+                           value="{{ date_from|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" 
+                           value="{{ date_to|default:'' }}">
+                </div>
+                <div class="col-md-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <a href="{% url 'custom_admin:admins_management' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Clear All
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admins Table -->
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Administrators List ({{ page_obj.paginator.count }} total)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>S/No</th>
+                            <th>Email</th>
+                            <th>Phone Number</th>
+                            <th>Staff Status</th>
+                            <th>Superuser</th>
+                            <th>Status</th>
+                            <th>Date Joined</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                            <td><strong>{{ user.email }}</strong></td>
+                            <td>{{ user.phone_number|default:"-" }}</td>
+                            <td>
+                                {% if user.is_staff %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Staff</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="fas fa-times me-1"></i>Not Staff</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger"><i class="fas fa-crown me-1"></i>Superuser</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Regular</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"M d, Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'custom_admin:user_detail' user.id %}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-{% if user.is_active %}warning{% else %}success{% endif %} toggle-status-btn" 
+                                            data-user-id="{{ user.id }}"
+                                            data-current-status="{{ user.is_active|yesno:'true,false' }}"
+                                            title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %} User">
+                                        <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %}"></i>
+                                    </button>
+                                    <a href="mailto:{{ user.email }}" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="Send Email">
+                                        <i class="fas fa-envelope"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-secondary copy-email-btn" 
+                                            data-email="{{ user.email }}"
+                                            title="Copy Email">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger delete-user-btn" 
+                                            data-user-id="{{ user.id }}"
+                                            data-user-email="{{ user.email }}"
+                                            title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted mb-0">No administrators found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <p class="text-center text-muted mt-2 mb-0">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} | 
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} administrators
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle user status (activate/deactivate)
+    document.querySelectorAll('.toggle-status-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const currentStatus = this.dataset.currentStatus === 'true';
+            const action = currentStatus ? 'deactivate' : 'activate';
+            
+            if (confirm(`Are you sure you want to ${action} this user?`)) {
+                fetch(`/admin/users/${userId}/toggle-status/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to update user status'));
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                });
+            }
+        });
+    });
+    
+    // Copy email to clipboard
+    document.querySelectorAll('.copy-email-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const email = this.dataset.email;
+            navigator.clipboard.writeText(email).then(() => {
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy email: ' + err);
+            });
+        });
+    });
+    
+    // Delete user
+    document.querySelectorAll('.delete-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userEmail = this.dataset.userEmail;
+            
+            if (confirm(`Are you sure you want to delete user "${userEmail}"? This action cannot be undone.`)) {
+                fetch(`/admin/users/${userId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to delete user'));
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

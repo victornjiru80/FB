@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Request - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Request</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Are you sure you want to <strong>delete</strong> this request?</p>
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <strong>{{ request_obj.title }}</strong><br>
+                        <span class="text-muted">{{ request_obj.description|truncatewords:15 }}</span><br>
+                        <span class="badge priority-badge priority-{{ request_obj.priority }}">{{ request_obj.priority|title }}</span>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="fas fa-trash"></i> Yes, Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Fulfillment - Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .report-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .report-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .export-btn {
+        padding: 0.5rem 1rem;
+        background: #ef4444;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .summary-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .fulfillment-rate {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .fulfillment-rate .summary-number {
+        color: white;
+    }
+    
+    .fulfillment-rate .summary-label {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .requests-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table th {
+        background: #f8fafc;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .priority-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .priority-urgent {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .priority-high {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .priority-medium {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .priority-low {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .status-fulfilled {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-expired {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+    
+    .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 768px) {
+        .report-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .table {
+            font-size: 0.875rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <!-- Header -->
+    <div class="report-header">
+        <h1 class="report-title">Request Fulfillment</h1>
+        <div class="report-actions">
+            <a href="{% url 'export_foodbank_request_fulfillment_pdf' %}" class="export-btn">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="summary-number">{{ total_requests }}</div>
+            <div class="summary-label">Total Requests</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number">{{ fulfilled_requests }}</div>
+            <div class="summary-label">Fulfilled</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number">{{ active_requests }}</div>
+            <div class="summary-label">Active</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number">{{ expired_requests }}</div>
+            <div class="summary-label">Expired</div>
+        </div>
+        <div class="summary-card fulfillment-rate">
+            <div class="summary-number">{{ fulfillment_rate|floatformat:1 }}%</div>
+            <div class="summary-label">Fulfillment Rate</div>
+        </div>
+    </div>
+    
+    <!-- Requests Table -->
+    <div class="requests-table">
+        {% if requests %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Quantity Needed</th>
+                    <th>Donations Received</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                <tr>
+                    <td>{{ request.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'donate_to_foodbank' request.id %}" class="text-blue-600 hover:text-blue-800">
+                            {{ request.title|truncatechars:40 }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="priority-badge priority-{{ request.priority }}">
+                            {{ request.get_priority_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ request.status }}">
+                            {{ request.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if request.quantity_needed %}
+                            {{ request.quantity_needed }} {{ request.quantity_unit }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ request.donations.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data">
+            <i class="fas fa-bullhorn"></i>
+            <h3>No Requests Found</h3>
+            <p>You haven't created any requests yet.</p>
+            <a href="{% url 'foodbank_requests' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus"></i> Create Your First Request
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

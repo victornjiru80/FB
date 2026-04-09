@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Details - {{ user.foodbank_profile.foodbank_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #10b981;
+        --gray-50: #f9fafb;
+    }
+
+    body { background: var(--gray-50); }
+
+    .payment-wrapper {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .detail-value {
+        color: #111827;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .evidence-image {
+        max-width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-outline:hover {
+        border-color: #d1d5db;
+        background: #f9fafb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-wrapper">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-receipt"></i> Payment Details
+            </h1>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="detail-card">
+            <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Payment Information</h3>
+
+            <div class="detail-row">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    <span class="badge {% if payment.status == 'approved' %}badge-approved{% elif payment.status == 'rejected' %}badge-rejected{% else %}badge-pending{% endif %}">
+                        {{ payment.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Plan Type</div>
+                <div class="detail-value">{{ payment.get_plan_type_display }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Amount</div>
+                <div class="detail-value"><strong>{{ payment.amount|floatformat:0 }}</strong></div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Payment Method</div>
+                <div class="detail-value">{{ payment.get_payment_method_display }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Transaction Reference</div>
+                <div class="detail-value"><code>{{ payment.transaction_reference }}</code></div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Payment Date</div>
+                <div class="detail-value">{{ payment.payment_date|date:"F d, Y" }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Submitted</div>
+                <div class="detail-value">{{ payment.submitted_at|date:"F d, Y H:i" }}</div>
+            </div>
+
+            {% if payment.notes %}
+            <div class="detail-row">
+                <div class="detail-label">Your Notes</div>
+                <div class="detail-value">{{ payment.notes }}</div>
+            </div>
+            {% endif %}
+
+            {% if payment.verified_by %}
+            <div class="detail-row">
+                <div class="detail-label">Verified By</div>
+                <div class="detail-value">{{ payment.verified_by.email }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Verified At</div>
+                <div class="detail-value">{{ payment.verified_at|date:"F d, Y H:i" }}</div>
+            </div>
+            {% endif %}
+
+            {% if payment.rejection_reason %}
+            <div class="detail-row">
+                <div class="detail-label">Rejection Reason</div>
+                <div class="detail-value" style="color: #dc2626;">{{ payment.rejection_reason }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Payment Evidence -->
+        <div class="detail-card">
+            <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Payment Evidence</h3>
+            {% if payment.payment_evidence %}
+                <img src="{{ payment.payment_evidence.url }}" alt="Payment Evidence" class="evidence-image">
+            {% else %}
+                <p style="color: #6b7280;">No payment evidence uploaded</p>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div>
+            <a href="{% url 'subscription_status' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Subscription Status
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

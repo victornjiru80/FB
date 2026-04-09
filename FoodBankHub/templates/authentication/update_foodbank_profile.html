@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Profile - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-user-edit me-2"></i>Update Profile</h2>
+                <a href="{% url 'foodbank_settings' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Food Bank Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.foodbank_name.id_for_label }}" class="form-label fw-semibold">
+                                        Food Bank Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.foodbank_name }}
+                                    {% if form.foodbank_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.foodbank_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.contact_person.id_for_label }}" class="form-label fw-semibold">
+                                        Contact Person <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.contact_person }}
+                                    {% if form.contact_person.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.contact_person.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label fw-semibold">
+                                Address
+                            </label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.service_type.id_for_label }}" class="form-label fw-semibold">
+                                Service Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.service_type }}
+                            {% if form.service_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.service_type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">What type of assistance does your food bank provide?</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.authority_picture.id_for_label }}" class="form-label fw-semibold">
+                                        Authority Picture
+                                    </label>
+                                    {{ form.authority_picture }}
+                                    {% if form.authority_picture.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.authority_picture.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Upload a picture of your authority letter or permit.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.urgent_request_picture.id_for_label }}" class="form-label fw-semibold">
+                                        Urgent Request Picture
+                                    </label>
+                                    {{ form.urgent_request_picture }}
+                                    {% if form.urgent_request_picture.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.urgent_request_picture.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Upload a picture for urgent requests (optional).</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{% url 'foodbank_settings' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Current Profile Preview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-eye me-2"></i>Current Profile</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Food Bank Name</label>
+                        <p class="mb-0">{{ foodbank_profile.foodbank_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Contact Person</label>
+                        <p class="mb-0">{{ foodbank_profile.contact_person }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Address</label>
+                        <p class="mb-0">{{ foodbank_profile.address|default:"Not provided" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Service Type</label>
+                        <p class="mb-0">{{ foodbank_profile.get_service_type_display|default:"Not specified" }}</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Keep your information up to date
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Add a clear description to attract donors
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Upload authority documents for credibility
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Use high-quality images for better presentation
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

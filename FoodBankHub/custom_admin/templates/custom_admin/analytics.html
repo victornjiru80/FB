@@ -1,0 +1,562 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Users</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Donations</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ total_donations }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hand-holding-heart fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Food Banks</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ total_foodbanks }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-warehouse fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card info">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Amount</div>
+                        <div class="h5 mb-0 font-weight-bold">KES {{ total_donated_amount|floatformat:0 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-uppercase mb-1">Posted Unspecified</div>
+                <div class="h5 mb-0 font-weight-bold">{{ posted_unspecified_count }}</div>
+                <small class="text-muted">Received & distributed</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-success">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-uppercase mb-1">Posted Direct</div>
+                <div class="h5 mb-0 font-weight-bold">{{ posted_direct_count }}</div>
+                <small class="text-muted">Accepted & stocked</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-warning">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-uppercase mb-1">Posted Subsidized</div>
+                <div class="h5 mb-0 font-weight-bold">{{ posted_subsidized_count }}</div>
+                <small class="text-muted">Delivered to foodbanks</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-info">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-uppercase mb-1">Posted Specified</div>
+                <div class="h5 mb-0 font-weight-bold">{{ posted_specified_count }}</div>
+                <small class="text-muted">Fulfilled/acknowledged</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">User Registrations (Last 12 Months)</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="registrationChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-lg-6">
+        <div class="card">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">User Types Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="userTypeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donation Analytics Row -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Donation Trends (Amount)</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="donationTrendsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-lg-6">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Donations by Type</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="donationTypeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performers Row -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Top Donors</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Total Donated</th>
+                                <th>Donations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donor in top_donors %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'custom_admin:user_detail' donor.id %}">
+                                        {{ donor.email|truncatechars:25 }}
+                                    </a>
+                                </td>
+                                <td>KES {{ donor.total_donated|default:0|floatformat:0 }}</td>
+                                <td>{{ donor.donation_count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No donors found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Top Food Banks</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Food Bank</th>
+                                <th>Donations Received</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for foodbank in top_foodbanks %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'custom_admin:user_detail' foodbank.user.id %}">
+                                        {{ foodbank.foodbank_name|truncatechars:25 }}
+                                    </a>
+                                </td>
+                                <td>{{ foodbank.donations_received }}</td>
+                                <td>KES {{ foodbank.total_received|default:0|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No food banks found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Row -->
+<div class="row mb-4">
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Users</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'custom_admin:user_detail' user.id %}">
+                                        {{ user.email|truncatechars:20 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ user.user_type }}</span>
+                                </td>
+                                <td>{{ user.date_joined|date:"M d" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Donations</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in recent_donations %}
+                            <tr>
+                                <td>{{ donation.donor.email|truncatechars:15 }}</td>
+                                <td>
+                                    {% if donation.amount %}
+                                        KES {{ donation.amount }}
+                                    {% elif donation.subsidized_price %}
+                                        KES {{ donation.subsidized_price }}
+                                    {% else %}
+                                        {{ donation.item_name|truncatechars:10 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ donation.donated_at|date:"M d" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Requests</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Food Bank</th>
+                                <th>Priority</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in recent_requests %}
+                            <tr>
+                                <td>{{ request.foodbank.foodbank_name|truncatechars:15 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if request.priority == 'urgent' %}danger{% elif request.priority == 'high' %}warning{% else %}secondary{% endif %}">
+                                        {{ request.priority|capfirst }}
+                                    </span>
+                                </td>
+                                <td>{{ request.created_at|date:"M d" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Reports Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Export Reports</h6>
+                <small class="text-muted">Choose format: PDF, Excel, or CSV</small>
+            </div>
+            <div class="card-body">
+                <!-- Top Donors Report -->
+                <div class="row mb-4">
+                    <div class="col-lg-3">
+                        <h6 class="text-primary">Top Donors Report</h6>
+                        <p class="text-muted small">Most active donors by contribution amount and frequency</p>
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'custom_admin:export_report' 'top_donors' %}?format=pdf" class="btn btn-outline-danger">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
+                            </a>
+                            <a href="{% url 'custom_admin:export_report' 'top_donors' %}?format=excel" class="btn btn-outline-success">
+                                <i class="fas fa-file-excel me-1"></i>Excel
+                            </a>
+                            <a href="{% url 'custom_admin:export_report' 'top_donors' %}?format=csv" class="btn btn-outline-info">
+                                <i class="fas fa-file-csv me-1"></i>CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Food Banks Report -->
+                <div class="row mb-4">
+                    <div class="col-lg-3">
+                        <h6 class="text-primary">Top Food Banks Report</h6>
+                        <p class="text-muted small">Most active food banks by donations received</p>
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'custom_admin:export_report' 'top_foodbanks' %}?format=pdf" class="btn btn-outline-danger">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
+                            </a>
+                            <a href="{% url 'custom_admin:export_report' 'top_foodbanks' %}?format=excel" class="btn btn-outline-success">
+                                <i class="fas fa-file-excel me-1"></i>Excel
+                            </a>
+                            <a href="{% url 'custom_admin:export_report' 'top_foodbanks' %}?format=csv" class="btn btn-outline-info">
+                                <i class="fas fa-file-csv me-1"></i>CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Export Options -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Export Features</h6>
+                            <ul class="mb-0">
+                                <li><strong>PDF:</strong> Professional reports with custom formatting, headers, and styling</li>
+                                <li><strong>Excel:</strong> Formatted spreadsheets with colors, borders, and auto-sized columns</li>
+                                <li><strong>CSV:</strong> Raw data format compatible with all spreadsheet applications</li>
+                                <li><strong>Timestamps:</strong> All exports include generation date and record counts</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// User Registration Chart
+const registrationCtx = document.getElementById('registrationChart').getContext('2d');
+new Chart(registrationCtx, {
+    type: 'line',
+    data: {
+        labels: {{ registration_months|safe }},
+        datasets: [{
+            label: 'New Users',
+            data: {{ registration_counts|safe }},
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Month'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'New Users'
+                }
+            }
+        }
+    }
+});
+
+// User Type Distribution Chart
+const userTypeCtx = document.getElementById('userTypeChart').getContext('2d');
+new Chart(userTypeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ user_type_labels|safe }},
+        datasets: [{
+            data: {{ user_type_data|safe }},
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(17, 153, 142, 0.8)',
+                'rgba(245, 87, 108, 0.8)',
+                'rgba(79, 172, 254, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Donation Trends Chart
+const donationTrendsCtx = document.getElementById('donationTrendsChart').getContext('2d');
+new Chart(donationTrendsCtx, {
+    type: 'line',
+    data: {
+        labels: {{ donation_months|safe }},
+        datasets: [{
+            label: 'Amount Donated (KES)',
+            data: {{ donation_amounts|safe }},
+            borderColor: 'rgb(17, 153, 142)',
+            backgroundColor: 'rgba(17, 153, 142, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Month'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'KES'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return 'KES ' + value.toLocaleString();
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'KES ' + context.parsed.y.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Donation Type Chart
+const donationTypeCtx = document.getElementById('donationTypeChart').getContext('2d');
+new Chart(donationTypeCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ donation_type_labels|safe }},
+        datasets: [{
+            label: 'Number of Donations',
+            data: {{ donation_type_data|safe }},
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.85)',
+                'rgba(245, 158, 11, 0.85)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Export functionality is now handled by the backend
+// Users can click the PDF, Excel, or CSV buttons to download reports
+</script>
+{% endblock %}

@@ -1,0 +1,411 @@
+{% load custom_filters %}
+
+        <!-- Posted Donations Environmental Impact -->
+        <div class="foodbank-table mt-4">
+            <h3 class="section-title">
+                <i class="fas fa-check-circle"></i>
+                Posted Donations Environmental Impact
+            </h3>
+            <p class="text-muted mb-4">Posted/completed donations for the selected period (Last {{ period_days }} days)</p>
+
+            <!-- Posted Unspecified -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-box-open me-2"></i>Posted Unspecified Donations</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">{{ posted_unspecified_total }} total</span>
+                        <a href="{% url 'custom_admin:export_environmental_posted_unspecified_excel' %}?days={{ period_days }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-file-excel me-1"></i>Excel
+                        </a>
+                        <a href="{% url 'custom_admin:export_environmental_posted_unspecified_pdf' %}?days={{ period_days }}" class="btn btn-sm btn-outline-danger" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i>PDF
+                        </a>
+                        <a href="{% url 'custom_admin:posted_unspecified_donations' %}" class="btn btn-sm btn-outline-primary">View Full Table</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 compact-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>S/No</th>
+                                    <th>Date</th>
+                                    <th>Donor</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Food Bank</th>
+                                    <th>Qty/Amount</th>
+                                    <th>Delivery</th>
+                                    <th>Location</th>
+                                    <th>Recipient</th>
+                                    <th>Notes</th>
+                                    <th>Status</th>
+                                    <th>Food Waste Prevented (kg)</th>
+                                    <th>CO2 Saved (tons)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in posted_unspecified_page_obj %}
+                                <tr>
+                                    <td>{{ forloop.counter0|add:posted_unspecified_page_obj.start_index }}</td>
+                                    <td>
+                                        <div>{{ item.created_at|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ item.created_at|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% with profile=item.donation.donor.donor_profile %}
+                                            {% if profile and profile.organization_name %}
+                                                <strong>{{ profile.organization_name }}</strong>
+                                            {% elif profile and profile.full_name %}
+                                                <strong>{{ profile.full_name }}</strong>
+                                            {% else %}
+                                                <strong>{{ item.donation.donor.email }}</strong>
+                                            {% endif %}
+                                        {% endwith %}
+                                        <br><small class="text-muted">{{ item.donation.donor.email }}</small>
+                                    </td>
+                                    <td>
+                                        {% if item.donation.donation_type == 'item' %}
+                                            {% if item.donation.donation_mode == 'free' %}
+                                                <span class="badge bg-success">Free Goods</span>
+                                            {% elif item.donation.donation_mode == 'subsidized' %}
+                                                <span class="badge bg-warning text-dark">Subsidized</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ item.donation.get_donation_type_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-light text-dark">{{ item.donation.get_donation_category_display }}</span></td>
+                                    <td>
+                                        {% if item.donation.donation_type == 'item' %}
+                                            {{ item.donation.item_name|default:"General donation"|truncatechars:55 }}
+                                        {% elif item.donation.donation_type == 'subsidized' %}
+                                            {{ item.donation.subsidized_product_type|default:"Subsidized goods"|truncatechars:55 }}
+                                        {% elif item.donation.donation_type == 'csr' %}
+                                            {{ item.donation.csr_description|truncatechars:55 }}
+                                        {% elif item.donation.donation_type == 'other' %}
+                                            {{ item.donation.other_description|default:"Other donation"|truncatechars:55 }}
+                                        {% elif item.donation.donation_type == 'money' %}
+                                            {{ item.donation.message|default:"Monetary donation"|truncatechars:55 }}
+                                        {% else %}
+                                            <span class="text-muted">No description</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ item.donation.foodbank.foodbank_name }}</strong></td>
+                                    <td>
+                                        {% if item.donation.donation_type == 'item' %}
+                                            <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}
+                                        {% elif item.donation.donation_type == 'money' %}
+                                            <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                        {% elif item.donation.donation_type == 'csr' or item.donation.donation_type == 'other' %}
+                                            {% if item.donation.quantity %}<strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}{% endif %}
+                                            {% if item.donation.amount %}<small class="text-muted d-block">KES {{ item.donation.amount|floatformat:0 }}</small>{% endif %}
+                                            {% if not item.donation.quantity and not item.donation.amount %}<span class="text-muted">-</span>{% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.donation.delivery_method %}
+                                            {{ item.donation.get_delivery_method_display|default:item.donation.delivery_method }}
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.donation.foodbank.address|default:"Location not provided" }}</td>
+                                    <td>
+                                        {% if item.accepted_by_recipient %}
+                                            <span class="badge bg-success-subtle text-success">Claimed</span>
+                                            <small class="text-muted d-block">{{ item.accepted_by_recipient.full_name|default:item.accepted_by_recipient.user.email }}</small>
+                                        {% else %}
+                                            <span class="badge bg-light text-secondary">Unclaimed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.donation.message %}
+                                            <div><small class="text-muted">Donor:</small> {{ item.donation.message|truncatechars:55 }}</div>
+                                        {% endif %}
+                                        {% if item.recipient_notes %}
+                                            <div><small class="text-muted">Recipient:</small> {{ item.recipient_notes|truncatechars:55 }}</div>
+                                        {% endif %}
+                                        {% if not item.donation.message and not item.recipient_notes %}
+                                            <span class="text-muted">No notes</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-secondary">{{ item|neutral_status_unspecified }}</span></td>
+                                    <td class="text-warning fw-semibold">{{ item.food_waste_prevented_kg|floatformat:2 }}</td>
+                                    <td class="text-success fw-semibold">{{ item.co2_saved_tons|floatformat:3 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="15" class="text-center text-muted py-4">No posted unspecified donations in this period</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if posted_unspecified_page_obj.has_other_pages %}
+                    <div class="p-3">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if posted_unspecified_page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ posted_unspecified_page_param }}={{ posted_unspecified_page_obj.previous_page_number }}{% if posted_unspecified_pagination_query_string %}&{{ posted_unspecified_pagination_query_string }}{% endif %}">Previous</a>
+                            </li>
+                            {% endif %}
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ posted_unspecified_page_obj.number }} of {{ posted_unspecified_page_obj.paginator.num_pages }}</span>
+                            </li>
+                            {% if posted_unspecified_page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ posted_unspecified_page_param }}={{ posted_unspecified_page_obj.next_page_number }}{% if posted_unspecified_pagination_query_string %}&{{ posted_unspecified_pagination_query_string }}{% endif %}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Posted Subsidized -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Posted Subsidized Donations</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">{{ posted_subsidized_total }} total</span>
+                        <a href="{% url 'custom_admin:export_environmental_posted_subsidized_excel' %}?days={{ period_days }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-file-excel me-1"></i>Excel
+                        </a>
+                        <a href="{% url 'custom_admin:export_environmental_posted_subsidized_pdf' %}?days={{ period_days }}" class="btn btn-sm btn-outline-danger" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i>PDF
+                        </a>
+                        <a href="{% url 'custom_admin:posted_subsidized_donations' %}" class="btn btn-sm btn-outline-primary">View Full Table</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 compact-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>S/No</th>
+                                    <th>Date</th>
+                                    <th>Donor</th>
+                                    <th>Food Bank</th>
+                                    <th>Location</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Market Price</th>
+                                    <th>Subsidy</th>
+                                    <th>New Price</th>
+                                    <th>Status</th>
+                                    <th>Delivery</th>
+                                    <th>Recipient</th>
+                                    <th>Notes</th>
+                                    <th>Decline Note</th>
+                                    <th>Food Waste Prevented (kg)</th>
+                                    <th>CO2 Saved (tons)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donation in posted_subsidized_page_obj %}
+                                <tr>
+                                    <td>{{ forloop.counter0|add:posted_subsidized_page_obj.start_index }}</td>
+                                    <td>
+                                        <div>{{ donation.donated_at|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ donation.donated_at|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if donation.donor.donor_profile and donation.donor.donor_profile.organization_name %}
+                                            <strong>{{ donation.donor.donor_profile.organization_name }}</strong>
+                                        {% elif donation.donor.donor_profile and donation.donor.donor_profile.full_name %}
+                                            <strong>{{ donation.donor.donor_profile.full_name }}</strong>
+                                        {% else %}
+                                            <strong>{{ donation.donor.email }}</strong>
+                                        {% endif %}
+                                        <br><small class="text-muted">{{ donation.donor.email }}</small>
+                                    </td>
+                                    <td><strong>{{ donation.foodbank.foodbank_name }}</strong></td>
+                                    <td>{{ donation.foodbank.address|default:"Not provided" }}</td>
+                                    <td>{{ donation.get_donation_category_display|default:"Food" }}</td>
+                                    <td><span class="badge bg-success text-white">Subsidized</span></td>
+                                    <td>{{ donation.subsidized_product_type|default:"Subsidized Goods" }}</td>
+                                    <td>{{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit|default:"units" }}</td>
+                                    <td>{% if donation.subsidized_initial_amount %}{{ donation.subsidized_initial_amount|floatformat:0 }}{% else %}-{% endif %}</td>
+                                    <td>{% if donation.subsidized_subsidy_amount %}{{ donation.subsidized_subsidy_amount|floatformat:0 }}{% else %}-{% endif %}</td>
+                                    <td><strong>{{ donation.subsidized_price|floatformat:0 }}</strong></td>
+                                    <td><span class="badge bg-secondary">{{ donation|neutral_status_subsidized }}</span></td>
+                                    <td>
+                                        {% if donation.delivery_method %}
+                                            {{ donation.get_delivery_method_display|default:donation.delivery_method|capfirst }}
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if donation.accepted_by_recipient %}
+                                            <span class="badge bg-success-subtle text-success">Claimed</span>
+                                            <small class="text-muted d-block">{{ donation.accepted_by_recipient.full_name|default:donation.accepted_by_recipient.user.email }}</small>
+                                        {% else %}
+                                            <span class="badge bg-light text-secondary">Unclaimed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if donation.message %}<div><small class="text-muted">Donor:</small> {{ donation.message|truncatechars:55 }}</div>{% endif %}
+                                        {% if donation.latest_recipient_note %}<div><small class="text-muted">Recipient:</small> {{ donation.latest_recipient_note|truncatechars:55 }}</div>{% endif %}
+                                        {% if not donation.message and not donation.latest_recipient_note %}<span class="text-muted">No notes</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if donation.status == 'declined' %}
+                                            {{ donation.decline_message|default:"No decline note"|truncatechars:55 }}
+                                        {% else %}
+                                            <span class="text-muted">Not declined</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-warning fw-semibold">{{ donation.food_waste_prevented_kg|floatformat:2 }}</td>
+                                    <td class="text-success fw-semibold">{{ donation.co2_saved_tons|floatformat:3 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="19" class="text-center text-muted py-4">No posted subsidized donations in this period</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if posted_subsidized_page_obj.has_other_pages %}
+                    <div class="p-3">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if posted_subsidized_page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ posted_subsidized_page_param }}={{ posted_subsidized_page_obj.previous_page_number }}{% if posted_subsidized_pagination_query_string %}&{{ posted_subsidized_pagination_query_string }}{% endif %}">Previous</a>
+                            </li>
+                            {% endif %}
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ posted_subsidized_page_obj.number }} of {{ posted_subsidized_page_obj.paginator.num_pages }}</span>
+                            </li>
+                            {% if posted_subsidized_page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ posted_subsidized_page_param }}={{ posted_subsidized_page_obj.next_page_number }}{% if posted_subsidized_pagination_query_string %}&{{ posted_subsidized_pagination_query_string }}{% endif %}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Posted Specified -->
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-arrow-right me-2"></i>Posted Specified Donations</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">{{ posted_specified_total }} total</span>
+                        <a href="{% url 'custom_admin:export_environmental_posted_specified_excel' %}?days={{ period_days }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-file-excel me-1"></i>Excel
+                        </a>
+                        <a href="{% url 'custom_admin:export_environmental_posted_specified_pdf' %}?days={{ period_days }}" class="btn btn-sm btn-outline-danger" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i>PDF
+                        </a>
+                        <a href="{% url 'custom_admin:posted_specified_donations' %}" class="btn btn-sm btn-outline-primary">View Full Table</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 compact-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>S/No</th>
+                                    <th>Category</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Donor</th>
+                                    <th>Recipient</th>
+                                    <th>Foodbank</th>
+                                    <th>Quantity</th>
+                                    <th>Delivery</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Requested</th>
+                                    <th>Notes</th>
+                                    <th>Food Waste Prevented (kg)</th>
+                                    <th>CO2 Saved (tons)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in posted_specified_page_obj %}
+                                {% with donation=req.linked_donation %}
+                                <tr>
+                                    <td>{{ forloop.counter0|add:posted_specified_page_obj.start_index }}</td>
+                                    <td><span class="badge bg-light text-dark">{{ donation.get_donation_category_display|default:req.request_category|default:req.request_type }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ donation.get_donation_type_display|default:"Request" }}</span></td>
+                                    <td>{{ req.description|truncatechars:80 }}</td>
+                                    <td>
+                                        {% with profile=donation.donor.donor_profile %}
+                                            {% if profile and profile.organization_name %}
+                                                <strong>{{ profile.organization_name }}</strong>
+                                            {% elif profile and profile.full_name %}
+                                                <strong>{{ profile.full_name }}</strong>
+                                            {% else %}
+                                                <strong>{{ donation.donor.email }}</strong>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ req.recipient.full_name }}</strong>
+                                        <small class="text-muted d-block">{{ req.recipient.user.email }}</small>
+                                    </td>
+                                    <td>{{ req.foodbank_name }}</td>
+                                    <td><strong>{{ req.quantity }} {{ req.get_unit_display }}</strong></td>
+                                    <td>{{ req.get_delivery_method_display }}</td>
+                                    <td>{{ req.location|default:"-" }}</td>
+                                    <td><span class="badge bg-secondary">{{ req|neutral_status_specified }}</span></td>
+                                    <td>
+                                        <small>{{ req.time_of_request|date:"M d, Y" }}</small><br>
+                                        <small class="text-muted">{{ req.time_of_request|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if req.additional_notes %}
+                                            {{ req.additional_notes|truncatechars:80 }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-warning fw-semibold">{{ req.food_waste_prevented_kg|floatformat:2 }}</td>
+                                    <td class="text-success fw-semibold">{{ req.co2_saved_tons|floatformat:3 }}</td>
+                                </tr>
+                                {% endwith %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="15" class="text-center text-muted py-4">No posted specified donations in this period</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if posted_specified_page_obj.has_other_pages %}
+                    <div class="p-3">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if posted_specified_page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ posted_specified_page_param }}={{ posted_specified_page_obj.previous_page_number }}{% if posted_specified_pagination_query_string %}&{{ posted_specified_pagination_query_string }}{% endif %}">Previous</a>
+                            </li>
+                            {% endif %}
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ posted_specified_page_obj.number }} of {{ posted_specified_page_obj.paginator.num_pages }}</span>
+                            </li>
+                            {% if posted_specified_page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ posted_specified_page_param }}={{ posted_specified_page_obj.next_page_number }}{% if posted_specified_pagination_query_string %}&{{ posted_specified_pagination_query_string }}{% endif %}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+

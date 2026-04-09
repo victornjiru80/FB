@@ -1,0 +1,244 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card warning">
+            <div class="card-body text-center">
+                <h6 class="card-title">Pending Verification</h6>
+                <h2 class="mb-0">{{ pending_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card success">
+            <div class="card-body text-center">
+                <h6 class="card-title">Approved</h6>
+                <h2 class="mb-0">{{ approved_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h6 class="card-title">Rejected</h6>
+                <h2 class="mb-0">{{ rejected_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Reports -->
+<div class="card mb-4">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h6 class="mb-1">Download Reports</h6>
+            <small class="text-muted">Export payment verification records using current filters</small>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'custom_admin:export_payment_verification_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a href="{% url 'custom_admin:export_payment_verification_excel' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+            <a href="{% url 'custom_admin:export_payment_verification_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-secondary">
+                <i class="fas fa-file-csv"></i> CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            {% if current_filters.status %}
+                <input type="hidden" name="status" value="{{ current_filters.status }}">
+            {% endif %}
+            <div class="col-md-3">
+                <label for="plan" class="form-label">Plan Type</label>
+                <select class="form-select" id="plan" name="plan">
+                    <option value="">All Plans</option>
+                    {% for value, label in plan_choices %}
+                        <option value="{{ value }}" {% if current_filters.plan == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="payment_method" class="form-label">Payment Method</label>
+                <select class="form-select" id="payment_method" name="payment_method">
+                    <option value="">All Methods</option>
+                    {% for value, label in payment_method_choices %}
+                        <option value="{{ value }}" {% if current_filters.payment_method == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control search-box" id="search" name="search" 
+                       placeholder="Search by food bank or transaction ref..." value="{{ current_filters.search|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ current_filters.date_from|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ current_filters.date_to|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                    <a href="{% url 'custom_admin:payment_verification' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payments Table -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">
+            <i class="fas fa-check-circle"></i> Payment Submissions
+            <span class="badge bg-secondary ms-2">{{ page_obj.paginator.count }} total</span>
+            {% if pending_count > 0 %}
+                <span class="badge bg-warning text-dark ms-2">{{ pending_count }} pending</span>
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>S/No</th>
+                            <th>Food Bank</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Transaction Ref</th>
+                            <th>Payment Date</th>
+                            <th>Submitted</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in page_obj %}
+                            <tr {% if payment.status == 'pending' %}class="table-warning"{% endif %}>
+                                <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                <td>
+                                    <strong>{{ payment.foodbank.foodbank_name }}</strong><br>
+                                    <small class="text-muted">{{ payment.foodbank.user.email }}</small><br>
+                                    <small class="text-muted">{{ payment.foodbank.user.phone_number|default:"N/A" }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ payment.get_plan_type_display }}</span>
+                                </td>
+                                <td>
+                                    <strong>KSH {{ payment.amount|floatformat:2 }}</strong>
+                                </td>
+                                <td>
+                                    <i class="fas fa-{% if payment.payment_method == 'mpesa' %}mobile-alt{% elif payment.payment_method == 'bank_transfer' %}university{% else %}money-bill{% endif %}"></i>
+                                    {{ payment.get_payment_method_display }}
+                                </td>
+                                <td>
+                                    <code>{{ payment.transaction_reference }}</code>
+                                </td>
+                                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {{ payment.submitted_at|date:"M d, Y H:i" }}<br>
+                                    <small class="text-muted">{{ payment.submitted_at|timesince }} ago</small>
+                                </td>
+                                <td>
+                                    {% if payment.notes %}
+                                        <small>{{ payment.notes }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {{ payment.get_status_badge_class }}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                    {% if payment.verified_by %}
+                                        <br><small class="text-muted">by {{ payment.verified_by.email }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'custom_admin:payment_detail' payment.id %}" 
+                                       class="btn btn-sm {% if payment.status == 'pending' %}btn-warning{% else %}btn-outline-primary{% endif %}">
+                                        <i class="fas fa-eye"></i> 
+                                        {% if payment.status == 'pending' %}Verify{% else %}View{% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.payment_method %}&payment_method={{ current_filters.payment_method }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No payment submissions found</p>
+                {% if current_filters.status == 'pending' %}
+                    <p class="text-success"><i class="fas fa-check-circle"></i> All payments have been verified!</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

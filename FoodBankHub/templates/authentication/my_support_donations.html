@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Support Donations{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1">
+                <i class="fas fa-heart text-danger me-2"></i>
+                My Support Donations
+            </h2>
+            <p class="text-muted mb-0">Track and filter your donations submitted for verification</p>
+        </div>
+        <div>
+            <a href="{% url 'support_payment' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-plus me-1"></i>Submit New Donation
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">From</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">To</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" value="{{ search_query }}" placeholder="Amount / reference / notes">
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'my_support_donations' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </a>
+                    <a href="{% url 'export_my_support_donations_excel' %}?{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </a>
+                    <a href="{% url 'export_my_support_donations_pdf' %}?{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if page_obj.object_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th style="width: 120px;">Amount</th>
+                                <th>Reference</th>
+                                <th style="min-width: 220px;">Donor Notes</th>
+                                <th style="width: 130px;">Status</th>
+                                <th style="width: 160px;">Rejection</th>
+                                <th style="width: 140px;">Submitted</th>
+                                <th style="width: 80px;">Proof</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in page_obj %}
+                                <tr>
+                                    <td>{{ donation.id }}</td>
+                                    <td><strong class="text-success">{{ donation.amount|floatformat:0 }}</strong></td>
+                                    <td>
+                                        {% if donation.transaction_reference %}
+                                            <code>{{ donation.transaction_reference }}</code>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if donation.notes %}
+                                            <span class="small" title="{{ donation.notes }}">{{ donation.notes|truncatechars:120 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if donation.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% elif donation.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif donation.status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if donation.status == 'rejected' %}
+                                            {% if donation.rejection_reason %}
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#rejectionReasonModal"
+                                                    data-donation-id="{{ donation.id }}"
+                                                    data-rejection-reason="{{ donation.rejection_reason }}"
+                                                >
+                                                    View Reason
+                                                </button>
+                                            {% else %}
+                                                <span class="text-muted">No reason provided</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ donation.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#paymentProofModal"
+                                            data-donation-id="{{ donation.id }}"
+                                            data-amount="{{ donation.amount|floatformat:0 }}"
+                                            data-reference="{{ donation.transaction_reference|default:'N/A' }}"
+                                            data-proof-url="{% if donation.payment_proof %}{{ donation.payment_proof.url }}{% endif %}"
+                                            title="View proof"
+                                        >
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if page_obj.paginator.num_pages > 1 %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+                            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-muted">No support donations found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectionReasonModalTitle">Rejection Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="rejectionReasonModalBody">No reason provided.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="paymentProofModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentProofModalTitle">Payment Proof</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Amount:</strong> <span id="paymentProofAmount">-</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Reference:</strong> <code id="paymentProofReference">N/A</code>
+                </div>
+                <div id="paymentProofLoading" class="text-muted mb-2" style="display: none;">
+                    <i class="fas fa-spinner fa-spin me-1"></i>Loading proof image...
+                </div>
+                <div id="paymentProofEmpty" class="text-muted" style="display: none;">No proof uploaded.</div>
+                <img id="paymentProofImage" src="" class="img-fluid rounded" alt="Payment Proof" style="display: none;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rejectionModalEl = document.getElementById('rejectionReasonModal');
+    if (rejectionModalEl && typeof bootstrap !== 'undefined') {
+        const rejectionTitleEl = document.getElementById('rejectionReasonModalTitle');
+        const rejectionBodyEl = document.getElementById('rejectionReasonModalBody');
+
+        rejectionModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) {
+                return;
+            }
+
+            const donationId = button.getAttribute('data-donation-id') || '';
+            const reason = button.getAttribute('data-rejection-reason') || 'No reason provided.';
+            rejectionTitleEl.textContent = donationId ? `Rejection Reason (Donation #${donationId})` : 'Rejection Reason';
+            rejectionBodyEl.textContent = reason;
+        });
+
+        rejectionModalEl.addEventListener('hidden.bs.modal', function () {
+            rejectionBodyEl.textContent = 'No reason provided.';
+        });
+    }
+
+    const modalEl = document.getElementById('paymentProofModal');
+    if (!modalEl || typeof bootstrap === 'undefined') {
+        return;
+    }
+
+    const titleEl = document.getElementById('paymentProofModalTitle');
+    const amountEl = document.getElementById('paymentProofAmount');
+    const referenceEl = document.getElementById('paymentProofReference');
+    const loadingEl = document.getElementById('paymentProofLoading');
+    const emptyEl = document.getElementById('paymentProofEmpty');
+    const imageEl = document.getElementById('paymentProofImage');
+
+    modalEl.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        if (!button) {
+            return;
+        }
+
+        const donationId = button.getAttribute('data-donation-id') || '';
+        const amount = button.getAttribute('data-amount') || '-';
+        const reference = button.getAttribute('data-reference') || 'N/A';
+        const proofUrl = button.getAttribute('data-proof-url') || '';
+
+        titleEl.textContent = donationId ? `Payment Proof (Donation #${donationId})` : 'Payment Proof';
+        amountEl.textContent = amount;
+        referenceEl.textContent = reference;
+
+        loadingEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+        imageEl.style.display = 'none';
+        imageEl.removeAttribute('src');
+
+        if (!proofUrl) {
+            emptyEl.style.display = 'block';
+            return;
+        }
+
+        loadingEl.style.display = 'block';
+        imageEl.onload = function () {
+            loadingEl.style.display = 'none';
+            imageEl.style.display = 'block';
+        };
+        imageEl.onerror = function () {
+            loadingEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+        };
+        imageEl.src = proofUrl;
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        imageEl.onload = null;
+        imageEl.onerror = null;
+        imageEl.removeAttribute('src');
+        imageEl.style.display = 'none';
+        loadingEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+    body {
+        font-family: 'Space Grotesk', 'Inter', sans-serif;
+        background: #f3f4f6;
+        color: #0f172a;
+    }
+
+    .request-wrapper {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .form-container {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        padding: 1.75rem;
+        box-shadow: 0 25px 60px -35px rgba(15, 23, 42, 0.35);
+    }
+
+    .form-header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-header p {
+        font-size: 0.95rem;
+        color: #64748b;
+    }
+
+    .meta-pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .meta-pill {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.78rem;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .form-section {
+        padding: 1.25rem 1.35rem;
+        border-radius: 16px;
+        border: 1px solid #edf2f7;
+        background: #fcfcfc;
+        margin-bottom: 1rem;
+    }
+
+    .form-section h5 {
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #475569;
+        margin-bottom: 0.75rem;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #ef4444;
+    }
+
+    .form-control, .form-select, .form-check-input {
+        border-radius: 10px;
+        border: 1px solid #d6dae3;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.93rem;
+        background: #fff;
+    }
+
+    .form-control:focus, .form-select:focus, .form-check-input:focus {
+        border-color: #0f766e;
+        box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+    }
+
+    .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.85rem;
+    }
+
+    .anonymous-section {
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        border: 1px dashed #0f766e;
+        background: #f0fdfa;
+        margin-bottom: 1rem;
+    }
+
+    .anonymous-section strong {
+        font-size: 0.95rem;
+    }
+
+    .helper-text {
+        font-size: 0.82rem;
+        color: #94a3b8;
+        margin-top: 0.2rem;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1.25rem;
+    }
+
+    .btn-submit {
+        background: #0f766e;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        background: #0d5f59;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+        border-radius: 12px;
+        padding: 0.75rem 1.9rem;
+        border-color: #cbd5f5;
+        color: #475569;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.25rem;
+        }
+
+        .form-section {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 request-wrapper">
+    <div class="form-container">
+        <div class="form-header">
+            <div>
+                <h2><i class="fas fa-plus-circle me-2 text-success"></i>{{ title }}</h2>
+                <p class="text-muted mb-0">Keep your request concise so foodbanks can respond faster.</p>
+            </div>
+            <div class="meta-pill-row">
+                <div class="meta-pill"><i class="fas fa-clock"></i> Avg. review: &lt; 24h</div>
+                <div class="meta-pill"><i class="fas fa-users"></i> Reaches approved banks</div>
+                <div class="meta-pill"><i class="fas fa-shield-alt"></i> Request stays discreet</div>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" id="requestForm">
+            {% csrf_token %}
+
+            <!-- Anonymous Request Toggle -->
+            <div class="anonymous-section d-flex flex-column gap-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="is_anonymous" name="is_anonymous" value="true">
+                    <label class="form-check-label" for="is_anonymous">
+                        <strong>Send anonymously</strong>
+                    </label>
+                </div>
+                <p class="small mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Anonymous requests are broadcast to every approved foodbank until one accepts.
+                </p>
+            </div>
+
+            <!-- Foodbank Selection (conditionally required) -->
+            <div class="form-section" id="foodbankSection">
+                <h5><i class="fas fa-building me-2"></i>Foodbank</h5>
+                <label for="foodbank" class="form-label required-field" id="foodbankLabel">Choose a partner</label>
+                <select name="foodbank" id="foodbank" class="form-select">
+                    <option value="">Select foodbank...</option>
+                    {% for foodbank in foodbanks %}
+                        <option value="{{ foodbank.id }}" data-service-type="{{ foodbank.service_type }}">
+                            {{ foodbank.foodbank_name }}
+                            {% if foodbank.service_type == 'food' %}(Food)
+                            {% elif foodbank.service_type == 'non_food' %}(Non-food)
+                            {% elif foodbank.service_type == 'both' %}(Food & Non-food)
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="helper-text">Skip this when sending anonymously.</div>
+            </div>
+
+            <!-- Request Details -->
+            <div class="form-section">
+                <h5><i class="fas fa-info-circle me-2"></i>Request Details</h5>
+
+                <div class="compact-grid">
+                    <div>
+                        <label for="request_type" class="form-label required-field">Request Type</label>
+                        <select name="request_type" id="request_type" class="form-select" required>
+                            <option value="">Select type...</option>
+                            <option value="food">Food</option>
+                            <option value="non_food">Non-Food</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="delivery_method" class="form-label required-field">Delivery Method</label>
+                        <select name="delivery_method" id="delivery_method" class="form-select" required>
+                            <option value="">Select method...</option>
+                            <option value="pickup">Pickup</option>
+                            <option value="delivery">Delivery</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label required-field">Description</label>
+                    <textarea name="description" id="description" class="form-control" rows="3" maxlength="400"
+                              placeholder="e.g., 100 bags of maize for community feeding program" required></textarea>
+                    <div class="helper-text"><span id="descriptionCount">0</span>/400 characters</div>
+                </div>
+
+                <div class="compact-grid">
+                    <div>
+                        <label for="quantity" class="form-label required-field">Quantity</label>
+                        <input type="number" name="quantity" id="quantity" class="form-control" min="1" placeholder="Enter quantity" required>
+                    </div>
+                    <div>
+                        <label for="unit" class="form-label required-field">Unit</label>
+                        <select name="unit" id="unit" class="form-select" required>
+                            <option value="">Select unit...</option>
+                            {% for unit_code, unit_name in quantity_units %}
+                                <option value="{{ unit_code }}">{{ unit_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Custom Unit Field (Initially Hidden) -->
+                <div class="mb-3" id="customUnitGroup" style="display: none;">
+                    <label for="custom_unit" class="form-label required-field">Custom Unit</label>
+                    <div class="input-group">
+                        <input type="text" name="custom_unit" id="custom_unit" class="form-control" 
+                               placeholder="Enter custom unit (e.g., boxes, containers, etc.)">
+                        <button type="button" class="btn btn-outline-primary" id="custom_unit_save">Save</button>
+                    </div>
+                    <div class="helper-text" id="customUnitFeedback">
+                        <i class="fas fa-info-circle me-1"></i>Specify your custom unit of measurement.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="location" class="form-label required-field">Location</label>
+                    <input type="text" name="location" id="location" class="form-control" 
+                           placeholder="Delivery/pickup location" required>
+                    <div class="helper-text">Specify where the items should be delivered or picked up.</div>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="mb-3">
+                    <label for="additional_notes" class="form-label">Additional Notes (Optional)</label>
+                    <textarea name="additional_notes" id="additional_notes" class="form-control" rows="2" 
+                              placeholder="Any special instructions or additional information..."></textarea>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-submit">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Request
+                </button>
+                <a href="{% url 'recipient_requests_view' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const anonymousCheckbox = document.getElementById('is_anonymous');
+    const foodbankSelect = document.getElementById('foodbank');
+    const foodbankLabel = document.getElementById('foodbankLabel');
+    const foodbankSection = document.getElementById('foodbankSection');
+    const form = document.getElementById('requestForm');
+    const requestTypeSelect = document.getElementById('request_type');
+    const descriptionField = document.getElementById('description');
+    const descriptionCount = document.getElementById('descriptionCount');
+    const unitSelect = document.getElementById('unit');
+    const customUnitField = document.getElementById('custom_unit');
+    const customUnitGroup = document.getElementById('customUnitGroup');
+    const customUnitSaveBtn = document.getElementById('custom_unit_save');
+    const customUnitFeedback = document.getElementById('customUnitFeedback');
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    const addUnitUrl = "{% url 'add_quantity_unit' %}";
+
+    // Toggle foodbank requirement based on anonymous checkbox
+    function updateFoodbankRequirement() {
+        const isAnonymous = anonymousCheckbox.checked;
+        
+        if (isAnonymous) {
+            // Make foodbank optional
+            foodbankSelect.removeAttribute('required');
+            foodbankLabel.classList.remove('required-field');
+            foodbankSection.style.opacity = '0.6';
+            foodbankSection.style.pointerEvents = 'none';
+        } else {
+            // Make foodbank required
+            foodbankSelect.setAttribute('required', 'required');
+            foodbankLabel.classList.add('required-field');
+            foodbankSection.style.opacity = '1';
+            foodbankSection.style.pointerEvents = 'auto';
+        }
+    }
+
+    // Filter foodbanks based on request type
+    function filterFoodbanks() {
+        const requestType = requestTypeSelect.value;
+        const options = foodbankSelect.querySelectorAll('option');
+        
+        options.forEach(option => {
+            if (option.value === '') {
+                return; // Keep "Choose a foodbank..." option
+            }
+            
+            const foodbankServiceType = option.dataset.serviceType;
+            
+            if (!requestType) {
+                // Show all foodbanks if no request type selected
+                option.style.display = 'block';
+            } else if (requestType === 'food') {
+                // Show foodbanks that support food
+                if (foodbankServiceType === 'food' || foodbankServiceType === 'both') {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            } else if (requestType === 'non_food') {
+                // Show foodbanks that support non-food
+                if (foodbankServiceType === 'non_food' || foodbankServiceType === 'both') {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Show/hide custom unit field based on unit selection
+    function toggleCustomUnitField() {
+        const unitValue = unitSelect.value;
+        
+        if (unitValue === 'other') {
+            customUnitGroup.style.display = 'block';
+            customUnitField.required = true;
+            // Add smooth animation
+            customUnitGroup.style.opacity = '0';
+            customUnitGroup.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                customUnitGroup.style.transition = 'all 0.3s ease';
+                customUnitGroup.style.opacity = '1';
+                customUnitGroup.style.transform = 'translateY(0)';
+            }, 10);
+        } else {
+            customUnitGroup.style.display = 'none';
+            customUnitField.required = false;
+            customUnitField.value = ''; // Clear the field when hidden
+            if (customUnitFeedback) customUnitFeedback.textContent = 'Specify your custom unit of measurement.';
+        }
+    }
+
+    // Initialize
+    updateFoodbankRequirement();
+
+    function updateDescriptionCount() {
+        if (!descriptionField || !descriptionCount) return;
+        if (descriptionField.value.length > 400) {
+            descriptionField.value = descriptionField.value.slice(0, 400);
+        }
+        descriptionCount.textContent = String(descriptionField.value.length);
+    }
+    
+    // Listen for changes
+    anonymousCheckbox.addEventListener('change', updateFoodbankRequirement);
+    requestTypeSelect.addEventListener('change', filterFoodbanks);
+    descriptionField.addEventListener('input', updateDescriptionCount);
+    unitSelect.addEventListener('change', toggleCustomUnitField);
+    
+    // Check initial state for custom unit
+    toggleCustomUnitField();
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const isAnonymous = anonymousCheckbox.checked;
+        let isValid = true;
+
+        // Validate required fields (excluding foodbank if anonymous)
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Special handling for foodbank when not anonymous
+        if (!isAnonymous && !foodbankSelect.value.trim()) {
+            foodbankSelect.classList.add('is-invalid');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            // Don't show alert - let Bootstrap handle validation
+        }
+    });
+    
+    // Remove invalid class on input
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+    
+    // Initialize filtering
+    filterFoodbanks();
+    updateDescriptionCount();
+
+    // Handle saving custom unit and adding to dropdown
+    if (customUnitSaveBtn) {
+        customUnitSaveBtn.addEventListener('click', async function() {
+            const label = (customUnitField.value || '').trim();
+            if (!label) {
+                if (customUnitFeedback) customUnitFeedback.textContent = 'Please enter a custom unit before saving.';
+                return;
+            }
+            customUnitSaveBtn.disabled = true;
+            customUnitSaveBtn.textContent = 'Saving...';
+            try {
+                const resp = await fetch(addUnitUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: new URLSearchParams({ label })
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    const msg = (data && data.message) ? data.message : 'Unable to save unit.';
+                    if (customUnitFeedback) customUnitFeedback.textContent = msg;
+                } else {
+                    const { unit } = data;
+                    // Avoid duplicate options
+                    let existing = unitSelect.querySelector(`option[value="${unit.code}"]`);
+                    if (!existing) {
+                        const opt = document.createElement('option');
+                        opt.value = unit.code;
+                        opt.textContent = unit.label;
+                        unitSelect.appendChild(opt);
+                    }
+                    unitSelect.value = unit.code;
+                    customUnitField.value = '';
+                    customUnitGroup.style.display = 'none';
+                    customUnitField.required = false;
+                    if (customUnitFeedback) customUnitFeedback.textContent = 'Saved. Unit added to the list.';
+                }
+            } catch (err) {
+                if (customUnitFeedback) customUnitFeedback.textContent = 'Network error. Please try again.';
+            } finally {
+                customUnitSaveBtn.disabled = false;
+                customUnitSaveBtn.textContent = 'Save';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

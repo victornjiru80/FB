@@ -1,0 +1,332 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="donation_type" class="form-label">Donation Type</label>
+                <select class="form-select" id="donation_type" name="donation_type">
+                    <option value="">All Types</option>
+                    {% for value, label in donation_types %}
+                        <option value="{{ value }}" {% if current_filters.donation_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="delivery_status" class="form-label">Delivery Status</label>
+                <select class="form-select" id="delivery_status" name="delivery_status">
+                    <option value="">All Status</option>
+                    {% for value, label in delivery_statuses %}
+                        <option value="{{ value }}" {% if current_filters.delivery_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control search-box" id="search" name="search" 
+                       placeholder="Search by donor, food bank, or item..." value="{{ current_filters.search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" action="{% url 'custom_admin:bulk_actions' %}" id="bulkForm">
+            {% csrf_token %}
+            <input type="hidden" name="model_type" value="donations">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label for="bulk_action" class="form-label">Bulk Actions</label>
+                    <select class="form-select" id="bulk_action" name="action">
+                        <option value="">Select Action</option>
+                        <option value="mark_delivered">Mark as Delivered</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-warning" onclick="return confirmBulkAction()">
+                        <i class="fas fa-bolt"></i> Apply
+                    </button>
+                    <span class="text-muted ms-2" id="selectedCount">0 selected</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Donations Table -->
+<div class="card">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            Donations ({{ page_obj.paginator.count }} total)
+        </h6>
+        <div>
+            <a href="{% url 'custom_admin:export_report' 'donations_summary' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-download"></i> Export PDF
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleAll()">
+                        </th>
+                        <th>Donor</th>
+                        <th>Food Bank</th>
+                        <th>Type</th>
+                        <th>Details</th>
+                        <th>Amount/Item</th>
+                        <th>Delivery Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in page_obj %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_items" value="{{ donation.id }}" 
+                                   class="donation-checkbox" onchange="updateSelectedCount()">
+                        </td>
+                        <td>
+                            <a href="{% url 'custom_admin:user_detail' donation.donor.id %}" class="text-decoration-none">
+                                {{ donation.donor.email|truncatechars:25 }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'custom_admin:user_detail' donation.foodbank.user.id %}" class="text-decoration-none">
+                                {{ donation.foodbank.foodbank_name|truncatechars:20 }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ donation.get_donation_type_display }}</span>
+                        </td>
+                        <td>
+                            {% if donation.donation_type == 'item' %}
+                                {{ donation.item_name }}
+                                <br><small class="text-muted">{{ donation.quantity }} {{ donation.quantity_unit }}</small>
+                            {% elif donation.donation_type == 'money' %}
+                                Money Donation
+                            {% elif donation.donation_type == 'subsidized' %}
+                                {{ donation.subsidized_product_type|default:"Subsidized Goods" }}
+                                <br><small class="text-muted">{{ donation.subsidized_quantity }} {{ donation.subsidized_quantity_unit }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if donation.amount %}
+                                <strong>KES {{ donation.amount|floatformat:0 }}</strong>
+                            {% elif donation.subsidized_price %}
+                                <strong>KES {{ donation.subsidized_price|floatformat:0 }}</strong>
+                                {% if donation.subsidized_market_price %}
+                                    <br><small class="text-muted">Market: KES {{ donation.subsidized_market_price|floatformat:0 }}</small>
+                                {% endif %}
+                            {% else %}
+                                {{ donation.quantity }} {{ donation.quantity_unit }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if donation.delivery_status == 'pending' %}
+                                <span class="badge bg-warning">{{ donation.get_delivery_status_display }}</span>
+                            {% elif donation.delivery_status == 'delivered' %}
+                                <span class="badge bg-success">{{ donation.get_delivery_status_display }}</span>
+                            {% elif donation.delivery_status == 'in_transit' %}
+                                <span class="badge bg-info">{{ donation.get_delivery_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ donation.get_delivery_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ donation.donated_at|date:"M d, Y" }}
+                            <br><small class="text-muted">{{ donation.donated_at|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if donation.delivery_status != 'delivered' %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" 
+                                            onclick="updateDeliveryStatus({{ donation.id }}, 'delivered')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                        onclick="viewDonationDetails({{ donation.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            No donations found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Donation pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.donation_type %}&donation_type={{ request.GET.donation_type }}{% endif %}{% if request.GET.delivery_status %}&delivery_status={{ request.GET.delivery_status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.donation_type %}&donation_type={{ request.GET.donation_type }}{% endif %}{% if request.GET.delivery_status %}&delivery_status={{ request.GET.delivery_status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.donation_type %}&donation_type={{ request.GET.donation_type }}{% endif %}{% if request.GET.delivery_status %}&delivery_status={{ request.GET.delivery_status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.donation_type %}&donation_type={{ request.GET.donation_type }}{% endif %}{% if request.GET.delivery_status %}&delivery_status={{ request.GET.delivery_status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Donation Details Modal -->
+<div class="modal fade" id="donationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Donation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="donationModalBody">
+                <!-- Content loaded via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.donation-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.donation-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('selectedCount').textContent = count + ' selected';
+    
+    // Update select all checkbox
+    const totalCheckboxes = document.querySelectorAll('.donation-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    selectAll.indeterminate = count > 0 && count < totalCheckboxes.length;
+    selectAll.checked = count === totalCheckboxes.length;
+}
+
+function confirmBulkAction() {
+    const selectedCount = document.querySelectorAll('.donation-checkbox:checked').length;
+    const action = document.getElementById('bulk_action').value;
+    
+    if (selectedCount === 0) {
+        alert('Please select at least one donation.');
+        return false;
+    }
+    
+    if (!action) {
+        alert('Please select an action.');
+        return false;
+    }
+    
+    return confirm(`Are you sure you want to ${action} ${selectedCount} donation(s)?`);
+}
+
+function updateDeliveryStatus(donationId, status) {
+    if (confirm('Are you sure you want to mark this donation as delivered?')) {
+        // In a real implementation, this would make an AJAX call
+        // For now, we'll just reload the page
+        window.location.reload();
+    }
+}
+
+function viewDonationDetails(donationId) {
+    // In a real implementation, this would load donation details via AJAX
+    const modalBody = document.getElementById('donationModalBody');
+    modalBody.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading donation details...</p>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('donationModal'));
+    modal.show();
+    
+    // Simulate loading
+    setTimeout(() => {
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Donation Information</h6>
+                    <p><strong>ID:</strong> ${donationId}</p>
+                    <p><strong>Type:</strong> Item Donation</p>
+                    <p><strong>Status:</strong> <span class="badge bg-warning">Pending</span></p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Delivery Information</h6>
+                    <p><strong>Method:</strong> Pickup</p>
+                    <p><strong>Scheduled:</strong> Not scheduled</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12">
+                    <h6>Message</h6>
+                    <p class="text-muted">Hope this helps the community!</p>
+                </div>
+            </div>
+        `;
+    }, 1000);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+});
+</script>
+{% endblock %}

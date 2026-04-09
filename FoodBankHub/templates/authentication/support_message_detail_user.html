@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Support Message #{{ support_message.id }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-envelope me-2"></i>Support Message #{{ support_message.id }}</h2>
+                <a href="{% url 'my_support_messages' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Messages
+                </a>
+            </div>
+
+            <!-- Message Details Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Message Details</h5>
+                        <div>
+                            {% if support_message.status == 'new' %}
+                                <span class="badge bg-light text-dark">New</span>
+                            {% elif support_message.status == 'in_progress' %}
+                                <span class="badge bg-warning">In Progress</span>
+                            {% elif support_message.status == 'resolved' %}
+                                <span class="badge bg-success">Resolved</span>
+                            {% elif support_message.status == 'closed' %}
+                                <span class="badge bg-secondary">Closed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-tag me-2"></i>Subject:</strong><br>
+                                <span class="text-muted">{{ support_message.get_subject_display }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-flag me-2"></i>Priority:</strong><br>
+                                {% if support_message.priority == 'urgent' %}
+                                    <span class="badge bg-danger">Urgent</span>
+                                {% elif support_message.priority == 'high' %}
+                                    <span class="badge bg-warning">High</span>
+                                {% elif support_message.priority == 'medium' %}
+                                    <span class="badge bg-info">Medium</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Low</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-calendar-alt me-2"></i>Created:</strong><br>
+                                <span class="text-muted">{{ support_message.created_at|date:"F d, Y" }} at {{ support_message.created_at|time:"g:i A" }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-clock me-2"></i>Last Updated:</strong><br>
+                                <span class="text-muted">{{ support_message.updated_at|date:"F d, Y" }} at {{ support_message.updated_at|time:"g:i A" }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if support_message.resolved_at %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="mb-0">
+                                <strong><i class="fas fa-check-circle me-2 text-success"></i>Resolved:</strong><br>
+                                <span class="text-muted">{{ support_message.resolved_at|date:"F d, Y" }} at {{ support_message.resolved_at|time:"g:i A" }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Your Message -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Your Message</h5>
+                </div>
+                <div class="card-body">
+                    <div class="message-content p-3" style="background: #f8f9fa; border-left: 4px solid #007bff; border-radius: 5px;">
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ support_message.message }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Conversation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 p-3 rounded bg-light border-start border-primary border-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ user.email }}</strong>
+                                <div class="small text-muted">{{ support_message.created_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <span class="badge bg-light text-dark">You</span>
+                        </div>
+                        <div class="mt-2" style="white-space: pre-wrap;">{{ support_message.message }}</div>
+                    </div>
+
+                    {% if replies %}
+                        {% for reply in replies %}
+                            <div class="mb-3 p-3 rounded {% if reply.is_from_admin %}bg-success bg-opacity-10 border-start border-success border-3{% else %}bg-light border-start border-secondary border-3{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{% if reply.is_from_admin %}Support Team{% else %}You{% endif %}</strong>
+                                        <div class="small text-muted">{{ reply.created_at|date:"M d, Y H:i" }}</div>
+                                    </div>
+                                    {% if reply.is_from_admin %}
+                                        <span class="badge bg-success">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">You</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-2" style="white-space: pre-wrap;">{{ reply.message }}</div>
+                            </div>
+                        {% endfor %}
+                    {% elif support_message.admin_response %}
+                        <div class="mb-3 p-3 rounded bg-success bg-opacity-10 border-start border-success border-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Support Team</strong>
+                                    <div class="small text-muted">{{ support_message.updated_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                                <span class="badge bg-success">Admin</span>
+                            </div>
+                            <div class="mt-2" style="white-space: pre-wrap;">{{ support_message.admin_response }}</div>
+                        </div>
+                    {% endif %}
+
+                    {% if support_message.status == 'resolved' or support_message.status == 'closed' %}
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>This issue has been marked as resolved.</strong>
+                            If you still need assistance, please submit a new support message.
+                        </div>
+                    {% else %}
+                        <div class="border-top pt-3">
+                            <h6 class="mb-2">Reply</h6>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="add_reply">
+                                <div class="mb-3">
+                                    <textarea name="reply_message" class="form-control" rows="3" placeholder="Type your reply..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>Send Reply
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Admin Response -->
+            {% if not support_message.admin_response and not replies %}
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-hourglass-half me-2"></i>Awaiting Response</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                    <p class="mb-0">Our support team is reviewing your message and will respond shortly.</p>
+                    <small class="text-muted">Average response time: 24-48 hours</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <a href="{% url 'my_support_messages' %}" class="btn btn-primary">
+                    <i class="fas fa-list me-1"></i>View All Messages
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-home me-1"></i>Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .message-content, .response-content {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

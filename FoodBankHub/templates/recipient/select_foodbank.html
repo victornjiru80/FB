@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Select Food Bank - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .foodbank-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .foodbank-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    
+    .service-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .service-food { background-color: #d4edda; color: #155724; }
+    .service-non-food { background-color: #d1ecf1; color: #0c5460; }
+    .service-both { background-color: #fff3cd; color: #856404; }
+    
+    .filter-section {
+        background-color: #f8f9fc;
+        border-radius: 0.35rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .search-results-header {
+        border-bottom: 1px solid #e3e6f0;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-search fa-fw me-2"></i>Select Food Bank
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Select Food Bank</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Find the Right Food Bank</h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="Search by name or location...">
+            </div>
+            <div class="col-md-3">
+                <label for="location" class="form-label">Location</label>
+                <select class="form-control" id="location" name="location">
+                    <option value="">All Locations</option>
+                    {% for city in cities %}
+                        <option value="{{ city }}" {% if location_filter == city %}selected{% endif %}>
+                            {{ city }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="service_type" class="form-label">Service Type</label>
+                <select class="form-control" id="service_type" name="service_type">
+                    <option value="all">All Services</option>
+                    <option value="food" {% if service_type_filter == 'food' %}selected{% endif %}>Food</option>
+                    <option value="non_food" {% if service_type_filter == 'non_food' %}selected{% endif %}>Non-Food</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="sort_by" class="form-label">Sort By</label>
+                <select class="form-control" id="sort_by" name="sort_by">
+                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Search Results Header -->
+    <div class="search-results-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                {% if total_count %}
+                    Found {{ total_count }} food bank{{ total_count|pluralize }}
+                    {% if search_query or location_filter or service_type_filter %}
+                        matching your criteria
+                    {% endif %}
+                {% else %}
+                    No food banks found
+                    {% if search_query or location_filter or service_type_filter %}
+                        matching your criteria
+                    {% endif %}
+                {% endif %}
+            </h5>
+            {% if search_query or location_filter or service_type_filter %}
+                <a href="{% url 'select_foodbank_for_request' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Food Banks List -->
+    <div class="row">
+        {% for foodbank in foodbanks %}
+            <div class="col-lg-6 col-xl-4">
+                <div class="card foodbank-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">{{ foodbank.foodbank_name }}</h5>
+                            <span class="service-badge service-{{ foodbank.service_type }}">
+                                {{ foodbank.get_service_type_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user fa-fw me-2"></i>{{ foodbank.contact_person }}
+                            </p>
+                            {% if foodbank.address %}
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-map-marker-alt fa-fw me-2"></i>{{ foodbank.address }}
+                                </p>
+                            {% endif %}
+                            {% if foodbank.contact_email %}
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-envelope fa-fw me-2"></i>{{ foodbank.contact_email }}
+                                </p>
+                            {% endif %}
+                            {% if foodbank.contact_phone %}
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-phone fa-fw me-2"></i>{{ foodbank.contact_phone }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        {% if foodbank.about_text %}
+                            <p class="card-text text-muted small">
+                                {{ foodbank.about_text|truncatewords:20 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'foodbank_public_profile' foodbank.id %}" 
+                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt me-1"></i>View Profile
+                            </a>
+                            <a href="{% url 'create_recipient_request_with_foodbank' foodbank.id %}" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-paper-plane me-1"></i>Make Request
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">No food banks found</h5>
+                    <p class="text-muted">
+                        {% if search_query or location_filter or service_type_filter %}
+                            Try adjusting your search criteria or 
+                            <a href="{% url 'select_foodbank_for_request' %}">clear all filters</a>.
+                        {% else %}
+                            There are currently no active food banks in the system.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Help Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="text-info mb-2">
+                        <i class="fas fa-info-circle me-2"></i>How to Choose a Food Bank
+                    </h6>
+                    <ul class="mb-0 text-muted small">
+                        <li><strong>Location:</strong> Choose a food bank near your location for easier coordination</li>
+                        <li><strong>Service Type:</strong> Select based on what you need - food items, non-food items, or both</li>
+                        <li><strong>Profile:</strong> Click "View Profile" to learn more about the food bank's mission and services</li>
+                        <li><strong>Contact:</strong> You can contact them directly using the provided contact information</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form when filters change
+    document.getElementById('location').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    document.getElementById('service_type').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    document.getElementById('sort_by').addEventListener('change', function() {
+        this.form.submit();
+    });
+</script>
+{% endblock %}

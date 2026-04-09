@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if testimonial %}Edit Testimonial{% else %}Create Testimonial{% endif %} - FoodBank Hub
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-quote-right text-primary me-2"></i>
+                        {% if testimonial %}Edit Testimonial{% else %}Share Your Experience{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if testimonial %}
+                            Update your testimonial about your giving experience
+                        {% else %}
+                            Tell others about your journey as a donor and inspire them to give
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'donor_testimonials_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Testimonials
+                </a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Testimonial Message -->
+                        <div class="mb-4">
+                            <label for="{{ form.message.id_for_label }}" class="form-label fw-bold">
+                                {{ form.message.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.message }}
+                            {% if form.message.help_text %}
+                                <div class="form-text">{{ form.message.help_text }}</div>
+                            {% endif %}
+                            {% if form.message.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.message.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.public_website_url.id_for_label }}" class="form-label fw-bold">
+                                {{ form.public_website_url.label }}
+                            </label>
+                            {{ form.public_website_url }}
+                            {% if form.public_website_url.help_text %}
+                                <div class="form-text">{{ form.public_website_url.help_text }}</div>
+                            {% endif %}
+                            {% if form.public_website_url.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.public_website_url.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Impact Image -->
+                        <div class="mb-4">
+                            <label for="{{ form.impact_image.id_for_label }}" class="form-label fw-bold">
+                                {{ form.impact_image.label }}
+                            </label>
+                            
+                            {% if testimonial and testimonial.impact_image %}
+                                <div class="mb-3">
+                                    <img src="{{ testimonial.impact_image.url }}" alt="Current Impact Image" 
+                                         class="img-thumbnail" style="max-height: 200px;">
+                                    <div class="form-text">Current image (upload a new one to replace)</div>
+                                </div>
+                            {% endif %}
+                            
+                            {{ form.impact_image }}
+                            {% if form.impact_image.help_text %}
+                                <div class="form-text">{{ form.impact_image.help_text }}</div>
+                            {% endif %}
+                            {% if form.impact_image.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.impact_image.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Display on Public -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.display_on_public }}
+                                <label class="form-check-label" for="{{ form.display_on_public.id_for_label }}">
+                                    {{ form.display_on_public.label }}
+                                </label>
+                            </div>
+                            {% if form.display_on_public.help_text %}
+                                <div class="form-text">{{ form.display_on_public.help_text }}</div>
+                            {% endif %}
+                            {% if form.display_on_public.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.display_on_public.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>Review Process
+                            </h6>
+                            <p class="mb-0">
+                                Your testimonial will be reviewed by our admin team before being displayed publicly. 
+                                This helps ensure all content is appropriate and inspiring for other potential donors.
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'donor_testimonials_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if testimonial %}Update Testimonial{% else %}Submit Testimonial{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Section -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Tips for Writing a Great Testimonial
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Share specific examples of how giving has impacted you personally</li>
+                        <li>Describe any positive changes you've witnessed in the community</li>
+                        <li>Mention what motivated you to start donating</li>
+                        <li>Include any memorable moments or interactions with food banks</li>
+                        <li>Keep it authentic and heartfelt - your genuine experience matters most</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-label {
+    color: #495057;
+}
+
+.alert-info {
+    border-left: 4px solid #0dcaf0;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.img-thumbnail {
+    border: 2px solid #dee2e6;
+}
+</style>
+{% endblock %}

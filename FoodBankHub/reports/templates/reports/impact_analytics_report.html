@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Impact Analytics Report - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root { --primary: #10b981; }
+    body { background: #f9fafb; }
+    .report-wrapper { padding: 2rem 0; min-height: 100vh; }
+    .report-header { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .report-title { font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-box { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); text-align: center; border-left: 4px solid var(--primary); }
+    .stat-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 0.5rem; }
+    .stat-value { font-size: 2.5rem; font-weight: 800; color: #111827; }
+    .stat-label { color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; }
+    .chart-card { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .chart-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
+    .filters-card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .export-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .btn-export { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-pdf { background: #ef4444; color: white; }
+    .btn-pdf:hover { background: #dc2626; color: white; }
+    .impact-highlight { background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; text-align: center; }
+    .impact-highlight h2 { font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-wrapper">
+    <div class="container">
+        <div class="report-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="report-title">
+                        <i class="fas fa-heart me-3"></i>Impact Analytics Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</p>
+                </div>
+                <a href="{% url 'foodbank_reports_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+            </div>
+        </div>
+
+        <div class="export-buttons">
+            <a href="#" onclick="window.print(); return false;" class="btn-export btn-pdf">
+                <i class="fas fa-print"></i> Print Report
+            </a>
+        </div>
+
+        <div class="filters-card">
+            <form method="GET" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> Apply
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="impact-highlight">
+            <h2>{{ total_beneficiaries }}</h2>
+            <p class="mb-0" style="font-size: 1.25rem;">People Served</p>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
+                <div class="stat-value">{{ items_distributed|floatformat:0 }}</div>
+                <div class="stat-label">Items Distributed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-value">KSH {{ monetary_assistance|floatformat:0 }}</div>
+                <div class="stat-label">Monetary Assistance</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i class="fas fa-gifts"></i></div>
+                <div class="stat-value">{{ total_donations }}</div>
+                <div class="stat-label">Total Donations</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-value">{{ unique_donors }}</div>
+                <div class="stat-label">Unique Donors</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-value">{{ requests_fulfilled }}</div>
+                <div class="stat-label">Requests Fulfilled</div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title">Weekly Impact Trends</h3>
+            <canvas id="weeklyImpactChart" height="80"></canvas>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">Impact by Category</h3>
+                    <canvas id="categoryImpactChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">Key Metrics Summary</h3>
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                            <span class="fw-bold">Beneficiaries per Week</span>
+                            <span class="text-primary fw-bold">{{ total_beneficiaries|default:0|floatformat:0 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                            <span class="fw-bold">Items per Beneficiary</span>
+                            <span class="text-primary fw-bold">
+                                {% if total_beneficiaries > 0 %}
+                                    {{ items_distributed|floatformat:0|default:0|add:0|div:total_beneficiaries|floatformat:1 }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                            <span class="fw-bold">Avg Donation Value</span>
+                            <span class="text-primary fw-bold">
+                                {% if total_donations > 0 %}
+                                    KSH {{ monetary_assistance|floatformat:0|default:0|add:0|div:total_donations|floatformat:0 }}
+                                {% else %}
+                                    KSH 0
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">Fulfillment Rate</span>
+                            <span class="text-success fw-bold">
+                                {% if requests_fulfilled > 0 %}
+                                    {{ requests_fulfilled|floatformat:0 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    const weeklyImpact = {{ weekly_impact|safe }};
+    new Chart(document.getElementById('weeklyImpactChart'), {
+        type: 'line',
+        data: {
+            labels: weeklyImpact.map(d => new Date(d.week).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})),
+            datasets: [{
+                label: 'Beneficiaries',
+                data: weeklyImpact.map(d => d.beneficiaries),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y'
+            }, {
+                label: 'Items Distributed',
+                data: weeklyImpact.map(d => d.items || 0),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Beneficiaries'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Items'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                }
+            }
+        }
+    });
+
+    const categoryImpact = {{ category_impact|safe }};
+    new Chart(document.getElementById('categoryImpactChart'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryImpact.map(d => d.donation_category || 'Other'),
+            datasets: [{
+                data: categoryImpact.map(d => d.count),
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#ec4899'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

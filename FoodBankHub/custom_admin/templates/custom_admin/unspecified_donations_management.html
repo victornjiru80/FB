@@ -1,0 +1,619 @@
+{% extends 'custom_admin/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-box-open me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Manage unspecified/general donations not tied to specific requests</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ total_donations }}</h3>
+                    <small class="text-white-50">Total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ pending_foodbank }}</h3>
+                    <small class="text-white-50">Pending Foodbank</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ accepted_by_foodbank }}</h3>
+                    <small class="text-white-50">Accepted by FB</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-danger">{{ declined_by_foodbank }}</h3>
+                    <small class="text-muted">Declined by FB</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card info">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ pending_recipient }}</h3>
+                    <small class="text-white-50">Pending Recipient</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ received }}</h3>
+                    <small class="text-white-50">Received</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% if posted_view %}{% url 'custom_admin:posted_unspecified_donations' %}{% else %}{% url 'custom_admin:unspecified_donations_management' %}{% endif %}" class="row g-3">
+                {% if not posted_view %}
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank Status</label>
+                    <select name="foodbank_status" class="form-select">
+                        <option value="">All</option>
+                        <option value="pending_foodbank" {% if current_filters.foodbank_status == 'pending_foodbank' %}selected{% endif %}>Pending Foodbank</option>
+                        <option value="accepted_by_foodbank" {% if current_filters.foodbank_status == 'accepted_by_foodbank' %}selected{% endif %}>Accepted by Foodbank</option>
+                        <option value="declined_by_foodbank" {% if current_filters.foodbank_status == 'declined_by_foodbank' %}selected{% endif %}>Declined by Foodbank</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Recipient Status</label>
+                    <select name="recipient_status" class="form-select">
+                        <option value="">All</option>
+                        <option value="not_applicable" {% if current_filters.recipient_status == 'not_applicable' %}selected{% endif %}>Not Claimed</option>
+                        <option value="pending_recipient" {% if current_filters.recipient_status == 'pending_recipient' %}selected{% endif %}>Pending Recipient</option>
+                        <option value="accepted_by_recipient" {% if current_filters.recipient_status == 'accepted_by_recipient' %}selected{% endif %}>Accepted by Recipient</option>
+                        <option value="received" {% if current_filters.recipient_status == 'received' %}selected{% endif %}>Received</option>
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All Foodbanks</option>
+                        {% for fb in foodbanks %}
+                        <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Donor, foodbank, item..." value="{{ current_filters.search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Type</label>
+                    <select name="donation_type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in donation_type_choices %}
+                        <option value="{{ value }}" {% if current_filters.donation_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in category_choices %}
+                        <option value="{{ value }}" {% if current_filters.category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Delivery</label>
+                    <select name="delivery" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in delivery_choices %}
+                        <option value="{{ value }}" {% if current_filters.delivery == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <a href="{% if clear_url %}{{ clear_url }}{% else %}{% url 'custom_admin:unspecified_donations_management' %}{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Donations Table -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Unspecified Donations</h5>
+            <div>
+                <a href="{% url 'custom_admin:export_unspecified_donations_csv' %}?{% if posted_view %}recipient_status=received{% if request.GET.urlencode %}&{% endif %}{% endif %}{{ request.GET.urlencode }}" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="fas fa-file-csv me-1"></i>Export to CSV
+                </a>
+                <a href="{% url 'custom_admin:export_unspecified_donations_excel' %}?{% if posted_view %}recipient_status=received{% if request.GET.urlencode %}&{% endif %}{% endif %}{{ request.GET.urlencode }}" class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-excel me-1"></i>Export to Excel
+                </a>
+                <a href="{% url 'custom_admin:export_unspecified_donations_pdf' %}?{% if posted_view %}recipient_status=received{% if request.GET.urlencode %}&{% endif %}{% endif %}{{ request.GET.urlencode }}" class="btn btn-danger btn-sm" target="_blank">
+                    <i class="fas fa-file-pdf me-1"></i>Export to PDF
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 compact-table">
+                    <thead>
+                        <tr>
+                            <th>S/No</th>
+                            <th>Date</th>
+                            <th>Donor</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Food Bank</th>
+                            <th>Qty/Amount</th>
+                            <th>Delivery</th>
+                            <th>Location</th>
+                            <th>Recipient</th>
+                            <th>Notes</th>
+                            <th class="status-cell text-center">Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                            <td style="line-height: 1.3;">
+                                <div style="font-size: 0.78rem;">{{ item.created_at|date:"M d, Y" }}</div>
+                                <small class="text-muted" style="font-size: 0.65rem;">{{ item.created_at|date:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% with profile=item.donation.donor.donor_profile %}
+                                    {% if profile %}
+                                        {% if profile.organization_name %}
+                                            <strong>{{ profile.organization_name }}</strong>
+                                        {% elif profile.full_name %}
+                                            <strong>{{ profile.full_name }}</strong>
+                                        {% else %}
+                                            <strong>{{ item.donation.donor.email }}</strong>
+                                        {% endif %}
+                                    {% else %}
+                                        <strong>{{ item.donation.donor.email }}</strong>
+                                    {% endif %}
+                                {% endwith %}
+                                <br>
+                                <small class="text-muted">{{ item.donation.donor.email }}</small>
+                            </td>
+                            <td style="font-size: 0.8rem;">
+                                {% if item.donation.donation_type == 'item' %}
+                                    {% if item.donation.donation_mode == 'free' %}
+                                        <span class="badge bg-success">Free Goods</span>
+                                    {% elif item.donation.donation_mode == 'subsidized' %}
+                                        <span class="badge bg-warning text-dark">Subsidized</span>
+                                        <div class="text-muted small mt-1">{{ item.donation.item_name|default:"General items"|truncatechars:24 }}</div>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ item.donation.get_donation_mode_display }}</span>
+                                        <div class="text-muted small mt-1">{{ item.donation.item_name|default:"General items"|truncatechars:24 }}</div>
+                                    {% endif %}
+                                {% else %}
+                                    {{ item.donation.get_donation_type_display }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if item.donation.donation_category == 'food' %}bg-success
+                                    {% elif item.donation.donation_category == 'non_food' %}bg-info
+                                    {% elif item.donation.donation_category == 'monetary' %}bg-warning text-dark
+                                    {% elif item.donation.donation_category == 'csr' %}bg-primary
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ item.donation.get_donation_category_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.donation.donation_type == 'item' %}
+                                    {% if item.donation.donation_mode == 'free' %}
+                                        {{ item.donation.item_name|default:"General donation"|truncatechars:55 }}
+                                    {% else %}
+                                        {{ item.donation.subsidized_product_type|default:item.donation.item_name|default:"Subsidized goods"|truncatechars:55 }}
+                                    {% endif %}
+                                {% elif item.donation.donation_type == 'subsidized' %}
+                                    {{ item.donation.subsidized_product_type|default:"Subsidized goods"|truncatechars:55 }}
+                                {% elif item.donation.donation_type == 'csr' %}
+                                    {{ item.donation.csr_description|truncatechars:55 }}
+                                {% elif item.donation.donation_type == 'other' %}
+                                    {{ item.donation.other_description|default:"Other donation"|truncatechars:55 }}
+                                {% elif item.donation.donation_type == 'money' %}
+                                    {{ item.donation.message|default:"Monetary donation"|truncatechars:55 }}
+                                {% else %}
+                                    <span class="text-muted">No description</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ item.donation.foodbank.foodbank_name }}</strong>
+                            </td>
+                            <td>
+                                {% if item.donation.donation_type == 'item' %}
+                                    <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}
+                                {% elif item.donation.donation_type == 'money' %}
+                                    <strong>KES {{ item.donation.amount|floatformat:0 }}</strong>
+                                {% elif item.donation.donation_type == 'csr' or item.donation.donation_type == 'other' %}
+                                    {% if item.donation.quantity %}
+                                        <strong>{{ item.donation.quantity }}</strong> {{ item.donation.quantity_unit|default:"units" }}<br>
+                                    {% endif %}
+                                    {% if item.donation.amount %}
+                                        <small class="text-muted">KES {{ item.donation.amount|floatformat:0 }}</small>
+                                    {% endif %}
+                                    {% if not item.donation.quantity and not item.donation.amount %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.donation.delivery_method %}
+                                    <span class="text-capitalize fw-semibold">
+                                        {{ item.donation.get_delivery_method_display|default:item.donation.delivery_method }}
+                                    </span>
+                                {% elif item.donation.donation_category == 'monetary' or item.donation.donation_type == 'money' %}
+                                    <span class="text-muted">Not applicable</span>
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ item.donation.foodbank.address|default:"Location not provided" }}
+                            </td>
+                            <td>
+                                {% if item.accepted_by_recipient %}
+                                    <span class="badge bg-success-subtle text-success fw-semibold" style="font-size: 0.7rem;">Claimed</span>
+                                    <br>
+                                    <small class="text-muted">{{ item.accepted_by_recipient.full_name|default:item.accepted_by_recipient.user.email }}</small>
+                                {% else %}
+                                    <span class="badge bg-light text-secondary fw-semibold" style="font-size: 0.7rem;">Unclaimed</span>
+                                {% endif %}
+                            </td>
+                            <td class="notes-cell">
+                                <div class="note-block">
+                                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size: 0.6rem;">Donor</small>
+                                    {% if item.donation.message %}
+                                        <p class="mb-1">{{ item.donation.message|truncatechars:70 }}</p>
+                                    {% elif item.donation.other_description %}
+                                        <p class="mb-1">{{ item.donation.other_description|truncatechars:70 }}</p>
+                                    {% else %}
+                                        <p class="text-muted mb-1">No donor note</p>
+                                    {% endif %}
+                                    <small class="text-muted text-uppercase d-block mb-1" style="font-size: 0.6rem;">Recipient</small>
+                                    {% if item.recipient_notes %}
+                                        <p class="mb-0">{{ item.recipient_notes|truncatechars:70 }}</p>
+                                    {% else %}
+                                        <p class="text-muted mb-0">No recipient note</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="status-cell text-center">
+                                <span class="badge
+                                    {% if item.recipient_status == 'received' %}bg-success
+                                    {% elif item.recipient_status == 'accepted_by_recipient' %}bg-info
+                                    {% elif item.recipient_status == 'declined_by_recipient' %}bg-danger
+                                    {% elif item.foodbank_status == 'accepted_by_foodbank' %}bg-warning text-dark
+                                    {% elif item.foodbank_status == 'pending_foodbank' %}bg-warning text-dark
+                                    {% elif item.foodbank_status == 'declined_by_foodbank' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ item|neutral_status_unspecified }}
+                                </span>
+                                {% if item.recipient_status == 'declined_by_recipient' %}
+                                    <div class="mt-2">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger recipient-decline-note-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#recipientDeclineNoteModal"
+                                            data-note="{{ item.recipient_decline_reason|default:'No recipient decline note.'|escapejs }}"
+                                            data-recipient="{% if item.accepted_by_recipient %}{{ item.accepted_by_recipient.full_name|default:item.accepted_by_recipient.user.email|escapejs }}{% else %}Recipient{% endif %}"
+                                        >
+                                            Show note
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary view-details-btn" data-donation-id="{{ item.id }}"
+                                        data-bs-toggle="modal" data-bs-target="#donationDetailsModal" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="14" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No unspecified donations found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pagination_query_string %}&{{ pagination_query_string }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pagination_query_string %}&{{ pagination_query_string }}{% endif %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Donation Details Modal -->
+<div class="modal fade" id="donationDetailsModal" tabindex="-1" aria-labelledby="donationDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="donationDetailsModalLabel">
+                    <i class="fas fa-info-circle me-2"></i>Donation Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="donationDetailsContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading donation details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="exportPdfBtn">
+                    <i class="fas fa-file-pdf me-2"></i>Export to PDF
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recipient Decline Note Modal -->
+<div class="modal fade" id="recipientDeclineNoteModal" tabindex="-1" aria-labelledby="recipientDeclineNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="recipientDeclineNoteModalLabel">
+                    <i class="fas fa-comment-alt me-2"></i>Recipient Decline Note
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2"><strong id="recipientDeclineNoteRecipient"></strong></p>
+                <p class="mb-0" id="recipientDeclineNoteText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const viewButtons = document.querySelectorAll('.view-details-btn');
+    let currentDonationId = null;
+    
+    viewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const donationId = this.dataset.donationId;
+            currentDonationId = donationId;
+            const modalContent = document.getElementById('donationDetailsContent');
+            
+            // Show loading state
+            modalContent.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading donation details...</p>
+                </div>
+            `;
+            
+            // Fetch donation details
+            fetch(`/admin/donations/unspecified/${donationId}/details/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        modalContent.innerHTML = generateDetailsHTML(data.donation);
+                    } else {
+                        modalContent.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                ${data.message || 'Failed to load donation details'}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            An error occurred while loading donation details
+                        </div>
+                    `;
+                    console.error('Error:', error);
+                });
+        });
+    });
+    
+    // Handle PDF export
+    document.getElementById('exportPdfBtn').addEventListener('click', function() {
+        if (currentDonationId) {
+            window.open(`/admin/donations/unspecified/${currentDonationId}/export-pdf/`, '_blank');
+        }
+    });
+
+    const declineNoteModalEl = document.getElementById('recipientDeclineNoteModal');
+    if (declineNoteModalEl) {
+        const recipientEl = document.getElementById('recipientDeclineNoteRecipient');
+        const noteEl = document.getElementById('recipientDeclineNoteText');
+        declineNoteModalEl.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+            const recipient = trigger.getAttribute('data-recipient') || 'Recipient';
+            const note = trigger.getAttribute('data-note') || 'No recipient decline note.';
+            if (recipientEl) {
+                recipientEl.textContent = recipient;
+            }
+            if (noteEl) {
+                noteEl.textContent = note;
+            }
+        });
+    }
+});
+
+function generateDetailsHTML(donation) {
+    return `
+        <!-- Donation Information -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-gift me-2"></i>Donation Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Donation ID:</strong> ${donation.id}</p>
+                        <p><strong>Type:</strong> <span class="badge bg-info">${donation.donation_type}</span></p>
+                        <p><strong>Details:</strong> ${donation.details}</p>
+                        ${donation.amount ? `<p><strong>Amount:</strong> KES ${donation.amount}</p>` : ''}
+                        ${donation.expiry_date ? `<p><strong>Expiry Date:</strong> ${donation.expiry_date}</p>` : ''}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Created:</strong> ${donation.created_at}</p>
+                        <p><strong>Last Updated:</strong> ${donation.updated_at}</p>
+                        ${donation.delivery_method ? `<p><strong>Delivery Method:</strong> ${donation.delivery_method}</p>` : ''}
+                        ${donation.location ? `<p><strong>Location:</strong> ${donation.location}</p>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donor Information -->
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-user me-2"></i>Donor Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> ${donation.donor_name}</p>
+                <p><strong>Email:</strong> ${donation.donor_email}</p>
+                ${donation.donor_phone ? `<p><strong>Phone:</strong> ${donation.donor_phone}</p>` : ''}
+                ${donation.donor_organization ? `<p><strong>Organization:</strong> ${donation.donor_organization}</p>` : ''}
+            </div>
+        </div>
+
+        <!-- Foodbank Information -->
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="fas fa-building me-2"></i>Foodbank Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Foodbank:</strong> ${donation.foodbank_name}</p>
+                <p><strong>Status:</strong> <span class="badge ${donation.foodbank_status_class}">${donation.foodbank_status}</span></p>
+                ${donation.foodbank_contact ? `<p><strong>Contact:</strong> ${donation.foodbank_contact}</p>` : ''}
+            </div>
+        </div>
+
+        <!-- Recipient Information -->
+        ${donation.recipient_name ? `
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-user-circle me-2"></i>Recipient Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Recipient:</strong> ${donation.recipient_name}</p>
+                <p><strong>Status:</strong> <span class="badge ${donation.recipient_status_class}">${donation.recipient_status}</span></p>
+                ${donation.received_date ? `<p><strong>Received Date:</strong> ${donation.received_date}</p>` : ''}
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- Tracking History -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Tracking History & Comments</h6>
+            </div>
+            <div class="card-body">
+                ${donation.tracking_history && donation.tracking_history.length > 0 ? `
+                    <div class="timeline">
+                        ${donation.tracking_history.map(entry => `
+                            <div class="timeline-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <span class="badge ${entry.badge_class}">${entry.status}</span>
+                                        </h6>
+                                        <p class="mb-1">${entry.description}</p>
+                                        ${entry.comment ? `<p class="text-muted mb-1"><em>"${entry.comment}"</em></p>` : ''}
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>${entry.updated_by || 'System'}
+                                        </small>
+                                    </div>
+                                    <small class="text-muted text-nowrap ms-3">
+                                        <i class="fas fa-clock me-1"></i>${entry.timestamp}
+                                    </small>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p class="text-muted">No tracking history available</p>'}
+            </div>
+        </div>
+    `;
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ news.title }} - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4" style="max-width: 980px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'home' %}#newsCarousel" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+        <div class="text-muted small">
+            <i class="far fa-calendar-alt me-1"></i>
+            {{ news.created_at|date:"F d, Y" }}
+        </div>
+    </div>
+
+    <article class="card border-0 shadow-sm overflow-hidden">
+        {% if news.image %}
+        <div style="background: #0f172a;">
+            <img src="{{ news.image.url }}" alt="{{ news.title }}" style="width: 100%; max-height: 420px; object-fit: contain; display: block;">
+        </div>
+        {% endif %}
+
+        <div class="card-body p-4 p-md-5">
+            <div class="mb-2">
+                <span class="badge rounded-pill text-bg-success">
+                    <i class="fas fa-bullhorn me-1"></i> Announcement
+                </span>
+            </div>
+
+            <h1 class="mb-3" style="color: #334155;">{{ news.title }}</h1>
+
+            <div class="news-article-body">
+                {{ news.content|linebreaks }}
+            </div>
+        </div>
+    </article>
+
+    {% if related_news %}
+    <div class="mt-4">
+        <h5 class="mb-3" style="color: #334155;">More announcements</h5>
+        <div class="row g-3">
+            {% for item in related_news %}
+            <div class="col-md-4">
+                <a href="{% url 'news_detail' item.id %}" class="text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm">
+                        {% if item.image %}
+                        <div style="background: #0f172a;">
+                            <img src="{{ item.image.url }}" alt="{{ item.title }}" style="width: 100%; height: 140px; object-fit: cover; display: block;">
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <div class="text-muted small mb-1">{{ item.created_at|date:"M d, Y" }}</div>
+                            <div class="fw-bold" style="color: #0f172a; overflow-wrap:anywhere;">{{ item.title }}</div>
+                            <div class="text-muted small mt-2">{{ item.content|truncatewords:18 }}</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.news-article-body {
+    color: #334155;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+</style>
+{% endblock %}
+

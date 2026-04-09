@@ -1,0 +1,585 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load report_filters %}
+
+{% block title %}Completed Requests Report - Recipient Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-page {
+        background: #f8f9fa;
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        background: white;
+        color: #1f2937;
+        padding: 1rem 0;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #eff6ff;
+        border-radius: 8px;
+        color: #1e40af;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+    }
+    
+    .section-title i {
+        color: #06b6d4;
+    }
+    
+    .table-modern {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+    
+    .table-modern thead {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+    }
+    
+    .table-modern th {
+        font-weight: 600;
+        color: white;
+        border: none;
+        padding: 1rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table-modern td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table-modern tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    .table-modern tbody tr:hover {
+        background-color: #f0f9ff;
+        transform: scale(1.01);
+    }
+    
+    .badge-custom {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-food { background: #dcfce7; color: #166534; }
+    .badge-non-food { background: #dbeafe; color: #1e40af; }
+    .badge-received { background: #d1fae5; color: #065f46; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+    
+    .summary-stats {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .stat-box {
+        background: #f9fafb;
+        color: #374151;
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+        border-left: 3px solid #06b6d4;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .stat-box .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #06b6d4;
+    }
+    
+    .stat-box .stat-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .pagination li a,
+    .pagination li span {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        color: #374151;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .pagination li a:hover {
+        background: #f9fafb;
+        border-color: #06b6d4;
+        color: #06b6d4;
+    }
+    
+    .pagination li.active span {
+        background: #06b6d4;
+        color: white;
+        border-color: #06b6d4;
+    }
+    
+    .pagination li.disabled span {
+        color: #d1d5db;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0" style="font-size: 1.25rem; font-weight: 600;">
+                        <i class="fas fa-check-double me-2 text-primary"></i>Completed Requests Report
+                    </h2>
+                    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Filter -->
+        <div class="filter-card">
+            <form method="GET" id="dateFilterForm">
+                <div class="row align-items-end g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>Start Date
+                        </label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>End Date
+                        </label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Apply Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="info-badge">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Showing data from <strong>{{ start_date }}</strong> to <strong>{{ end_date }}</strong></span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="summary-stats">
+            <div class="stat-box">
+                <div class="stat-value">{{ total_completed }}</div>
+                <div class="stat-label">Completed Requests</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ total_quantity }}</div>
+                <div class="stat-label">Total Quantity</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ total_unspecified }}</div>
+                <div class="stat-label">Unspecified Donations</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ total_subsidized }}</div>
+                <div class="stat-label">Subsidized Donations</div>
+            </div>
+        </div>
+
+        <!-- Completed Requests Table -->
+        <div class="section-card">
+            <div class="section-header">
+                <h4 class="section-title mb-0">
+                    <i class="fas fa-list-check"></i>
+                    Completed & Received Requests
+                </h4>
+                <a href="{% url 'export_completed_requests_pdf' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-sm btn-danger">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+            </div>
+            
+            {% if completed_requests %}
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>S/No</th>
+                            <th>Request Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Food Bank</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Urgency</th>
+                            <th>Fulfilled Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in completed_requests %}
+                        <tr>
+                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td>{{ request.time_of_request|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge-custom {% if request.request_type == 'food' %}badge-food{% else %}badge-non-food{% endif %}">
+                                    {{ request.get_request_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="max-width: 250px;">
+                                    {{ request.description|truncatechars:80 }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if request.foodbank %}
+                                    {{ request.foodbank.foodbank_name }}
+                                {% elif request.assigned_foodbank %}
+                                    {{ request.assigned_foodbank.foodbank_name }}
+                                {% else %}
+                                    Anonymous Request
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ request.quantity }}</strong></td>
+                            <td>{{ request.get_unit_display }}</td>
+                            <td>
+                                {% if request.urgency == 'urgent' %}
+                                    <span class="badge bg-danger">Urgent</span>
+                                {% elif request.urgency == 'high' %}
+                                    <span class="badge bg-warning text-dark">High</span>
+                                {% elif request.urgency == 'medium' %}
+                                    <span class="badge bg-info">Medium</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ request.fulfilled_at|date:"M d, Y"|default:"N/A" }}</td>
+                            <td>
+                                <span class="badge-custom badge-received">
+                                    <i class="fas fa-check-double me-1"></i>Received
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination for Completed Requests -->
+            {% if completed_requests.has_other_pages %}
+            <div class="pagination-container">
+                <ul class="pagination">
+                    {% if completed_requests.has_previous %}
+                        <li><a href="?requests_page=1&start_date={{ start_date }}&end_date={{ end_date }}&unspecified_page={{ completed_unspecified.number }}&subsidized_page={{ completed_subsidized.number }}">First</a></li>
+                        <li><a href="?requests_page={{ completed_requests.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&unspecified_page={{ completed_unspecified.number }}&subsidized_page={{ completed_subsidized.number }}">Previous</a></li>
+                    {% else %}
+                        <li class="disabled"><span>First</span></li>
+                        <li class="disabled"><span>Previous</span></li>
+                    {% endif %}
+                    
+                    <li class="active"><span>Page {{ completed_requests.number }} of {{ completed_requests.paginator.num_pages }}</span></li>
+                    
+                    {% if completed_requests.has_next %}
+                        <li><a href="?requests_page={{ completed_requests.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&unspecified_page={{ completed_unspecified.number }}&subsidized_page={{ completed_subsidized.number }}">Next</a></li>
+                        <li><a href="?requests_page={{ completed_requests.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&unspecified_page={{ completed_unspecified.number }}&subsidized_page={{ completed_subsidized.number }}">Last</a></li>
+                    {% else %}
+                        <li class="disabled"><span>Next</span></li>
+                        <li class="disabled"><span>Last</span></li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h5 class="text-muted">No Completed Requests Found</h5>
+                <p class="text-muted">No requests have been confirmed as received in the selected period.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">
+                    <i class="fas fa-home me-2"></i>Go to Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Completed Unspecified Donations Table -->
+        <div class="section-card">
+            <div class="section-header">
+                <h4 class="section-title mb-0">
+                    <i class="fas fa-box-open"></i>
+                    Completed Unspecified Donations
+                </h4>
+                <a href="{% url 'export_completed_unspecified_pdf' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-sm btn-danger">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+            </div>
+            
+            {% if completed_unspecified %}
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>S/No</th>
+                            <th>Donation Date</th>
+                            <th>Donor</th>
+                            <th>Food Bank</th>
+                            <th>Item Type</th>
+                            <th>Quantity</th>
+                            <th>Accepted Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in completed_unspecified %}
+                        <tr>
+                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td>{{ item.donation.donated_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if item.donation.donor %}
+                                    {{ item.donation.donor.get_full_name }}
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                            </td>
+                            <td>{{ item.donation.foodbank.foodbank_name }}</td>
+                            <td>
+                                <span class="badge-custom badge-food">
+                                    {{ item.donation.get_item_type_display|default:"Food Item" }}
+                                </span>
+                            </td>
+                            <td><strong>{{ item.donation.quantity }} {{ item.donation.get_unit_display }}</strong></td>
+                            <td>{{ item.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge-custom badge-received">
+                                    <i class="fas fa-check-double me-1"></i>Received
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination for Unspecified Donations -->
+            {% if completed_unspecified.has_other_pages %}
+            <div class="pagination-container">
+                <ul class="pagination">
+                    {% if completed_unspecified.has_previous %}
+                        <li><a href="?unspecified_page=1&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&subsidized_page={{ completed_subsidized.number }}">First</a></li>
+                        <li><a href="?unspecified_page={{ completed_unspecified.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&subsidized_page={{ completed_subsidized.number }}">Previous</a></li>
+                    {% else %}
+                        <li class="disabled"><span>First</span></li>
+                        <li class="disabled"><span>Previous</span></li>
+                    {% endif %}
+                    
+                    <li class="active"><span>Page {{ completed_unspecified.number }} of {{ completed_unspecified.paginator.num_pages }}</span></li>
+                    
+                    {% if completed_unspecified.has_next %}
+                        <li><a href="?unspecified_page={{ completed_unspecified.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&subsidized_page={{ completed_subsidized.number }}">Next</a></li>
+                        <li><a href="?unspecified_page={{ completed_unspecified.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&subsidized_page={{ completed_subsidized.number }}">Last</a></li>
+                    {% else %}
+                        <li class="disabled"><span>Next</span></li>
+                        <li class="disabled"><span>Last</span></li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h5 class="text-muted">No Completed Unspecified Donations</h5>
+                <p class="text-muted">No unspecified donations have been received in the selected period.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Completed Subsidized Donations Table -->
+        <div class="section-card">
+            <div class="section-header">
+                <h4 class="section-title mb-0">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Completed Subsidized Donations
+                </h4>
+                <a href="{% url 'export_completed_subsidized_pdf' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-sm btn-danger">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+            </div>
+            
+            {% if completed_subsidized %}
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>S/No</th>
+                            <th>Donation Date</th>
+                            <th>Donor</th>
+                            <th>Food Bank</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Original Price (KES)</th>
+                            <th>Subsidized Price (KES)</th>
+                            <th>Discount %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in completed_subsidized %}
+                        <tr>
+                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td>{{ donation.donated_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if donation.donor %}
+                                    {{ donation.donor.get_full_name }}
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                            </td>
+                            <td>{{ donation.foodbank.foodbank_name }}</td>
+                            <td>
+                                <strong>{{ donation.subsidized_product_type|default:"N/A" }}</strong>
+                            </td>
+                            <td><strong>{{ donation.subsidized_quantity|default:donation.quantity }} {{ donation.subsidized_quantity_unit|default:donation.quantity_unit|default:"units" }}</strong></td>
+                            <td><strong>{{ donation.subsidized_market_price|floatformat:2|default:"N/A" }}</strong></td>
+                            <td><strong>{{ donation.subsidized_price|floatformat:2|default:donation.amount|floatformat:2 }}</strong></td>
+                            <td>
+                                {% if donation.subsidized_discount_percentage and donation.subsidized_discount_percentage > 0 %}
+                                    <span class="badge bg-success">{{ donation.subsidized_discount_percentage|floatformat:0 }}%</span>
+                                {% else %}
+                                    {% with discount=donation.subsidized_market_price|calculate_discount:donation.subsidized_price %}
+                                        {% if discount %}
+                                            <span class="badge bg-success">{{ discount|floatformat:0 }}%</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-custom badge-received">
+                                    <i class="fas fa-check-double me-1"></i>Received
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination for Subsidized Donations -->
+            {% if completed_subsidized.has_other_pages %}
+            <div class="pagination-container">
+                <ul class="pagination">
+                    {% if completed_subsidized.has_previous %}
+                        <li><a href="?subsidized_page=1&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&unspecified_page={{ completed_unspecified.number }}">First</a></li>
+                        <li><a href="?subsidized_page={{ completed_subsidized.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&unspecified_page={{ completed_unspecified.number }}">Previous</a></li>
+                    {% else %}
+                        <li class="disabled"><span>First</span></li>
+                        <li class="disabled"><span>Previous</span></li>
+                    {% endif %}
+                    
+                    <li class="active"><span>Page {{ completed_subsidized.number }} of {{ completed_subsidized.paginator.num_pages }}</span></li>
+                    
+                    {% if completed_subsidized.has_next %}
+                        <li><a href="?subsidized_page={{ completed_subsidized.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&unspecified_page={{ completed_unspecified.number }}">Next</a></li>
+                        <li><a href="?subsidized_page={{ completed_subsidized.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&requests_page={{ completed_requests.number }}&unspecified_page={{ completed_unspecified.number }}">Last</a></li>
+                    {% else %}
+                        <li class="disabled"><span>Next</span></li>
+                        <li class="disabled"><span>Last</span></li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h5 class="text-muted">No Completed Subsidized Donations</h5>
+                <p class="text-muted">No subsidized donations have been received in the selected period.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Approved Food Bank Applications</h1>
+    <div class="d-flex gap-2">
+        <span class="badge bg-success fs-6">{{ approved_count }} Approved</span>
+        <a href="{% url 'custom_admin:foodbank_approvals' %}" class="btn btn-sm btn-outline-warning">
+            <i class="fas fa-clipboard-check me-1"></i>Pending Approvals
+        </a>
+        <a href="{% url 'custom_admin:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-check-circle me-2"></i>
+            Approved Applications ({{ approved_count }})
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if approved_registrations %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                These applications are <strong>approved</strong>. You may
+                <strong>reopen</strong> them if changes or revalidation is required.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Food Bank</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Service Type</th>
+                            <th>Approved On</th>
+                            <th>Approved By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registration in approved_registrations %}
+                        <tr>
+                            <td class="fw-bold">{{ registration.foodbank_name }}</td>
+                            <td>{{ registration.contact_person }}</td>
+                            <td>
+                                <a href="mailto:{{ registration.user.email }}">
+                                    {{ registration.user.email }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ registration.get_service_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {{ registration.approval_date|date:"M d, Y" }}
+                            </td>
+                            <td>
+                                {{ registration.approved_by.email|default:"System" }}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'custom_admin:view_foodbank_application' registration.id %}"
+                                       class="btn btn-sm btn-outline-info"
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <a href="{% url 'custom_admin:reopen_foodbank_application' registration.id %}"
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Reopen Application"
+                                       onclick="return confirm('Reopen this approved application and move it back to pending?')">
+                                        <i class="fas fa-redo"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if approved_registrations.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if approved_registrations.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ approved_registrations.previous_page_number }}">
+                                    Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in approved_registrations.paginator.page_range %}
+                            {% if approved_registrations.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > approved_registrations.number|add:'-3' and num < approved_registrations.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if approved_registrations.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ approved_registrations.next_page_number }}">
+                                    Next
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Approved Applications</h5>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

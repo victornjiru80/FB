@@ -1,0 +1,563 @@
+/* Elegant FoodBank Navbar Styles */
+.foodbank-navbar {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 0.7rem 0;
+    transition: all 0.3s ease;
+}
+
+.foodbank-navbar.scrolled {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    padding: 0.55rem 0;
+}
+
+.foodbank-navbar .navbar-brand {
+    color: #0f172a !important;
+    text-shadow: none;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.foodbank-navbar .brand-icon {
+    width: 36px;
+    height: 36px;
+    background: #ccfbf1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #0f766e;
+    box-shadow: none;
+    border: 1px solid rgba(15, 118, 110, 0.15);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.foodbank-navbar .brand-icon:hover {
+    transform: none;
+    box-shadow: none;
+    background: #bff5ea;
+}
+
+.foodbank-navbar .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.foodbank-navbar .brand-subtitle {
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.foodbank-navbar .navbar-stats {
+    display: flex;
+    gap: 1rem;
+    margin: 0 1.5rem;
+}
+
+.foodbank-navbar .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: border-color 0.2s ease, background 0.2s ease;
+    min-width: 80px;
+}
+
+.foodbank-navbar .stat-item:hover {
+    background: #f8fafc;
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(15, 118, 110, 0.25);
+}
+
+.foodbank-navbar .stat-item i {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.foodbank-navbar .stat-number {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.foodbank-navbar .stat-label {
+    font-size: 0.65rem;
+    color: #64748b;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.foodbank-navbar .nav-link {
+    color: #475569 !important;
+    background: transparent;
+    border: 1px solid transparent;
+    margin: 0 0.25rem;
+    padding: 0.5rem 0.85rem !important;
+    border-radius: 999px;
+    transition: color 0.2s ease, background 0.2s ease;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.foodbank-navbar .nav-link i {
+    font-size: 0.9rem;
+    width: 18px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.foodbank-navbar .nav-link:hover,
+.foodbank-navbar .nav-link:focus {
+    color: #0f766e !important;
+    background: rgba(15, 118, 110, 0.08);
+    border-color: transparent;
+    transform: none;
+}
+
+.foodbank-navbar .nav-link:hover i {
+    transform: none;
+}
+
+.foodbank-navbar .nav-link.active {
+    color: #0f766e !important;
+    background: rgba(15, 118, 110, 0.12);
+    border-color: transparent;
+    box-shadow: none;
+    font-weight: 600;
+}
+
+.foodbank-navbar .nav-link.active i {
+    color: #0f766e;
+}
+
+.foodbank-navbar .nav-text {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+.foodbank-navbar .notification-nav-link {
+    position: relative;
+    background: rgba(239, 68, 68, 0.08);
+    border-color: transparent;
+}
+
+.foodbank-navbar .notification-nav-link:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: transparent;
+}
+
+.foodbank-navbar .notification-badge {
+    animation: gentle-pulse 2s infinite;
+}
+
+@keyframes gentle-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.foodbank-navbar .user-avatar {
+    width: 32px;
+    height: 32px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #475569;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    box-shadow: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.foodbank-navbar .user-avatar:hover {
+    transform: none;
+    box-shadow: none;
+    background: #cbd5f5;
+    color: #1e293b;
+}
+
+.foodbank-navbar .user-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.foodbank-navbar .user-name {
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.foodbank-navbar .user-role {
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.foodbank-navbar .navbar-toggler {
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.foodbank-navbar .navbar-toggler-icon,
+.foodbank-navbar .navbar-toggler-icon::before,
+.foodbank-navbar .navbar-toggler-icon::after {
+    background-color: #475569;
+}
+
+/* Enhanced Dropdown Styles for FoodBank */
+.foodbank-navbar .dropdown-menu {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    position: absolute !important;
+    top: 100% !important;
+    left: auto !important;
+    right: 0 !important;
+    z-index: 1050 !important;
+    min-width: 220px;
+    transform: none !important;
+}
+
+.foodbank-navbar .notification-dropdown,
+.foodbank-navbar .settings-dropdown {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.foodbank-navbar .dropdown-header {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    color: #1e293b;
+    margin: -0.75rem -0.75rem 0.75rem -0.75rem;
+    padding: 1rem 1rem;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.foodbank-navbar .dropdown-item {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-weight: 500;
+    color: #475569;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    margin: 0.125rem 0;
+    position: relative;
+}
+
+.foodbank-navbar .dropdown-item i {
+    transition: transform 0.2s ease;
+}
+
+.foodbank-navbar .dropdown-item:hover,
+.foodbank-navbar .dropdown-item:focus {
+    background: rgba(22, 163, 74, 0.08);
+    color: #1e293b;
+    transform: translateX(3px);
+    border-color: rgba(22, 163, 74, 0.2);
+    padding-left: 1.25rem;
+}
+
+.foodbank-navbar .dropdown-item:hover i,
+.foodbank-navbar .dropdown-item:focus i {
+    transform: scale(1.15);
+}
+
+.foodbank-navbar .dropdown-item.active {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* Ensure proper dropdown positioning */
+.foodbank-navbar .nav-item.dropdown {
+    position: relative !important;
+}
+
+/* Fix dropdown flickering by ensuring proper display states */
+.foodbank-navbar .dropdown-menu {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.foodbank-navbar .dropdown-menu.show {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Removed hover-based flickering prevention as it was interfering with Bootstrap dropdowns */
+
+/* Ensure dropdown toggle doesn't cause flickering */
+.foodbank-navbar .dropdown-toggle {
+    position: relative;
+    z-index: 1;
+    min-width: 120px;
+    justify-content: space-between;
+}
+
+.foodbank-navbar .dropdown-toggle::after {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.foodbank-navbar .dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
+.foodbank-navbar .dropdown-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
+
+/* Dark Mode Toggle Button */
+.foodbank-navbar .theme-toggle {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 10px;
+    padding: 0.5rem;
+    margin: 0 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.foodbank-navbar .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.foodbank-navbar .theme-toggle i {
+    font-size: 1rem;
+    color: #475569;
+    transition: all 0.3s ease;
+}
+
+.foodbank-navbar .theme-toggle:hover i {
+    color: #1e293b;
+}
+
+/* Dark Mode Styles */
+.foodbank-navbar.dark-mode {
+    background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+    border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.foodbank-navbar.dark-mode.scrolled {
+    background: rgba(15, 23, 42, 0.95);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.foodbank-navbar.dark-mode .navbar-brand {
+    color: #f8fafc !important;
+}
+
+.foodbank-navbar.dark-mode .brand-subtitle {
+    color: #94a3b8;
+}
+
+.foodbank-navbar.dark-mode .stat-item {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(71, 85, 105, 0.3);
+}
+
+.foodbank-navbar.dark-mode .stat-item:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(22, 163, 74, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.foodbank-navbar.dark-mode .stat-number {
+    color: #f8fafc;
+}
+
+.foodbank-navbar.dark-mode .stat-label {
+    color: #94a3b8;
+}
+
+.foodbank-navbar.dark-mode .nav-link {
+    color: #cbd5e1 !important;
+}
+
+.foodbank-navbar.dark-mode .nav-link:hover,
+.foodbank-navbar.dark-mode .nav-link:focus {
+    color: #f8fafc !important;
+    background: rgba(22, 163, 74, 0.15);
+    border-color: rgba(22, 163, 74, 0.3);
+}
+
+.foodbank-navbar.dark-mode .nav-link.active {
+    color: #f8fafc !important;
+    background: rgba(22, 163, 74, 0.2);
+    border-color: rgba(22, 163, 74, 0.4);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.foodbank-navbar.dark-mode .notification-nav-link {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.foodbank-navbar.dark-mode .notification-nav-link:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.foodbank-navbar.dark-mode .user-avatar {
+    background: linear-gradient(135deg, #475569, #334155);
+}
+
+.foodbank-navbar.dark-mode .user-name {
+    color: #f8fafc;
+}
+
+.foodbank-navbar.dark-mode .user-role {
+    color: #94a3b8;
+}
+
+.foodbank-navbar.dark-mode .navbar-toggler {
+    border-color: rgba(71, 85, 105, 0.4);
+    background: rgba(30, 41, 59, 0.8);
+}
+
+.foodbank-navbar.dark-mode .navbar-toggler-icon,
+.foodbank-navbar.dark-mode .navbar-toggler-icon::before,
+.foodbank-navbar.dark-mode .navbar-toggler-icon::after {
+    background-color: #cbd5e1;
+}
+
+.foodbank-navbar.dark-mode .theme-toggle {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(71, 85, 105, 0.4);
+}
+
+.foodbank-navbar.dark-mode .theme-toggle:hover {
+    background: rgba(30, 41, 59, 0.9);
+}
+
+.foodbank-navbar.dark-mode .theme-toggle i {
+    color: #cbd5e1;
+}
+
+.foodbank-navbar.dark-mode .theme-toggle:hover i {
+    color: #f8fafc;
+}
+
+.foodbank-navbar.dark-mode .notification-dropdown,
+.foodbank-navbar.dark-mode .settings-dropdown {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(71, 85, 105, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.foodbank-navbar.dark-mode .dropdown-header {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #f8fafc;
+    border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+.foodbank-navbar.dark-mode .dropdown-item {
+    color: #cbd5e1;
+}
+
+.foodbank-navbar.dark-mode .dropdown-item:hover,
+.foodbank-navbar.dark-mode .dropdown-item:focus {
+    background: rgba(22, 163, 74, 0.15);
+    color: #f8fafc;
+    border-color: rgba(22, 163, 74, 0.3);
+}
+
+/* Responsive Design for FoodBank Navbar */
+@media (max-width: 991.98px) {
+    .foodbank-navbar .navbar-collapse {
+        background: rgba(248, 250, 252, 0.95);
+        backdrop-filter: blur(25px);
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        margin-top: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .foodbank-navbar.dark-mode .navbar-collapse {
+        background: rgba(15, 23, 42, 0.95);
+        border-color: rgba(71, 85, 105, 0.3);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .foodbank-navbar .navbar-stats {
+        display: none;
+    }
+
+    .foodbank-navbar .nav-link {
+        margin: 0.25rem 0;
+        text-align: center;
+    }
+
+    .foodbank-navbar .user-info {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .foodbank-navbar {
+        padding: 0.5rem 0;
+    }
+
+    .foodbank-navbar .brand-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+
+    .foodbank-navbar .brand-text strong {
+        font-size: 1rem;
+    }
+
+    .foodbank-navbar .brand-subtitle {
+        font-size: 0.65rem;
+    }
+}

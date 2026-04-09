@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Make Request - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .foodbank-info {
+        background-color: #f8f9fc;
+        border-radius: 0.35rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #4e73df;
+    }
+    
+    .service-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .service-food { background-color: #d4edda; color: #155724; }
+    .service-non-food { background-color: #d1ecf1; color: #0c5460; }
+    .service-both { background-color: #fff3cd; color: #856404; }
+    
+    .form-section {
+        background-color: #ffffff;
+        border-radius: 0.35rem;
+        padding: 2rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-paper-plane fa-fw me-2"></i>Make Request
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'select_foodbank_for_request' %}">Select Food Bank</a></li>
+                <li class="breadcrumb-item active">Make Request</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Selected Food Bank Info -->
+            <div class="foodbank-info">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1">{{ foodbank.foodbank_name }}</h5>
+                        <span class="service-badge service-{{ foodbank.service_type }}">
+                            {{ foodbank.get_service_type_display }}
+                        </span>
+                    </div>
+                    <a href="{% url 'select_foodbank_for_request' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Change Food Bank
+                    </a>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-user fa-fw me-2"></i>{{ foodbank.contact_person }}
+                        </p>
+                        {% if foodbank.address %}
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-map-marker-alt fa-fw me-2"></i>{{ foodbank.address }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if foodbank.contact_email %}
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-envelope fa-fw me-2"></i>{{ foodbank.contact_email }}
+                            </p>
+                        {% endif %}
+                        {% if foodbank.contact_phone %}
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-phone fa-fw me-2"></i>{{ foodbank.contact_phone }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-2">
+                    <a href="{% url 'foodbank_public_profile' foodbank.id %}" 
+                       class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fas fa-external-link-alt me-1"></i>View Full Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Request Form -->
+            <div class="form-section">
+                <h5 class="mb-4">
+                    <i class="fas fa-edit me-2"></i>Request Details
+                </h5>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">
+                                Request Title <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Give your request a clear, descriptive title (e.g., "Food Aid for Family of 4", "School Supplies Needed")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description <span class="text-danger">*</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Provide details about what you need and why. This helps the food bank understand your situation better.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                Quantity <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.quantity.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity_unit.id_for_label }}" class="form-label">
+                                Unit <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity_unit }}
+                            {% if form.quantity_unit.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.quantity_unit.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                e.g., kg, packets, liters, pieces
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.delivery_method.id_for_label }}" class="form-label">
+                                Delivery Method
+                            </label>
+                            {{ form.delivery_method }}
+                            {% if form.delivery_method.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.delivery_method.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                How would you prefer to receive the assistance?
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                Your Location
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.location.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Where should the assistance be delivered or where can you pick it up?
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="form-check">
+                                {{ form.is_anonymous }}
+                                <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">
+                                    Make this request anonymous
+                                </label>
+                                <div class="form-text">
+                                    If checked, your identity will be hidden from the food bank, but they can still contact you through the system.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'select_foodbank_for_request' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Selection
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card border-left-info mt-4">
+                <div class="card-body">
+                    <h6 class="text-info mb-2">
+                        <i class="fas fa-info-circle me-2"></i>Request Guidelines
+                    </h6>
+                    <ul class="mb-0 text-muted small">
+                        <li><strong>Be Specific:</strong> Clearly describe what you need and approximate quantities</li>
+                        <li><strong>Be Honest:</strong> Provide accurate information about your situation</li>
+                        <li><strong>Be Patient:</strong> Food banks will review your request and respond as soon as possible</li>
+                        <li><strong>Stay Connected:</strong> Check your notifications for updates on your request</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and user experience enhancements
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-resize textarea
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+        
+        // Form submission confirmation
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const title = document.querySelector('input[name="title"]').value.trim();
+                const description = document.querySelector('textarea[name="description"]').value.trim();
+                
+                if (!title || !description) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields before submitting.');
+                    return false;
+                }
+                
+                // Show loading state
+                const submitBtn = document.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Submitting...';
+                submitBtn.disabled = true;
+            });
+        }
+    });
+</script>
+{% endblock %}

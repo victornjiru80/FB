@@ -1,0 +1,246 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-tasks me-2"></i>{{ title }}</h2>
+            <p class="text-muted">Unified request management system for all recipient-foodbank requests</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ total_requests }}</h3>
+                    <small class="text-white-50">Total Requests</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ pending }}</h3>
+                    <small class="text-white-50">Pending</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card info">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ assigned }}</h3>
+                    <small class="text-white-50">Assigned</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">{{ fulfilled }}</h3>
+                    <small class="text-white-50">Fulfilled</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-warning">{{ partial }}</h3>
+                    <small class="text-muted">Partial</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-danger">{{ declined }}</h3>
+                    <small class="text-muted">Declined</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h4 class="mb-0 text-info">{{ anonymous_requests }}</h4>
+                    <small class="text-muted">Anonymous Requests</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Request Type</label>
+                    <select name="request_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in request_type_choices %}
+                        <option value="{{ value }}" {% if current_filters.request_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foodbank</label>
+                    <select name="foodbank" class="form-select">
+                        <option value="">All Foodbanks</option>
+                        {% for fb in foodbanks %}
+                        <option value="{{ fb.id }}" {% if current_filters.foodbank == fb.id|stringformat:"s" %}selected{% endif %}>{{ fb.foodbank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Anonymous</label>
+                    <select name="anonymous" class="form-select">
+                        <option value="">All</option>
+                        <option value="yes" {% if current_filters.anonymous == 'yes' %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if current_filters.anonymous == 'no' %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Description, recipient, location..." value="{{ current_filters.search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Apply
+                    </button>
+                    <a href="{% url 'custom_admin:request_management_admin' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Request Management</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Recipient</th>
+                            <th>Foodbank</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                            <th>Anonymous</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in page_obj %}
+                        <tr>
+                            <td>{{ req.id }}</td>
+                            <td>
+                                {% if req.is_anonymous %}
+                                <span class="text-muted"><i class="fas fa-user-secret"></i> Anonymous</span>
+                                {% else %}
+                                {{ req.recipient.full_name }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.foodbank %}
+                                {{ req.foodbank.foodbank_name }}
+                                {% elif req.assigned_foodbank %}
+                                {{ req.assigned_foodbank.foodbank_name }}
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-info">{{ req.get_request_type_display }}</span></td>
+                            <td><small>{{ req.description|truncatewords:8 }}</small></td>
+                            <td>{{ req.quantity }} {{ req.unit }}</td>
+                            <td>
+                                {% if req.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif req.status == 'assigned' %}
+                                <span class="badge bg-info">Assigned</span>
+                                {% elif req.status == 'fulfilled' %}
+                                <span class="badge bg-success">Fulfilled</span>
+                                {% elif req.status == 'partial' %}
+                                <span class="badge bg-warning">Partial</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ req.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.is_anonymous %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.time_of_request|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No requests found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

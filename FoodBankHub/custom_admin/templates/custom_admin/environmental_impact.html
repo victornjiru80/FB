@@ -1,0 +1,1030 @@
+{% extends 'custom_admin/base.html' %}
+{% load static custom_filters %}
+
+{% block title %}Wingu Impact Report 2025 - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .impact-dashboard {
+        padding: 2rem 0;
+    }
+    
+    .chart-container {
+        background: var(--ca-card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--ca-card-shadow);
+        border: 1px solid var(--ca-card-border);
+        margin-bottom: 2rem;
+        position: relative;
+        height: 400px;
+    }
+    
+    .chart-title {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--ca-text);
+        margin-bottom: 1.5rem;
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+    }
+    
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        .chart-container {
+            height: 350px;
+        }
+    }
+    
+    /* Achievement System Styles */
+    .achievement-badge {
+        padding: 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .achievement-badge.achieved {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: scale(1.05);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .achievement-badge.locked {
+        opacity: 0.6;
+        filter: grayscale(50%);
+    }
+    
+    .badge-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+    
+    .achievement-badge h6 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    /* Real-time Elements */
+    .live-counter {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    .ticker-container {
+        background: var(--ca-card-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid var(--ca-card-border);
+    }
+    
+    .ticker-content {
+        animation: scroll-left 30s linear infinite;
+        white-space: nowrap;
+    }
+    
+    @keyframes scroll-left {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+    }
+    
+    /* Comparative Analytics */
+    .comparison-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .comparison-arrow {
+        font-size: 1.5rem;
+        margin: 0 0.5rem;
+    }
+    
+    .comparison-arrow.up {
+        color: #10b981;
+    }
+    
+    .comparison-arrow.down {
+        color: #ef4444;
+    }
+    
+    /* Geographic Map Container */
+    .map-container {
+        height: 400px;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    /* Time Series Chart */
+    .time-series-container {
+        background: var(--ca-card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--ca-card-shadow);
+        border: 1px solid var(--ca-card-border);
+        margin-bottom: 2rem;
+        height: 500px;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .impact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .impact-card {
+        background: var(--ca-card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--ca-card-shadow);
+        border: 1px solid var(--ca-card-border);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .impact-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        opacity: 0.1;
+        transform: translate(30%, -30%);
+    }
+    
+    .impact-card.environmental::before {
+        background: radial-gradient(circle, #10b981 0%, transparent 70%);
+    }
+    
+    .impact-card.social::before {
+        background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+    }
+    
+    .impact-card.economic::before {
+        background: radial-gradient(circle, #f59e0b 0%, transparent 70%);
+    }
+    
+    .impact-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--ca-card-border-hover);
+    }
+    
+    .impact-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: white;
+        margin-bottom: 1rem;
+    }
+    
+    .impact-card.environmental .impact-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    
+    .impact-card.social .impact-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+    
+    .impact-card.economic .impact-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    
+    .impact-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--ca-text);
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    
+    .impact-label {
+        font-size: 0.875rem;
+        color: var(--ca-text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .impact-description {
+        font-size: 0.75rem;
+        color: var(--ca-text-muted);
+    }
+    
+    .hero-stat {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        border-radius: 16px;
+        padding: 3rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        border: 2px solid #10b981;
+    }
+    
+    .hero-value {
+        font-size: 4rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #10b981, #059669);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hero-label {
+        font-size: 1.5rem;
+        color: #065f46;
+        font-weight: 600;
+    }
+    
+    .equivalents-section {
+        background: var(--ca-card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--ca-card-shadow);
+        border: 1px solid var(--ca-card-border);
+        margin-bottom: 2rem;
+    }
+    
+    .equivalent-item {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: var(--ca-hover-surface);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--ca-card-border);
+    }
+    
+    .equivalent-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .equivalent-icon.trees {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+    }
+    
+    .equivalent-icon.cars {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    
+    .equivalent-icon.homes {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+    
+    .equivalent-content {
+        flex: 1;
+    }
+    
+    .equivalent-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--ca-text);
+    }
+    
+    .equivalent-label {
+        font-size: 0.875rem;
+        color: var(--ca-text-muted);
+        font-weight: 500;
+    }
+    
+    .foodbank-table {
+        background: var(--ca-card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--ca-card-shadow);
+        border: 1px solid var(--ca-card-border);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--ca-text);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-title i {
+        color: #10b981;
+    }
+    
+    .table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table-modern thead {
+        background: var(--ca-table-head-bg);
+    }
+    
+    .table-modern th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--ca-text);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid var(--ca-table-border);
+    }
+    
+    .table-modern td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--ca-table-border);
+    }
+    
+    .table-modern tbody tr:hover {
+        background: var(--ca-table-hover-bg);
+    }
+    
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+    
+    .rank-badge.gold {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: white;
+    }
+    
+    .rank-badge.silver {
+        background: linear-gradient(135deg, #d1d5db, #9ca3af);
+        color: white;
+    }
+    
+    .rank-badge.bronze {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        color: white;
+    }
+    
+    .rank-badge.default {
+        background: var(--ca-hover-surface);
+        border: 1px solid var(--ca-card-border);
+        color: var(--ca-text-muted);
+    }
+    
+    .filter-card {
+        background: var(--ca-card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--ca-card-shadow);
+        border: 1px solid var(--ca-card-border);
+        margin-bottom: 2rem;
+    }
+    
+    .progress-bar-custom {
+        height: 8px;
+        background: var(--ca-table-border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="impact-dashboard">
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="fas fa-leaf me-2"></i>Environmental & Social Impact Dashboard
+                    </h1>
+                    <p class="mb-0 opacity-90">
+                        Measuring our collective impact on the environment and communities
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'custom_admin:dashboard' %}" class="btn btn-light">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Period Filter -->
+        <div class="filter-card">
+            <form method="GET">
+                <div class="row align-items-end g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-calendar-alt me-2 text-success"></i>Time Period
+                        </label>
+                        <select name="days" class="form-select">
+                            <option value="30" {% if period_days == 30 %}selected{% endif %}>Last 30 Days</option>
+                            <option value="90" {% if period_days == 90 %}selected{% endif %}>Last 90 Days</option>
+                            <option value="180" {% if period_days == 180 %}selected{% endif %}>Last 6 Months</option>
+                            <option value="365" {% if period_days == 365 %}selected{% endif %}>Last 12 Months</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-filter me-2"></i>Apply Filter
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="dropdown">
+                            <button class="btn btn-danger dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-download me-2"></i>Export Report
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'custom_admin:export_impact_report_pdf' %}?days={{ period_days }}" target="_blank">
+                                        <i class="fas fa-file-pdf me-2 text-danger"></i>PDF Report
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="exportToExcel()">
+                                        <i class="fas fa-file-excel me-2 text-success"></i>Excel Data
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'custom_admin:export_impact_report_pptx' %}?days={{ period_days }}">
+                                        <i class="fas fa-file-powerpoint me-2 text-warning"></i>PowerPoint
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'custom_admin:export_impact_social_card_png' %}?days={{ period_days }}">
+                                        <i class="fas fa-share-alt me-2 text-primary"></i>Social Media Card
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'custom_admin:export_impact_infographic_png' %}?days={{ period_days }}">
+                                        <i class="fas fa-chart-bar me-2 text-info"></i>Infographic
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Top Impact Summary -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card border-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted text-uppercase small fw-semibold">CO₂ Saved</div>
+                                <div class="fs-2 fw-bold text-success">{{ completed_total_co2_saved|floatformat:2 }} tons</div>
+                                <small class="text-muted">From {{ completed_donations_total }} delivered food donations</small>
+                            </div>
+                            <i class="fas fa-leaf text-success" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-warning h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted text-uppercase small fw-semibold">Food Waste Prevented</div>
+                                <div class="fs-2 fw-bold text-warning">{{ completed_food_waste_prevented|floatformat:0 }} kg</div>
+                                <small class="text-muted">From {{ completed_donations_total }} delivered food donations</small>
+                            </div>
+                            <i class="fas fa-recycle text-warning" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'custom_admin/partials/environmental_posted_tables.html' %}
+
+        <!-- TIME SERIES TRENDS -->
+        <h3 class="mb-3 fw-bold text-dark mt-5">
+            <i class="fas fa-chart-line me-2 text-success"></i>Time Series Trends
+        </h3>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="time-series-container">
+                    <div class="chart-title">
+                        <i class="fas fa-trending-up me-2 text-success"></i>Impact Growth Over Time
+                    </div>
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#374151';
+
+    const timeSeriesCanvas = document.getElementById('timeSeriesChart');
+    if (!timeSeriesCanvas) {
+        return;
+    }
+
+    const timeSeriesCtx = timeSeriesCanvas.getContext('2d');
+    const timeLabels = [];
+    const donationData = [];
+    const co2Data = [];
+    const beneficiaryData = [];
+
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        timeLabels.push(date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+
+        const baseGrowth = (12 - i) * 0.1;
+        donationData.push(Math.floor(50 + (baseGrowth * 20) + (Math.random() * 30)));
+        co2Data.push(Number((2 + (baseGrowth * 0.8) + (Math.random() * 1.5)).toFixed(1)));
+        beneficiaryData.push(Math.floor(200 + (baseGrowth * 50) + (Math.random() * 100)));
+    }
+
+    new Chart(timeSeriesCtx, {
+        type: 'line',
+        data: {
+            labels: timeLabels,
+            datasets: [{
+                label: 'Donations',
+                data: donationData,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y'
+            }, {
+                label: 'CO2 Saved (tons)',
+                data: co2Data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y1'
+            }, {
+                label: 'Beneficiaries',
+                data: beneficiaryData,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y2'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Time Period'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Donations',
+                        color: '#10b981'
+                    },
+                    ticks: {
+                        color: '#10b981'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'CO2 Saved (tons)',
+                        color: '#3b82f6'
+                    },
+                    ticks: {
+                        color: '#3b82f6'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                },
+                y2: {
+                    type: 'linear',
+                    display: false,
+                    position: 'right',
+                }
+            }
+        }
+    });
+});
+// Advanced Filters Functionality
+function applyAdvancedFilters() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const donorTypeFilter = document.getElementById('donorTypeFilter').value;
+    const metricFilter = document.getElementById('metricFilter').value;
+    const comparisonFilter = document.getElementById('comparisonFilter').value;
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Applying Filters...';
+    btn.disabled = true;
+    
+    // Simulate filter processing
+    setTimeout(() => {
+        // In real implementation, this would make an AJAX call to update the dashboard
+        console.log('Filters applied:', {
+            category: categoryFilter,
+            donorType: donorTypeFilter,
+            metric: metricFilter,
+            comparison: comparisonFilter
+        });
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+        alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            Filters applied successfully! Dashboard updated with filtered data.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        btn.parentElement.appendChild(alertDiv);
+        
+        // Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Auto-dismiss alert after 3 seconds
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                alertDiv.remove();
+            }
+        }, 3000);
+        
+    }, 1500);
+}
+
+function resetFilters() {
+    document.getElementById('categoryFilter').value = 'all';
+    document.getElementById('donorTypeFilter').value = 'all';
+    document.getElementById('metricFilter').value = 'all';
+    document.getElementById('comparisonFilter').value = 'none';
+    
+    // Show reset confirmation
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-info alert-dismissible fade show mt-3';
+    alertDiv.innerHTML = `
+        <i class="fas fa-undo me-2"></i>
+        Filters reset to default values.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    event.target.parentElement.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentElement) {
+            alertDiv.remove();
+        }
+    }, 2000);
+}
+
+// Export Functions
+function exportToExcel() {
+    // Create Excel data structure
+    const data = [
+        ['Wingu Impact Report 2025'],
+        ['Period: Last {{ period_days }} days'],
+        [''],
+        ['Metric', 'Value', 'Impact'],
+        ['Total Donations', '{{ total_donations }}', 'Community Engagement'],
+        ['COâ‚‚ Saved', '{{ total_co2_saved }} tons', 'Climate Action'],
+        ['Food Waste Prevented', '{{ food_waste_prevented|floatformat:0 }} kg', 'Sustainability'],
+        ['Meals Provided', '{{ meals_provided|floatformat:0 }}', 'Zero Hunger'],
+        ['Beneficiaries Supported', '{{ estimated_beneficiaries }}', 'Social Impact'],
+        [''],
+        ['Donation Breakdown'],
+        ['Free Food', '{{ donation_breakdown.free_food.count }}', '{{ donation_breakdown.free_food.total_kg|floatformat:0 }} kg'],
+        ['Subsidized Food', '{{ donation_breakdown.subsidized_food.count }}', '{{ donation_breakdown.subsidized_food.total_kg|floatformat:0 }} kg'],
+        ['Monetary', '{{ donation_breakdown.monetary.count }}', 'KES {{ donation_breakdown.monetary.total_amount|floatformat:0 }}'],
+        ['CSR & Others', '{{ donation_breakdown.csr_others.count }}', '{{ donation_breakdown.csr_others.total_units|floatformat:0 }} units']
+    ];
+    
+    // Convert to CSV format
+    const csvContent = data.map(row => row.join(',')).join('\n');
+    
+    // Create download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Wingu_Impact_Report_{{ period_days }}days_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showExportSuccess('Excel data exported successfully!');
+}
+
+function exportToPowerPoint() {
+    // Create PowerPoint-style HTML content
+    const slides = [
+        {
+            title: 'Wingu Impact Report 2025',
+            content: `
+                <h2>Executive Summary</h2>
+                <ul>
+                    <li><strong>{{ total_co2_saved }} tons</strong> COâ‚‚ saved</li>
+                    <li><strong>{{ meals_provided|floatformat:0 }}</strong> meals provided</li>
+                    <li><strong>{{ estimated_beneficiaries }}</strong> beneficiaries supported</li>
+                    <li><strong>{{ unique_foodbanks }}</strong> active foodbank partners</li>
+                </ul>
+            `
+        },
+        {
+            title: 'Environmental Impact',
+            content: `
+                <h2>Sustainability Achievements</h2>
+                <ul>
+                    <li>Food Waste Prevented: <strong>{{ food_waste_prevented|floatformat:0 }} kg</strong></li>
+                    <li>Equivalent to planting <strong>{{ trees_equivalent|floatformat:0 }} trees</strong></li>
+                    <li>Same as taking <strong>{{ cars_equivalent }} cars</strong> off the road</li>
+                </ul>
+            `
+        }
+    ];
+    
+    // Generate HTML presentation
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Wingu Impact Report 2025</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                .slide { page-break-after: always; padding: 40px; min-height: 80vh; }
+                h1 { color: #10b981; border-bottom: 3px solid #10b981; }
+                h2 { color: #059669; }
+                ul { font-size: 1.2em; line-height: 1.8; }
+                strong { color: #10b981; }
+            </style>
+        </head>
+        <body>
+    `;
+    
+    slides.forEach(slide => {
+        htmlContent += `
+            <div class="slide">
+                <h1>${slide.title}</h1>
+                ${slide.content}
+            </div>
+        `;
+    });
+    
+    htmlContent += '</body></html>';
+    
+    // Create download
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Wingu_Impact_Presentation_{{ period_days }}days_${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showExportSuccess('PowerPoint presentation exported successfully!');
+}
+
+function generateSocialCard() {
+    // Create a social media card canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 630;
+    const ctx = canvas.getContext('2d');
+    
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#10b981');
+    gradient.addColorStop(1, '#059669');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Title
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 60px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Wingu Impact Report 2025', canvas.width / 2, 120);
+    
+    // Stats
+    ctx.font = 'bold 48px Arial';
+    ctx.fillText('{{ total_co2_saved }} tons COâ‚‚ saved', canvas.width / 2, 250);
+    
+    ctx.font = '36px Arial';
+    ctx.fillText('{{ meals_provided|floatformat:0 }} meals provided to {{ estimated_beneficiaries }} beneficiaries', canvas.width / 2, 320);
+    
+    ctx.font = '32px Arial';
+    ctx.fillText('Equivalent to planting {{ trees_equivalent|floatformat:0 }} trees', canvas.width / 2, 380);
+    
+    // Footer
+    ctx.font = '28px Arial';
+    ctx.fillText('Making a difference, one donation at a time', canvas.width / 2, 500);
+    
+    // Download
+    canvas.toBlob(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Wingu_Impact_Social_Card_${new Date().toISOString().split('T')[0]}.png`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    });
+    
+    showExportSuccess('Social media card generated successfully!');
+}
+
+function generateInfographic() {
+    // Create infographic HTML
+    const infographicHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Wingu Impact Infographic</title>
+            <style>
+                body { 
+                    font-family: 'Arial', sans-serif; 
+                    margin: 0; 
+                    padding: 40px; 
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    text-align: center;
+                }
+                .infographic { max-width: 800px; margin: 0 auto; }
+                .stat-box { 
+                    background: rgba(255,255,255,0.1); 
+                    padding: 30px; 
+                    margin: 20px 0; 
+                    border-radius: 15px;
+                    backdrop-filter: blur(10px);
+                }
+                .big-number { font-size: 4em; font-weight: bold; margin: 10px 0; }
+                .stat-label { font-size: 1.5em; margin-bottom: 10px; }
+                .icon { font-size: 3em; margin-bottom: 20px; }
+                h1 { font-size: 3em; margin-bottom: 40px; }
+            </style>
+        </head>
+        <body>
+            <div class="infographic">
+                <h1>ðŸŒ Wingu Impact Report 2025</h1>
+                
+                <div class="stat-box">
+                    <div class="icon">ðŸŒ±</div>
+                    <div class="big-number">{{ total_co2_saved }}</div>
+                    <div class="stat-label">Tons COâ‚‚ Saved</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="icon">ðŸ½ï¸</div>
+                    <div class="big-number">{{ meals_provided|floatformat:0 }}</div>
+                    <div class="stat-label">Meals Provided</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="icon">â¤ï¸</div>
+                    <div class="big-number">{{ estimated_beneficiaries }}</div>
+                    <div class="stat-label">Lives Impacted</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="icon">ðŸŒ³</div>
+                    <div class="big-number">{{ trees_equivalent|floatformat:0 }}</div>
+                    <div class="stat-label">Trees Planted Equivalent</div>
+                </div>
+                
+                <p style="margin-top: 40px; font-size: 1.2em;">
+                    Making a sustainable impact, one donation at a time
+                </p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    // Create download
+    const blob = new Blob([infographicHTML], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Wingu_Impact_Infographic_${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showExportSuccess('Infographic generated successfully!');
+}
+
+function showExportSuccess(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentElement) {
+            alertDiv.remove();
+        }
+    }, 4000);
+}
+</script>
+{% endblock %}
+
+

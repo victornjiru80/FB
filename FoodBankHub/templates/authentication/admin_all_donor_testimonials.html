@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Donor Testimonials - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-quote-right text-primary me-2"></i>
+                        All Donor Testimonials
+                    </h2>
+                    <p class="text-muted mb-0">Manage all donor testimonials across the platform</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-info fs-6">{{ total_count }} Total</span>
+                    <a href="{% url 'admin_donor_testimonials_pending' %}" class="btn btn-warning">
+                        <i class="fas fa-clock me-2"></i>Pending Review
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Filter by Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Testimonials List -->
+            {% if testimonials %}
+                <div class="row">
+                    {% for testimonial in testimonials %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100 shadow-sm 
+                            {% if testimonial.approval_status == 'approved' %}border-success
+                            {% elif testimonial.approval_status == 'pending' %}border-warning
+                            {% else %}border-danger{% endif %}">
+                            
+                            {% if testimonial.impact_image %}
+                            <img src="{{ testimonial.impact_image.url }}" class="card-img-top" alt="Impact Image" style="height: 150px; object-fit: contain; background: #0f172a;">
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <!-- Donor Info -->
+                                <div class="mb-2">
+                                    <h6 class="card-title mb-1">
+                                        <i class="fas fa-user text-primary me-1"></i>
+                                        {{ testimonial.donor.full_name|default:testimonial.donor.user.email }}
+                                    </h6>
+                                    <small class="text-muted">{{ testimonial.donor.user.email }}</small>
+                                </div>
+
+                                <!-- Status Badge -->
+                                <div class="mb-3">
+                                    {% if testimonial.approval_status == 'approved' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Approved
+                                        </span>
+                                        {% if testimonial.display_on_public %}
+                                            <span class="badge bg-info ms-1">
+                                                <i class="fas fa-eye me-1"></i>Public
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary ms-1">
+                                                <i class="fas fa-eye-slash me-1"></i>Private
+                                            </span>
+                                        {% endif %}
+                                    {% elif testimonial.approval_status == 'pending' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Rejected
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Testimonial Content -->
+                                <div class="flex-grow-1 mb-3">
+                                    <p class="card-text small">{{ testimonial.message|truncatewords:25 }}</p>
+                                </div>
+
+                                <!-- Metadata -->
+                                <div class="text-muted small mb-3">
+                                    <div>
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ testimonial.created_at|date:"M d, Y" }}
+                                    </div>
+                                    {% if testimonial.reviewed_at %}
+                                    <div>
+                                        <i class="fas fa-user-check me-1"></i>
+                                        Reviewed {{ testimonial.reviewed_at|date:"M d, Y" }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Rejection Reason -->
+                                {% if testimonial.approval_status == 'rejected' and testimonial.rejection_reason %}
+                                <div class="alert alert-danger small mb-3 p-2">
+                                    <strong>Rejection:</strong> {{ testimonial.rejection_reason|truncatewords:15 }}
+                                </div>
+                                {% endif %}
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex gap-1 mt-auto">
+                                    {% if testimonial.approval_status == 'pending' %}
+                                        <a href="{% url 'admin_approve_donor_testimonial' testimonial.id %}" 
+                                           class="btn btn-success btn-sm flex-fill">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'admin_reject_donor_testimonial' testimonial.id %}" 
+                                           class="btn btn-danger btn-sm flex-fill">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    {% elif testimonial.approval_status == 'rejected' %}
+                                        <a href="{% url 'admin_approve_donor_testimonial' testimonial.id %}" 
+                                           class="btn btn-outline-success btn-sm flex-fill">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </a>
+                                    {% else %}
+                                        <span class="text-success small">
+                                            <i class="fas fa-check-circle me-1"></i>Approved
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-quote-right text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">No Testimonials Found</h4>
+                    <p class="text-muted mb-4">
+                        {% if status_filter != 'all' %}
+                            No testimonials match the selected filter criteria.
+                        {% else %}
+                            No donor testimonials have been submitted yet.
+                        {% endif %}
+                    </p>
+                    {% if status_filter != 'all' %}
+                        <a href="{% url 'admin_all_donor_testimonials' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View All Testimonials
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.border-success {
+    border-left: 4px solid #198754 !important;
+}
+
+.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.border-danger {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.badge {
+    font-size: 0.7rem;
+}
+
+.btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}

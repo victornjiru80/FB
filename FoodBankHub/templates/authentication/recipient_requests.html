@@ -1,0 +1,963 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .request-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .request-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Advanced filters collapsible styles */
+    .filter-section .collapse {
+        margin-top: 1rem;
+    }
+
+    .filter-section .border-top {
+        border-color: #dee2e6 !important;
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+
+    /* Filter toggle button */
+    .filter-section .btn[data-bs-toggle="collapse"] {
+        transition: all 0.3s ease;
+    }
+
+    .filter-section .btn[data-bs-toggle="collapse"]:focus {
+        box-shadow: none;
+    }
+
+    .filter-section .btn[data-bs-toggle="collapse"] i {
+        transition: transform 0.3s ease;
+    }
+
+    .filter-section .btn[data-bs-toggle="collapse"]:not(.collapsed) i {
+        transform: rotate(180deg);
+    }
+
+    .text-wrap-cell {
+        white-space: normal !important;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+
+    /* Table: all columns visible at first glance */
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .preview-table-wrapper {
+        margin: 0 -1rem 1.5rem;
+        padding: 1.25rem 1.5rem 1rem;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+    }
+
+    .preview-table-wrapper table {
+        margin-bottom: 0;
+        table-layout: fixed;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .preview-table-wrapper table th,
+    .preview-table-wrapper table td {
+        border-color: rgba(15,23,42,0.08) !important;
+    }
+
+    .preview-table-wrapper table thead th + th,
+    .preview-table-wrapper table tbody td + td {
+        border-left: 1px solid rgba(15,23,42,0.08);
+    }
+
+    .preview-table-wrapper .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.56rem;
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+        padding: 0.24rem 0.18rem;
+        line-height: 1.1;
+    }
+
+    .preview-table-wrapper .table td {
+        vertical-align: middle;
+        font-size: 0.65rem;
+        padding: 0.28rem 0.22rem;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    /* Column widths: 13 columns share space so all visible */
+    .preview-table-wrapper .table th:nth-child(1),
+    .preview-table-wrapper .table td:nth-child(1) { width: 3.5%; }
+    .preview-table-wrapper .table th:nth-child(2),
+    .preview-table-wrapper .table td:nth-child(2) { width: 6%; }
+    .preview-table-wrapper .table th:nth-child(3),
+    .preview-table-wrapper .table td:nth-child(3) { width: 7%; }
+    .preview-table-wrapper .table th:nth-child(4),
+    .preview-table-wrapper .table td:nth-child(4) { width: 15%; }
+    .preview-table-wrapper .table th:nth-child(5),
+    .preview-table-wrapper .table td:nth-child(5) { width: 8.5%; }
+    .preview-table-wrapper .table th:nth-child(6),
+    .preview-table-wrapper .table td:nth-child(6) { width: 12%; }
+    .preview-table-wrapper .table th:nth-child(7),
+    .preview-table-wrapper .table td:nth-child(7) { width: 7%; }
+    .preview-table-wrapper .table th:nth-child(8),
+    .preview-table-wrapper .table td:nth-child(8) { width: 10%; }
+    .preview-table-wrapper .table th:nth-child(9),
+    .preview-table-wrapper .table td:nth-child(9) { width: 12%; }
+    .preview-table-wrapper .table th:nth-child(10),
+    .preview-table-wrapper .table td:nth-child(10) { width: 7%; }
+    .preview-table-wrapper .table th:nth-child(11),
+    .preview-table-wrapper .table td:nth-child(11) { width: 5%; }
+    .preview-table-wrapper .table th:nth-child(12),
+    .preview-table-wrapper .table td:nth-child(12) { width: 5%; }
+    .preview-table-wrapper .table th:nth-child(13),
+    .preview-table-wrapper .table td:nth-child(13) { width: 2%; }
+
+    .preview-table-wrapper .table td:nth-child(4),
+    .preview-table-wrapper .table td:nth-child(5),
+    .preview-table-wrapper .table td:nth-child(6),
+    .preview-table-wrapper .table td:nth-child(8),
+    .preview-table-wrapper .table td:nth-child(9) {
+        white-space: normal !important;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+
+    .table-warning {
+        background-color: rgba(255,193,7,0.1) !important;
+    }
+
+    .preview-table-wrapper .table-hover .badge {
+        font-size: 0.58rem;
+        padding: 0.12rem 0.28rem;
+        white-space: normal !important;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        line-height: 1.2;
+    }
+
+    .preview-table-wrapper .table-hover small {
+        font-size: 0.6rem;
+    }
+
+    .preview-table-wrapper .table-hover .btn-sm {
+        font-size: 0.6rem;
+        padding: 0.18rem 0.3rem;
+    }
+
+    /* Status cell: wrap long labels */
+    .preview-table-wrapper .table td:nth-child(9) {
+        overflow: hidden;
+    }
+    .preview-table-wrapper .table td:nth-child(9) > span {
+        display: inline-flex !important;
+        max-width: 100%;
+        white-space: normal !important;
+        line-height: 1.15;
+        flex-wrap: wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .preview-table-wrapper .table td:nth-child(9) > span > span {
+        margin-left: 0 !important;
+        margin-top: 0.2rem;
+        max-width: 100%;
+        white-space: normal !important;
+        display: inline-flex;
+        flex-wrap: wrap;
+    }
+    .preview-table-wrapper .table td:nth-child(9) .btn {
+        margin-top: 0.2rem;
+        white-space: normal;
+        line-height: 1.1;
+    }
+    .preview-table-wrapper .table td:nth-child(11) {
+        overflow: hidden;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .preview-table-wrapper .table td:nth-child(11) .view-notes-btn {
+        display: inline-block;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        font-size: 0.55rem !important;
+        padding: 0.16rem 0.24rem !important;
+        line-height: 1.05;
+    }
+    .preview-table-wrapper .table td:nth-child(11) .view-notes-btn i {
+        margin-right: 0.15rem !important;
+    }
+    .preview-table-wrapper .table td:nth-child(12) {
+        white-space: normal !important;
+    }
+    .preview-table-wrapper .table td:nth-child(12) .btn {
+        white-space: normal !important;
+        line-height: 1.1;
+    }
+
+    @media (max-width: 1200px) {
+        .preview-table-wrapper .table th {
+            font-size: 0.52rem;
+        }
+        .preview-table-wrapper .table td {
+            font-size: 0.6rem;
+            padding: 0.22rem 0.18rem;
+        }
+    }
+
+    #requestNotesModalBody {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    
+    /* View toggle buttons */
+    .btn-group .btn.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-list-alt me-2"></i>{{ title }}</h2>
+                <div class="d-flex gap-2">
+                    <!-- Export Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-success fw-semibold shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download me-2"></i>Download Reports
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                            <li><a class="dropdown-item" href="{% url 'export_recipient_requests' 'pdf' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}&{% endfor %}">
+                                <i class="fas fa-file-pdf me-2"></i>Download PDF
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'export_recipient_requests' 'csv' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}&{% endfor %}">
+                                <i class="fas fa-file-csv me-2"></i>Download CSV
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'export_recipient_requests' 'excel' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}&{% endfor %}">
+                                <i class="fas fa-file-excel me-2"></i>Download Excel
+                            </a></li>
+                        </ul>
+                    </div>
+
+                    <!-- View Toggle -->
+                    <button type="button" class="btn btn-outline-secondary active" id="tableViewBtn">
+                        <i class="fas fa-table me-1"></i>Table View
+                    </button>
+                    <a href="{% url 'create_request' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create New Request
+                    </a>
+                </div>
+            </div>
+
+
+            <!-- Filters (aligned with table: Category, Type, Description, Foodbank, Quantity, Delivery, Location, Status, Requested, Notes) -->
+            <div class="filter-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+
+                <form method="get" class="row g-3">
+                    <div class="col-md-2">
+                        <label for="type" class="form-label">Type</label>
+                        <select name="type" id="type" class="form-select">
+                            <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="food" {% if type_filter == 'food' %}selected{% endif %}>Food</option>
+                            <option value="non_food" {% if type_filter == 'non_food' %}selected{% endif %}>Non-Food</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="category" class="form-label">Category</label>
+                        <select name="category" id="category" class="form-select">
+                            <option value="all" {% if category_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="free_goods" {% if category_filter == 'free_goods' %}selected{% endif %}>Free Goods</option>
+                            <option value="subsidized" {% if category_filter == 'subsidized' %}selected{% endif %}>Subsidized</option>
+                            <option value="money" {% if category_filter == 'money' %}selected{% endif %}>Money</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <select name="quantity" id="quantity" class="form-select">
+                            <option value="all" {% if quantity_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="small" {% if quantity_filter == 'small' %}selected{% endif %}>Small (1-50)</option>
+                            <option value="medium" {% if quantity_filter == 'medium' %}selected{% endif %}>Medium (51-200)</option>
+                            <option value="large" {% if quantity_filter == 'large' %}selected{% endif %}>Large (201+)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="amount" class="form-label">Amount</label>
+                        <select name="amount" id="amount" class="form-select">
+                            <option value="all" {% if amount_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="small" {% if amount_filter == 'small' %}selected{% endif %}>Small (<= KES 5,000)</option>
+                            <option value="medium" {% if amount_filter == 'medium' %}selected{% endif %}>Medium (KES 5,001-20,000)</option>
+                            <option value="large" {% if amount_filter == 'large' %}selected{% endif %}>Large (> KES 20,000)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Sent to Foodbank</option>
+                            <option value="awaiting_recipient" {% if status_filter == 'awaiting_recipient' %}selected{% endif %}>Awaiting Your Response</option>
+                            <option value="fulfilled" {% if status_filter == 'fulfilled' %}selected{% endif %}>Fulfilled</option>
+                            <option value="partial" {% if status_filter == 'partial' %}selected{% endif %}>Partial</option>
+                            <option value="declined" {% if status_filter == 'declined' %}selected{% endif %}>Declined</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="delivery" class="form-label">Delivery</label>
+                        <select name="delivery" id="delivery" class="form-select">
+                            <option value="all" {% if delivery_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="pickup" {% if delivery_filter == 'pickup' %}selected{% endif %}>Pickup</option>
+                            <option value="delivery" {% if delivery_filter == 'delivery' %}selected{% endif %}>Delivery</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="acknowledgment" class="form-label">Acknowledgment</label>
+                        <select name="acknowledgment" id="acknowledgment" class="form-select">
+                            <option value="all" {% if acknowledgment_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="received" {% if acknowledgment_filter == 'received' %}selected{% endif %}>Received</option>
+                            <option value="acknowledged" {% if acknowledgment_filter == 'acknowledged' %}selected{% endif %}>Acknowledged</option>
+                            <option value="not_acknowledged" {% if acknowledgment_filter == 'not_acknowledged' %}selected{% endif %}>Not Acknowledged</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="anonymous" class="form-label">Anonymous</label>
+                        <select name="anonymous" id="anonymous" class="form-select">
+                            <option value="all" {% if anonymous_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="anonymous" {% if anonymous_filter == 'anonymous' %}selected{% endif %}>Anonymous Only</option>
+                            <option value="not_anonymous" {% if anonymous_filter == 'not_anonymous' %}selected{% endif %}>Not Anonymous</option>
+                        </select>
+                    </div>
+                    <div class="row g-3 mt-1 pt-3 border-top">
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">Start Date</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label">End Date</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sort" class="form-label">Sort</label>
+                            <select name="sort" id="sort" class="form-select">
+                                <option value="newest" {% if sort_filter == 'newest' or not sort_filter %}selected{% endif %}>Newest First</option>
+                                <option value="oldest" {% if sort_filter == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search (Description, Location, Notes, Foodbank)</label>
+                            <input type="text" name="search" id="search" class="form-control" value="{{ search_query }}" placeholder="Search...">
+                        </div>
+                        <div class="col-md-12 col-lg-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2"><i class="fas fa-filter me-1"></i>Filter</button>
+                            <a href="{% url 'recipient_requests_view' %}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i>Clear</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Requests List -->
+            {% if requests %}
+                <!-- Table View (Default) -->
+                <div class="preview-table-wrapper">
+                    <div id="tableView" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>S/No</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Foodbank</th>
+                                <th>Quantity</th>
+                                <th>Delivery</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Requested</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                                <th>View</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in requests %}
+                            <tr {% if request.is_overdue %}class="table-warning"{% endif %}>
+                                <td class="text-center">{{ requests.start_index|add:forloop.counter0 }}</td>
+
+                                <td>
+                                    {% with category=request.request_category|default:request.request_type %}
+                                        {% if category == 'food' %}
+                                            <span class="badge" style="background: #dbeafe; color: #1e40af;">Food</span>
+                                        {% elif category == 'non_food' %}
+                                            <span class="badge" style="background: #fef3c7; color: #92400e;">Non-Food</span>
+                                        {% else %}
+                                            <span class="badge" style="background: #f3f4f6; color: #6b7280;">Other</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                <td>
+                                    {% with donation=request.primary_donation %}
+                                        {% if donation %}
+                                            {% if donation.donation_type == 'item' %}
+                                                <span class="badge" style="background: #d1fae5; color: #065f46;">Free Goods</span>
+                                            {% elif donation.donation_type == 'money' %}
+                                                <span class="badge" style="background: #dbeafe; color: #1e40af;">Money</span>
+                                            {% elif donation.donation_type == 'subsidized' %}
+                                                <span class="badge" style="background: #fef3c7; color: #92400e;">Subsidized</span>
+                                            {% elif donation.donation_type == 'csr' %}
+                                                <span class="badge" style="background: #e9d5ff; color: #6b21a8;">CSR</span>
+                                            {% else %}
+                                                <span class="badge" style="background: #f3f4f6; color: #6b7280;">{{ donation.get_donation_type_display }}</span>
+                                            {% endif %}
+                                        {% elif request.is_anonymous %}
+                                            <span class="badge" style="background: #f3f4f6; color: #111827;">Anonymous</span>
+                                        {% else %}
+                                            <span class="badge" style="background: #e5e7eb; color: #6b7280;">Request</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                <td>
+                                    <div class="text-wrap-cell">{{ request.description }}</div>
+                                </td>
+
+                                <td>{{ request.foodbank_name }}</td>
+
+                                <td>
+                                    {% with remaining=request.get_remaining_quantity %}
+                                        <div>
+                                            <strong>{{ request.quantity }} {{ request.get_unit_display }}</strong>
+                                            <small class="text-muted ms-1">Requested</small>
+                                        </div>
+                                        <div class="mt-1 d-flex justify-content-between align-items-center gap-2">
+                                            <small>
+                                                <span class="text-success fw-bold">{{ request.quantity_fulfilled|default:0 }} {{ request.get_unit_display }}</span>
+                                                <span class="text-muted">Fulfilled</span>
+                                                <span class="text-muted mx-1">|</span>
+                                                <span class="text-warning fw-bold">{{ remaining|default:0 }} {{ request.get_unit_display }}</span>
+                                                <span class="text-muted">Remaining</span>
+                                            </small>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#quantityBreakdownModal{{ request.id }}">
+                                                <i class="fas fa-list me-1"></i>View Breakdown
+                                            </button>
+                                        </div>
+                                    {% endwith %}
+                                </td>
+
+                                <td>{{ request.get_delivery_method_display }}</td>
+
+                                <td>
+                                    <div class="text-wrap-cell" title="{{ request.location }}">{{ request.location }}</div>
+                                </td>
+
+                                <td>
+                                    {% if request.status == 'partial' %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #dcfce7; color: #15803d;">
+                                            <i class="fas fa-adjust" style="font-size: 0.6rem;"></i>
+                                            Partially Fulfilled
+                                            {% if "Receipt Confirmed" in request.additional_notes|default:"" %}
+                                                <span style="margin-left: 0.5rem; background: #059669; color: white; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.6rem;">
+                                                    <i class="fas fa-box-open"></i> Received
+                                                </span>
+                                            {% elif request.acknowledged_by_recipient %}
+                                                <span style="margin-left: 0.5rem; background: #dcfce7; color: #166534; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.6rem;">
+                                                    <i class="fas fa-check-circle"></i> Acknowledged
+                                                </span>
+                                            {% endif %}
+                                        </span>
+                                    {% elif request.status == 'awaiting_recipient' %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #fef3c7; color: #92400e;">
+                                            <i class="fas fa-clock" style="font-size: 0.6rem;"></i>
+                                            Awaiting Your Response
+                                        </span>
+                                    {% elif request.status == 'fulfilled' %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #dcfce7; color: #166534;">
+                                            <i class="fas fa-check-circle" style="font-size: 0.6rem;"></i>
+                                            {% if "Receipt Confirmed" in request.additional_notes|default:"" %}
+                                                <i class="fas fa-box-open" style="font-size: 0.6rem;"></i> Received
+                                            {% elif request.acknowledged_by_recipient %}
+                                                Acknowledged
+                                            {% else %}
+                                                Fulfilled
+                                            {% endif %}
+                                        </span>
+                                    {% elif request.status == 'donation_received' %}
+                                        <span class="badge bg-info">Donated awaiting approval</span>
+                                    {% elif request.status == 'submitted' %}
+                                        <span style="color: orange;">Sent to Donors</span>
+                                    {% elif request.status == 'declined' %}
+                                        {% if request.foodbank_declined_donation %}
+                                            <span style="padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.25rem; background: #f3f4f6; color: #374151;">
+                                                <i class="fas fa-clock" style="font-size: 0.6rem;"></i>
+                                                Pending
+                                            </span>
+                                        {% else %}
+                                            <span style="color: red;">Declined</span>
+                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#declineMessageModal{{ request.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
+                                                View reason
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color: gray;">Sent to FB</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <small>{{ request.time_of_request|date:"M d, Y" }}</small>
+                                    <br><small class="text-muted">{{ request.time_of_request|date:"H:i" }}</small>
+                                    {% if request.fulfilled_at %}
+                                        <br><small class="text-success">
+                                            <i class="fas fa-check"></i> {{ request.fulfilled_at|date:"M d" }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if request.additional_notes or request.acknowledged_by_recipient or request.primary_donor_note %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary view-notes-btn"
+                                                data-note-title="Notes for {{ request.foodbank_name|default:'Request' }}"
+                                                data-note-body="{{ request.additional_notes|default_if_none:''|escapejs }}"
+                                                data-donor-note="{{ request.primary_donor_note|default_if_none:''|escapejs }}"
+                                                data-note-ack="{{ request.acknowledged_by_recipient|yesno:'true,false' }}"
+                                                data-note-ack-time="{{ request.fulfilled_at|default:request.updated_at|date:'M d, Y H:i' }}">
+                                            <i class="fas fa-sticky-note me-1"></i>View
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if request.status == 'declined' %}
+                                        {# Empty when declined - no actions #}
+                                    {% elif request.status == 'awaiting_recipient' or request.status == 'partial' and not request.acknowledged_by_recipient %}
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#acknowledgeModal{{ request.id }}">
+                                            <i class="fas fa-check me-1"></i>Accept
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger ms-1" data-bs-toggle="modal" data-bs-target="#declineModal{{ request.id }}">
+                                            <i class="fas fa-times me-1"></i>Decline
+                                        </button>
+                                    {% elif request.status == 'fulfilled' or request.status == 'partial' %}
+                                        {% if not request.acknowledged_by_recipient %}
+                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#acknowledgeModal{{ request.id }}">
+                                                <i class="fas fa-check me-1"></i>Acknowledge
+                                            </button>
+                                        {% elif request.acknowledged_by_recipient and "Receipt Confirmed" not in request.additional_notes|default:"" %}
+                                            <form method="POST" action="{% url 'confirm_request_received' request.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-info btn-sm action-btn" onclick="return confirm('Confirm that you have received the products?')">
+                                                    <i class="fas fa-box-open fa-xs"></i> Confirm Received
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check-double me-1"></i>Received
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if request.status != 'declined' %}
+                                    <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if requests.has_other_pages %}
+                    <nav aria-label="My requests pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if requests.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if category_filter != 'all' %}&category={{ category_filter }}{% endif %}{% if quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if acknowledgment_filter != 'all' %}&acknowledgment={{ acknowledgment_filter }}{% endif %}{% if anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ requests.previous_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if category_filter != 'all' %}&category={{ category_filter }}{% endif %}{% if quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if acknowledgment_filter != 'all' %}&acknowledgment={{ acknowledgment_filter }}{% endif %}{% if anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ requests.number }} of {{ requests.paginator.num_pages }}</span>
+                            </li>
+                            {% if requests.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ requests.next_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if category_filter != 'all' %}&category={{ category_filter }}{% endif %}{% if quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if acknowledgment_filter != 'all' %}&acknowledgment={{ acknowledgment_filter }}{% endif %}{% if anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ requests.paginator.num_pages }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if category_filter != 'all' %}&category={{ category_filter }}{% endif %}{% if quantity_filter != 'all' %}&quantity={{ quantity_filter }}{% endif %}{% if amount_filter != 'all' %}&amount={{ amount_filter }}{% endif %}{% if delivery_filter != 'all' %}&delivery={{ delivery_filter }}{% endif %}{% if acknowledgment_filter != 'all' %}&acknowledgment={{ acknowledgment_filter }}{% endif %}{% if anonymous_filter != 'all' %}&anonymous={{ anonymous_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_filter != 'newest' %}&sort={{ sort_filter }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No requests found</h4>
+                    <p class="text-muted">You haven't made any requests yet.</p>
+                    <a href="{% url 'create_request' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Your First Request
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Decline Message Modals (Preserved) -->
+{% for request in requests %}
+    {% if request.status == 'declined' and request.decline_message and not request.foodbank_declined_donation %}
+
+    <div class="modal fade" id="declineMessageModal{{ request.id }}" tabindex="-1" aria-labelledby="declineMessageModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="declineMessageModalLabel{{ request.id }}">Decline Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ request.decline_message }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+<!-- Quantity Breakdown Modals -->
+{% for request in requests %}
+<div class="modal fade" id="quantityBreakdownModal{{ request.id }}" tabindex="-1" aria-labelledby="quantityBreakdownModalLabel{{ request.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quantityBreakdownModalLabel{{ request.id }}">
+                    <i class="fas fa-list-ul me-2"></i>Quantity Breakdown
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% with remaining=request.get_remaining_quantity %}
+                <div class="border rounded p-3 bg-light mb-3">
+                    <div><strong>Requested:</strong> {{ request.quantity }} {{ request.get_unit_display }}</div>
+                    <div><strong>Fulfilled:</strong> {{ request.quantity_fulfilled|default:0 }} {{ request.get_unit_display }}</div>
+                    <div><strong>Remaining:</strong> {{ remaining|default:0 }} {{ request.get_unit_display }}</div>
+                </div>
+                {% endwith %}
+
+                {% if request.quantity_timeline %}
+                    <div class="list-group list-group-flush">
+                        {% for entry in request.quantity_timeline %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex align-items-start">
+                                <div class="me-2 mt-1">
+                                    {% if entry.state == 'declined' %}
+                                        <i class="fas fa-times-circle text-danger"></i>
+                                    {% elif entry.state == 'accepted' %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted" style="font-size: 0.55rem;"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="w-100">
+                                    <div{% if entry.is_declined %} style="text-decoration: line-through; color: #9ca3af;"{% endif %}>
+                                        {{ entry.display }}
+                                    </div>
+                                    {% if entry.label %}
+                                        <small class="text-muted d-block">{{ entry.label }}</small>
+                                    {% endif %}
+                                    {% if entry.timestamp %}
+                                        <small class="text-muted d-block">{{ entry.timestamp|date:"M d, Y H:i" }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No donation breakdown yet.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Acknowledgment Modals -->
+{% for request in requests %}
+    {% if request.status == 'awaiting_recipient' or request.status == 'partial' or request.status == 'fulfilled' %}
+    {% if not request.acknowledged_by_recipient %}
+    <div class="modal fade" id="acknowledgeModal{{ request.id }}" tabindex="-1" aria-labelledby="acknowledgeModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acknowledgeModalLabel{{ request.id }}">
+                        <i class="fas fa-check-circle text-success me-2"></i>Acknowledge Request
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{% url 'acknowledge_request' request.id %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You are about to acknowledge receipt of this donation. This confirms that you have received the items as described.
+                        </div>
+                        <div class="alert alert-warning d-flex align-items-start">
+                            <i class="fas fa-hand-holding-heart me-2 mt-1"></i>
+                            <div>
+                                <strong>Subsidized request?</strong>
+                                <div class="small mb-0">
+                                    If this request was fulfilled through a subsidized program, you will need to contribute the agreed subsidized amount to receive the products at the discounted rate.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="acknowledgment_note{{ request.id }}" class="form-label">
+                                <i class="fas fa-sticky-note me-1"></i>Acknowledgment Note (Optional)
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="acknowledgment_note{{ request.id }}"
+                                name="acknowledgment_note"
+                                rows="3"
+                                placeholder="Add any notes about the donation you received (e.g., condition of items, feedback, etc.)"
+                                maxlength="500"></textarea>
+                            <div class="form-text">Maximum 500 characters</div>
+                        </div>
+
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="mb-2"><i class="fas fa-list me-1"></i>Request Details:</h6>
+                            <p class="mb-1"><strong>Type:</strong> {{ request.get_request_type_display }}</p>
+                            <p class="mb-1"><strong>Description:</strong> {{ request.description|truncatechars:100 }}</p>
+                            <p class="mb-1"><strong>Foodbank:</strong> {{ request.foodbank_name }}</p>
+                            <p class="mb-1"><strong>Quantity:</strong> {{ request.quantity }} {{ request.get_unit_display }}</p>
+                            <p class="mb-0"><strong>Status:</strong>
+                                <span class="badge bg-{% if request.status == 'fulfilled' %}success{% else %}warning{% endif %}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Acknowledge Receipt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+{% endfor %}
+
+<!-- Recipient Decline Modals -->
+{% for request in requests %}
+    {% if request.status == 'awaiting_recipient' or request.status == 'partial' %}
+    <div class="modal fade" id="declineModal{{ request.id }}" tabindex="-1" aria-labelledby="declineModalLabel{{ request.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="declineModalLabel{{ request.id }}">
+                        <i class="fas fa-times-circle text-danger me-2"></i>Decline Request
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{% url 'recipient_decline_request' request.id %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You are about to decline this request. Please provide a reason for declining.
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="decline_note{{ request.id }}" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Reason for Declining <span class="text-danger">*</span>
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="decline_note{{ request.id }}"
+                                name="decline_note"
+                                rows="3"
+                                placeholder="Please explain why you are declining this request..."
+                                maxlength="500"
+                                required></textarea>
+                            <div class="form-text">Maximum 500 characters. This note will be sent to the foodbank.</div>
+                        </div>
+
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="mb-2"><i class="fas fa-list me-1"></i>Request Details:</h6>
+                            <p class="mb-1"><strong>Type:</strong> {{ request.get_request_type_display }}</p>
+                            <p class="mb-1"><strong>Description:</strong> {{ request.description|truncatechars:100 }}</p>
+                            <p class="mb-1"><strong>Foodbank:</strong> {{ request.foodbank_name }}</p>
+                            <p class="mb-0"><strong>Quantity:</strong> {{ request.quantity }} {{ request.get_unit_display }}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times me-1"></i>Decline Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+<!-- Request Notes Modal -->
+<div class="modal fade" id="requestNotesModal" tabindex="-1" aria-labelledby="requestNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestNotesModalLabel">Request Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="requestNotesModalBody" style="white-space: pre-wrap; line-height: 1.5;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const notesModalEl = document.getElementById('requestNotesModal');
+    const notesModal = notesModalEl ? new bootstrap.Modal(notesModalEl) : null;
+    const notesModalTitle = document.getElementById('requestNotesModalLabel');
+    const notesModalBody = document.getElementById('requestNotesModalBody');
+
+    document.querySelectorAll('.view-notes-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!notesModal) return;
+            notesModalTitle.textContent = btn.getAttribute('data-note-title') || 'Request Notes';
+
+            let raw = btn.getAttribute('data-note-body') || '';
+            let donorRaw = btn.getAttribute('data-donor-note') || '';
+            let decoded = raw;
+            let donorDecoded = donorRaw;
+            try {
+                decoded = JSON.parse(`"${raw}"`);
+            } catch (e) {
+                decoded = raw;
+            }
+
+            try {
+                donorDecoded = JSON.parse(`"${donorRaw}"`);
+            } catch (e) {
+                donorDecoded = donorRaw;
+            }
+
+            if (btn.getAttribute('data-note-ack') === 'true') {
+                const ackTime = btn.getAttribute('data-note-ack-time');
+                const ackSection = `--- Acknowledgment ---\nRecipient acknowledged this request${ackTime ? ` on ${ackTime}` : ''}.`;
+                decoded = decoded ? `${decoded}\n\n${ackSection}` : ackSection;
+            }
+
+            const stripLeadingHeader = (value, header) => {
+                if (!value) return '';
+                let cleaned = value;
+                const dashed = new RegExp(`^\\s*---\\s*${header}\\s*---\\s*(\\n|\\r\\n)?`, 'i');
+                const colon = new RegExp(`^\\s*${header}\\s*:\\s*(\\n|\\r\\n)?`, 'i');
+                cleaned = cleaned.replace(dashed, '');
+                cleaned = cleaned.replace(colon, '');
+                return cleaned.trim();
+            };
+
+            decoded = stripLeadingHeader(decoded, 'Recipient Note');
+            donorDecoded = stripLeadingHeader(donorDecoded, 'Donor Note');
+
+            const toLines = (value) => (value || '')
+                .split('\n')
+                .map(line => line.trim().length ? line : '&nbsp;')
+                .join('<br>');
+
+            notesModalBody.innerHTML = `
+                <strong>Recipient Note:</strong><br>
+                ${decoded ? toLines(decoded) : '<em>No recipient note</em>'}
+                <br><br>
+                <strong>Donor Note:</strong><br>
+                ${donorDecoded ? toLines(donorDecoded) : '<em>No donor note</em>'}
+            `;
+
+            notesModal.show();
+        });
+    });
+});
+</script>
+
+{% endblock %}

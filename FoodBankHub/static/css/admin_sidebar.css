@@ -1,0 +1,179 @@
+/* Custom Admin Sidebar Styles */
+
+/* Force sidebar background to white and text to dark for maximum readability */
+#nav-sidebar {
+    background-color: #fff !important;
+    color: #222 !important;
+    border-right: 1px solid #e0e0e0;
+}
+
+#nav-sidebar .module th,
+#nav-sidebar .module caption {
+    background-color: #f8f9fa !important;
+    color: #222 !important;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+}
+
+#nav-sidebar .module td,
+#nav-sidebar .module td a {
+    color: #222 !important;
+    background: none !important;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#nav-sidebar .module td a:hover,
+#nav-sidebar .module td a:focus {
+    background-color: #e3f2fd !important;
+    color: #1565c0 !important;
+    text-decoration: none;
+}
+
+#nav-sidebar .current-app .section:link,
+#nav-sidebar .current-app .section:visited,
+#nav-sidebar .current-model a {
+    color: #1976d2 !important;
+    background-color: #e3f2fd !important;
+    font-weight: 700;
+}
+
+#nav-sidebar .current-model {
+    background-color: #e3f2fd !important;
+    border-left: 3px solid #1976d2 !important;
+}
+
+/* Toggle button styling for visibility */
+.toggle-nav-sidebar {
+    background-color: #f8f9fa !important;
+    color: #1976d2 !important;
+    border-right: 1px solid #e0e0e0 !important;
+}
+
+.toggle-nav-sidebar:hover,
+.toggle-nav-sidebar:focus {
+    background-color: #e3f2fd !important;
+    color: #1565c0 !important;
+}
+
+/* Search filter styling for clarity */
+#nav-filter {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #e0e0e0 !important;
+}
+
+#nav-filter:focus {
+    border-color: #1976d2 !important;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1) !important;
+}
+
+/* Remove any dark backgrounds from parent containers */
+#header, #branding {
+    background: #f8f9fa !important;
+    color: #222 !important;
+}
+
+/* Ensure all sidebar icons are visible */
+#nav-sidebar .module td a i {
+    color: #1976d2 !important;
+}
+
+#nav-sidebar .module td a:hover i {
+    color: #1565c0 !important;
+}
+
+/* Remove any hover-based sidebar expansion */
+.main:not(.shifted) #nav-sidebar {
+    margin-left: -276px;
+    visibility: hidden;
+}
+
+.main.shifted #nav-sidebar {
+    margin-left: 0;
+    visibility: visible;
+}
+
+/* Ensure sidebar only responds to click, not hover */
+#nav-sidebar {
+    pointer-events: auto;
+}
+
+/* Improve overall sidebar appearance */
+#nav-sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #dee2e6;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Better spacing for navigation items */
+#nav-sidebar .module {
+    margin-bottom: 0;
+}
+
+#nav-sidebar .module table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Icon spacing */
+#nav-sidebar .module td a i {
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+    color: #6c757d;
+}
+
+#nav-sidebar .module td a:hover i {
+    color: #1976d2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    #nav-sidebar, #toggle-nav-sidebar {
+        display: none;
+    }
+    
+    .main > #nav-sidebar + .content,
+    .main.shifted > #nav-sidebar + .content {
+        max-width: 100%;
+    }
+}
+
+/* Remove branding elements */
+#branding h1,
+#branding h2,
+#branding img,
+#site-name,
+#site-name a {
+    display: none !important;
+}
+
+/* Clean up header */
+#header {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#header #branding {
+    display: none;
+}
+
+#header #user-tools {
+    float: right;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure clean sidebar header */
+#nav-sidebar .module:first-child {
+    border-top: none;
+}
+
+#nav-sidebar .module:first-child th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+} 

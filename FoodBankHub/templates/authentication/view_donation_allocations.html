@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Donation Allocations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Donation Allocations</h4>
+                    <a href="{% url 'foodbank_donations' %}" class="btn btn-secondary btn-sm">Back to Donations</a>
+                </div>
+                <div class="card-body">
+                    <!-- Donation Summary -->
+                    <div class="alert alert-info">
+                        <h6>Donation Summary:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Type:</strong> {{ donation.get_donation_type_display }}</p>
+                                <p class="mb-1"><strong>Donor:</strong> {{ donation.donor.email }}</p>
+                                {% if donation.donation_type == 'item' %}
+                                    <p class="mb-1"><strong>Item:</strong> {{ donation.item_name }}</p>
+                                    <p class="mb-1"><strong>Total Quantity:</strong> {{ donation.quantity }} {{ donation.quantity_unit }}</p>
+                                {% elif donation.donation_type == 'money' %}
+                                    <p class="mb-1"><strong>Total Amount:</strong> ${{ donation.amount }}</p>
+                                {% elif donation.donation_type == 'subsidized' %}
+                                    <p class="mb-1"><strong>Item:</strong> {{ donation.item_name }}</p>
+                                    <p class="mb-1"><strong>Total Value:</strong> ${{ donation.subsidized_price }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Date Received:</strong> {{ donation.donated_at|date:"M d, Y" }}</p>
+                                <p class="mb-1"><strong>Delivery Status:</strong> {{ donation.get_delivery_status_display }}</p>
+                                {% if donation.message %}
+                                    <p class="mb-1"><strong>Message:</strong> {{ donation.message }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Allocation Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h5>{{ allocations.count }}</h5>
+                                    <small>Total Allocations</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    {% if donation.donation_type == 'item' %}
+                                        {% with total_allocated=allocations|length %}
+                                            <h5>{{ total_allocated }}</h5>
+                                            <small>Recipients Served</small>
+                                        {% endwith %}
+                                    {% else %}
+                                        {% with total_allocated=allocations|length %}
+                                            <h5>{{ total_allocated }}</h5>
+                                            <small>Recipients Served</small>
+                                        {% endwith %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    {% if donation.donation_type == 'item' %}
+                                        {% with total_allocated=allocations|length %}
+                                            <h5>{{ donation.quantity|add:"-"|add:total_allocated }}</h5>
+                                            <small>Remaining</small>
+                                        {% endwith %}
+                                    {% else %}
+                                        {% with total_allocated=allocations|length %}
+                                            <h5>{{ donation.amount|add:"-"|add:total_allocated }}</h5>
+                                            <small>Remaining</small>
+                                        {% endwith %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Allocations Table -->
+                    {% if allocations %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Recipient</th>
+                                        <th>Contact</th>
+                                        <th>Quantity/Amount</th>
+                                        <th>Allocated Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for allocation in allocations %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ allocation.recipient.full_name }}</strong>
+                                                {% if allocation.recipient.is_organization %}
+                                                    <br><small class="text-muted">Organization</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ allocation.recipient.user.email }}</small><br>
+                                                <small class="text-muted">{{ allocation.recipient.user.phone_number }}</small>
+                                            </td>
+                                            <td>
+                                                {% if allocation.quantity %}
+                                                    <span class="badge bg-primary">{{ allocation.quantity }} {{ donation.quantity_unit }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">${{ allocation.amount }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ allocation.allocated_at|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Allocations Yet</h5>
+                            <p class="text-muted">This donation hasn't been allocated to any recipients yet.</p>
+                            <a href="{% url 'allocate_donation' donation.id %}" class="btn btn-primary">Allocate Now</a>
+                        </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'allocate_donation' donation.id %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Allocate More
+                        </a>
+                        <a href="{% url 'foodbank_donations' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Donations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

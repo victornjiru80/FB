@@ -1,0 +1,298 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Donation #{{ donation.id }} - System Support{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">
+                <i class="fas fa-heart text-danger me-2"></i>System Support Donation #{{ donation.id }}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'custom_admin:dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'custom_admin:system_support_donations' %}">System Support Donations</a>
+                    </li>
+                    <li class="breadcrumb-item active">Donation #{{ donation.id }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'custom_admin:system_support_donations' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Donation Details -->
+        <div class="col-lg-8">
+            <!-- Donation Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>Donation Information
+                    </h6>
+                    {% if donation.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-clock me-1"></i>Pending Verification
+                        </span>
+                    {% elif donation.status == 'approved' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle me-1"></i>Approved
+                        </span>
+                    {% elif donation.status == 'rejected' %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-times-circle me-1"></i>Rejected
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Donation Amount</label>
+                            <h3 class="text-success mb-0">KES {{ donation.amount|floatformat:2 }}</h3>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Transaction Reference</label>
+                            <p class="mb-0">
+                                {% if donation.transaction_reference %}
+                                    <code class="fs-6">{{ donation.transaction_reference }}</code>
+                                {% else %}
+                                    <span class="text-muted">Not provided</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Submitted On</label>
+                            <p class="mb-0">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ donation.created_at|date:"F d, Y" }} at {{ donation.created_at|time:"h:i A" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Last Updated</label>
+                            <p class="mb-0">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ donation.updated_at|date:"F d, Y" }} at {{ donation.updated_at|time:"h:i A" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if donation.notes %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="text-muted small">Donor Notes</label>
+                            <div class="alert alert-info">
+                                <i class="fas fa-comment me-2"></i>{{ donation.notes }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if donation.status != 'pending' %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Verified By</label>
+                            <p class="mb-0">
+                                <i class="fas fa-user-shield me-1"></i>
+                                {{ donation.verified_by.email }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Verified On</label>
+                            <p class="mb-0">
+                                <i class="fas fa-calendar-check me-1"></i>
+                                {{ donation.verified_at|date:"F d, Y" }} at {{ donation.verified_at|time:"h:i A" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if donation.admin_notes %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label class="text-muted small">Admin Notes</label>
+                            <div class="alert alert-secondary">
+                                <i class="fas fa-sticky-note me-2"></i>{{ donation.admin_notes }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if donation.rejection_reason %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label class="text-muted small">Rejection Reason</label>
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>{{ donation.rejection_reason }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Proof -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-image me-2"></i>Payment Proof
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if donation.payment_proof %}
+                        <img src="{{ donation.payment_proof.url }}" 
+                             alt="Payment Proof" 
+                             class="img-fluid rounded shadow-sm"
+                             style="max-height: 600px; cursor: pointer;"
+                             onclick="window.open('{{ donation.payment_proof.url }}', '_blank')">
+                        <p class="text-muted mt-3 mb-0">
+                            <small><i class="fas fa-info-circle me-1"></i>Click image to view full size</small>
+                        </p>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No payment proof uploaded</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Donor Info & Actions -->
+        <div class="col-lg-4">
+            <!-- Donor Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-user me-2"></i>Donor Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-circle fa-4x text-primary mb-2"></i>
+                        <h5 class="mb-1">
+                            {% if donation.donor.donor_profile %}
+                                {{ donation.donor.donor_profile.full_name }}
+                            {% else %}
+                                {{ donation.donor.email }}
+                            {% endif %}
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-envelope me-1"></i>{{ donation.donor.email }}
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-2">
+                        <small class="text-muted">User Type</small>
+                        <p class="mb-0">
+                            <span class="badge bg-info">{{ donation.donor.user_type }}</span>
+                        </p>
+                    </div>
+
+                    <div class="mb-2">
+                        <small class="text-muted">Member Since</small>
+                        <p class="mb-0">{{ donation.donor.date_joined|date:"F Y" }}</p>
+                    </div>
+
+                    {% if donation.donor.donor_profile %}
+                    <div class="mb-2">
+                        <small class="text-muted">Phone</small>
+                        <p class="mb-0">
+                            {% if donation.donor.donor_profile.phone_number %}
+                                {{ donation.donor.donor_profile.phone_number }}
+                            {% else %}
+                                <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Verification Actions -->
+            {% if donation.status == 'pending' %}
+            <div class="card shadow mb-4 border-warning">
+                <div class="card-header py-3 bg-warning">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-tasks me-2"></i>Verification Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Review the payment proof and donor information, then approve or reject this donation.
+                    </p>
+
+                    <!-- Approve Form -->
+                    <form method="POST" class="mb-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        
+                        <div class="mb-3">
+                            <label for="admin_notes" class="form-label small">Admin Notes (Optional)</label>
+                            <textarea name="admin_notes" id="admin_notes" class="form-control" rows="2" 
+                                      placeholder="Internal notes about this donation..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100" 
+                                onclick="return confirm('Are you sure you want to APPROVE this donation of KES {{ donation.amount }}?')">
+                            <i class="fas fa-check-circle me-1"></i>Approve Donation
+                        </button>
+                    </form>
+
+                    <hr>
+
+                    <!-- Reject Form -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        
+                        <div class="mb-3">
+                            <label for="rejection_reason" class="form-label small">Rejection Reason *</label>
+                            <textarea name="rejection_reason" id="rejection_reason" class="form-control" rows="3" 
+                                      placeholder="Explain why this donation is being rejected..." required></textarea>
+                            <small class="text-muted">This will be shown to the donor.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100"
+                                onclick="return confirm('Are you sure you want to REJECT this donation? The donor will be notified.')">
+                            <i class="fas fa-times-circle me-1"></i>Reject Donation
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 {% if donation.status == 'approved' %}bg-success{% else %}bg-danger{% endif %}">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-info-circle me-2"></i>Verification Complete
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if donation.status == 'approved' %}
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="mb-0">This donation has been approved and the donor has been notified.</p>
+                    {% else %}
+                        <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                        <p class="mb-0">This donation has been rejected and the donor has been notified.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

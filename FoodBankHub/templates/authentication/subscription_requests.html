@@ -1,0 +1,387 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscription Requests{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sub-requests-wrapper {
+        background: #f9fafb;
+        min-height: 100vh;
+        padding: 2rem 0 3rem;
+    }
+    .sub-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+    .stat-card {
+        border-radius: 14px;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, #f8fafc, #eef2ff);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .stat-card h4 {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6366f1;
+        margin-bottom: 0.35rem;
+    }
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .filters-card {
+        margin-top: 1.5rem;
+    }
+    .table-responsive {
+        margin-top: 1.5rem;
+    }
+    .payment-table th {
+        background: #f1f5f9;
+        font-weight: 600;
+        color: #475569;
+    }
+    .badge-pill {
+        border-radius: 999px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+    .badge-monthly { background: #e0f2fe; color: #0369a1; }
+    .badge-yearly { background: #ede9fe; color: #5b21b6; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-approved { background: #d1fae5; color: #065f46; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; }
+    .badge-requires_info { background: #dbeafe; color: #1e3a8a; }
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #94a3b8;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #cbd5f5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sub-requests-wrapper">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <div class="text-uppercase text-muted small fw-semibold">Subscription Console</div>
+                <h1 class="fw-bold mb-1">Payment Requests</h1>
+                <p class="text-muted mb-0">Review every submission, download records, and track verification progress.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'subscription_status' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Status
+                </a>
+                <a href="{% url 'subscribe' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> New Payment Request
+                </a>
+            </div>
+        </div>
+
+        <div class="stats-grid mb-4">
+            <div class="stat-card">
+                <h4>Current Plan</h4>
+                <div class="value" style="font-size:1.25rem;">{{ subscription.get_plan_display }}</div>
+                <div class="text-muted small text-uppercase">{{ subscription.get_status_display }}</div>
+            </div>
+            <div class="stat-card">
+                <h4>Total Requests</h4>
+                <div class="value">{{ total_payments }}</div>
+                <div class="text-muted small">All submitted payments</div>
+            </div>
+            <div class="stat-card">
+                <h4>Pending Review</h4>
+                <div class="value" style="color:#f97316;">{{ pending_payments_count }}</div>
+                <div class="text-muted small">Awaiting verification</div>
+            </div>
+        </div>
+
+        <div class="sub-card filters-card">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Plan</label>
+                    <select name="plan_type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in plan_choices %}
+                            <option value="{{ value }}" {% if filters.plan_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Payment Method</label>
+                    <select name="payment_method" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in payment_method_choices %}
+                            <option value="{{ value }}" {% if filters.payment_method == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Search</label>
+                    <input name="q" class="form-control" value="{{ filters.q }}" placeholder="Transaction ref / notes">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ filters.date_from }}">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ filters.date_to }}">
+                </div>
+                <div class="col-12 col-md-6 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'subscription_requests' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo me-1"></i> Clear
+                    </a>
+                    <a href="{% url 'subscription_payments_export_excel' %}{% if filter_query %}?{{ filter_query }}{% endif %}" class="btn btn-outline-success">
+                        <i class="fas fa-file-excel me-1"></i> Export Excel
+                    </a>
+                    <a href="{% url 'subscription_payments_export_pdf' %}{% if filter_query %}?{{ filter_query }}{% endif %}" class="btn btn-outline-danger">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </a>
+                </div>
+            </form>
+
+            {% if payment_page_obj.object_list %}
+                <div class="table-responsive">
+                    <table class="table payment-table align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width:70px;">S/No</th>
+                                <th>Date</th>
+                                <th>Plan</th>
+                                <th>Amount</th>
+                                <th>Payment Method</th>
+                                <th>Transaction Ref</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th style="width:140px;">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payment_page_obj %}
+                            <tr>
+                                <td>{{ forloop.counter|add:payment_page_obj.start_index|add:'-1' }}</td>
+                                <td>{{ payment.payment_date|date:'M d, Y' }}</td>
+                                <td>
+                                    <span class="badge-pill {% if payment.plan_type == 'monthly' %}badge-monthly{% else %}badge-yearly{% endif %}">
+                                        {{ payment.get_plan_type_display }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ payment.amount|floatformat:0 }}</strong></td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td><code>{{ payment.transaction_reference }}</code></td>
+                                <td>
+                                    {% if payment.notes %}
+                                        <span title="{{ payment.notes }}">{{ payment.notes|truncatechars:90 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge-pill {% if payment.status == 'approved' %}badge-approved{% elif payment.status == 'rejected' %}badge-rejected{% elif payment.status == 'requires_info' %}badge-requires_info{% else %}badge-pending{% endif %}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ payment.submitted_at|date:'M d, Y H:i' }}</td>
+                                <td>
+                                    {% if payment.payment_evidence or payment.status == 'rejected' and payment.rejection_reason %}
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% if payment.payment_evidence %}
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#subscriptionEvidenceModal"
+                                                        data-reference="{{ payment.transaction_reference }}"
+                                                        data-evidence-url="{{ payment.payment_evidence.url }}">
+                                                    <i class="fas fa-image me-1"></i>View Evidence
+                                                </button>
+                                            {% endif %}
+                                            {% if payment.status == 'rejected' and payment.rejection_reason %}
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#subscriptionRejectionModal"
+                                                        data-title="Rejection Reason"
+                                                        data-reason="{{ payment.rejection_reason|escape }}"
+                                                        data-reference="{{ payment.transaction_reference }}">
+                                                    <i class="fas fa-info-circle me-1"></i>View Reason
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if payment_page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-3" aria-label="Payment history pagination">
+                    <ul class="pagination">
+                        {% if payment_page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ payment_page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Page {{ payment_page_obj.number }} of {{ payment_page_obj.paginator.num_pages }}</span>
+                        </li>
+                        {% if payment_page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ payment_page_obj.next_page_number }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-receipt"></i>
+                    <p class="mb-0">No subscription requests match your filters.</p>
+                    <p class="small">Try adjusting the filters above or submit a new payment request.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="subscriptionRejectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rejection Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-2" id="subscriptionRejectionReference"></p>
+                <div id="subscriptionRejectionBody"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="subscriptionEvidenceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Evidence</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-2 d-none" id="subscriptionEvidenceReference"></p>
+                <div class="text-center">
+                    <img id="subscriptionEvidenceImage" src="" alt="Payment evidence" class="img-fluid rounded border" style="max-height: 70vh;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="subscriptionEvidenceOpenLink" href="#" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>Open Full Image
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rejectionModalEl = document.getElementById('subscriptionRejectionModal');
+        if (rejectionModalEl) {
+            rejectionModalEl.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const reason = button.getAttribute('data-reason') || 'No reason provided';
+                const title = button.getAttribute('data-title') || 'Rejection Reason';
+                const reference = button.getAttribute('data-reference');
+                const titleEl = rejectionModalEl.querySelector('.modal-title');
+                const bodyEl = document.getElementById('subscriptionRejectionBody');
+                const refEl = document.getElementById('subscriptionRejectionReference');
+                if (titleEl) titleEl.textContent = title;
+                if (refEl) {
+                    refEl.textContent = reference ? `Transaction: ${reference}` : '';
+                    refEl.classList.toggle('d-none', !reference);
+                }
+                if (bodyEl) bodyEl.textContent = reason;
+            });
+            rejectionModalEl.addEventListener('hidden.bs.modal', function () {
+                const bodyEl = document.getElementById('subscriptionRejectionBody');
+                const refEl = document.getElementById('subscriptionRejectionReference');
+                if (bodyEl) bodyEl.textContent = '';
+                if (refEl) refEl.textContent = '';
+            });
+        }
+
+        const evidenceModalEl = document.getElementById('subscriptionEvidenceModal');
+        if (evidenceModalEl) {
+            evidenceModalEl.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const reference = button.getAttribute('data-reference');
+                const evidenceUrl = button.getAttribute('data-evidence-url') || '';
+                const refEl = document.getElementById('subscriptionEvidenceReference');
+                const imgEl = document.getElementById('subscriptionEvidenceImage');
+                const openLinkEl = document.getElementById('subscriptionEvidenceOpenLink');
+
+                if (refEl) {
+                    refEl.textContent = reference ? `Transaction: ${reference}` : '';
+                    refEl.classList.toggle('d-none', !reference);
+                }
+                if (imgEl) imgEl.src = evidenceUrl;
+                if (openLinkEl) {
+                    openLinkEl.href = evidenceUrl || '#';
+                    openLinkEl.classList.toggle('disabled', !evidenceUrl);
+                    openLinkEl.setAttribute('aria-disabled', evidenceUrl ? 'false' : 'true');
+                }
+            });
+            evidenceModalEl.addEventListener('hidden.bs.modal', function () {
+                const refEl = document.getElementById('subscriptionEvidenceReference');
+                const imgEl = document.getElementById('subscriptionEvidenceImage');
+                const openLinkEl = document.getElementById('subscriptionEvidenceOpenLink');
+                if (refEl) refEl.textContent = '';
+                if (imgEl) imgEl.src = '';
+                if (openLinkEl) {
+                    openLinkEl.href = '#';
+                    openLinkEl.classList.remove('disabled');
+                    openLinkEl.setAttribute('aria-disabled', 'false');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+

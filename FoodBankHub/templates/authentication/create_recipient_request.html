@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Create Request{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">📌 Create a New Request</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                        <div class="form-check mb-3">
+                            {{ form.is_anonymous }}
+                            {{ form.is_anonymous.label_tag }}
+                        </div>
+                            {{ form.foodbank.label_tag }}
+                            {{ form.foodbank }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.title.label_tag }}
+                            {{ form.title }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.description.label_tag }}
+                            {{ form.description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.quantity.label_tag }}
+                                {{ form.quantity }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.quantity_unit.label_tag }}
+                                {{ form.quantity_unit }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.delivery_method.label_tag }}
+                            {{ form.delivery_method }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.location.label_tag }}
+                            {{ form.location }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg shadow">
+                                Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const checkbox = document.querySelector("#id_is_anonymous");
+    const foodbankField = document.querySelector("#id_foodbank");
+
+    function toggleFoodbank() {
+        if (checkbox.checked) {
+            foodbankField.disabled = true;
+            foodbankField.value = "";  // clear selection
+        } else {
+            foodbankField.disabled = false;
+        }
+    }
+
+    checkbox.addEventListener("change", toggleFoodbank);
+    toggleFoodbank();
+});
+</script>
+
+{% endblock %}

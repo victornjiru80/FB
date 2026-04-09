@@ -1,0 +1,82 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'custom_admin:environmental_impact_reports' %}" class="text-muted text-decoration-none small"><i class="fas fa-arrow-left me-1"></i>Back to Environmental Impact Reports</a>
+            <h2 class="mb-1 mt-2"><i class="fas fa-calendar-alt text-primary me-2"></i>{{ title }}</h2>
+            <p class="text-muted mb-0">Monthly impact breakdown with configurable period</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'custom_admin:export_impact_monthly_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf me-1"></i>Export PDF</a>
+            <a href="{% url 'custom_admin:export_impact_monthly_excel' %}?{{ request.GET.urlencode }}" class="btn btn-success btn-sm"><i class="fas fa-file-excel me-1"></i>Export Excel</a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Months (last N)</label>
+                    <select name="months" class="form-select">
+                        <option value="6" {% if current_filters.months == "6" %}selected{% endif %}>6</option>
+                        <option value="12" {% if current_filters.months == "12" or not current_filters.months %}selected{% endif %}>12</option>
+                        <option value="24" {% if current_filters.months == "24" %}selected{% endif %}>24</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Year (optional)</label>
+                    <input type="number" name="year" class="form-control" placeholder="e.g. 2024" value="{{ current_filters.year|default:'' }}" min="2020" max="2030">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Monthly Impact ({{ months }} months)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Month</th>
+                            <th>Donations</th>
+                            <th>Food Donated (kg)</th>
+                            <th>Subsidized Food (kg)</th>
+                            <th>Waste Prevented (kg)</th>
+                            <th>CO₂ Saved (tons)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for month in monthly_data %}
+                        <tr>
+                            <td><strong>{{ month.month }}</strong></td>
+                            <td>{{ month.donation_count }}</td>
+                            <td>{{ month.food_donated }}</td>
+                            <td>{{ month.subsidized_food }}</td>
+                            <td class="text-warning"><strong>{{ month.waste_prevented }}</strong></td>
+                            <td class="text-success"><strong>{{ month.co2_saved }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No monthly data for the selected period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

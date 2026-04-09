@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Reduce page top offset under fixed navbar by half for this page */
+    .main-content {
+        padding-top: 30px;
+    }
+
+    .split-container {
+        display: flex;
+        min-height: calc(100vh - 90px);
+        background: radial-gradient(circle at top left, rgba(226, 232, 240, 0.55), rgba(248, 250, 252, 0.9) 45%, #ffffff 100%);
+        padding: 2.5rem 1.5rem;
+    }
+
+    .form-section {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-container {
+        max-width: 520px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 2.6rem 2.75rem;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+
+    .form-header {
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+
+    .form-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.01em;
+    }
+
+    .signin-banner {
+        display: block;
+        font-size: 0.95rem;
+        color: #64748b;
+    }
+
+    .form-group {
+        margin-bottom: 1.4rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #334155;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        background: #f8fafc;
+        color: #0f172a;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #0f766e;
+        background: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.12);
+    }
+
+    .form-control::placeholder {
+        color: #94a3b8;
+    }
+
+    .password-field {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+
+    .password-toggle:hover {
+        color: #0f172a;
+    }
+
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #475569;
+    }
+
+    .remember-me input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #0f766e;
+    }
+
+    .forgot-password {
+        color: #0f766e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .forgot-password:hover {
+        color: #115e59;
+        text-decoration: none;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 14px;
+        font-size: 0.98rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #115e59;
+        border-color: #115e59;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #e2e8f0;
+    }
+
+    /* Override global button text rule (keep Register visible) */
+    .login-register-btn {
+        color: #0f172a !important;
+    }
+
+    .btn-secondary:hover {
+        background: #e2e8f0;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .divider {
+        text-align: center;
+        margin: 2rem 0 1.5rem;
+        position: relative;
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #e2e8f0;
+    }
+
+    .divider span {
+        background: #ffffff;
+        padding: 0 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .back-link {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .back-link a {
+        color: #0f766e;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .back-link a:hover {
+        color: #115e59;
+        text-decoration: none;
+    }
+
+    .error-message {
+        color: #b91c1c;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        padding: 0.55rem 0.75rem;
+        background: rgba(239, 68, 68, 0.08);
+        border-radius: 0.75rem;
+        border-left: 3px solid #ef4444;
+    }
+
+    .success-message {
+        color: #166534;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        padding: 0.55rem 0.75rem;
+        background: rgba(34, 197, 94, 0.12);
+        border-radius: 0.75rem;
+        border-left: 3px solid #22c55e;
+    }
+
+    .info-message {
+        color: #0f766e;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        padding: 0.55rem 0.75rem;
+        background: rgba(20, 184, 166, 0.12);
+        border-radius: 0.75rem;
+        border-left: 3px solid #14b8a6;
+    }
+
+    .messages {
+        margin-bottom: 1.25rem;
+    }
+
+    .button-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        align-items: stretch;
+    }
+
+    .button-row .btn {
+        margin-bottom: 0;
+    }
+
+    .registration-options {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .registration-options p {
+        color: #64748b;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .registration-links {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .registration-links .btn {
+        flex: none;
+        width: auto;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        background: #ffffff;
+        color: #0f766e;
+        border: 1px solid rgba(15, 118, 110, 0.2);
+    }
+
+    .registration-links .btn:hover {
+        background: rgba(15, 118, 110, 0.08);
+        border-color: rgba(15, 118, 110, 0.4);
+        color: #0f766e;
+    }
+
+    @media (max-width: 992px) {
+        .split-container {
+            flex-direction: column;
+            padding: 2rem 1rem;
+        }
+
+        .form-container {
+            padding: 2rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .form-container {
+            padding: 1.75rem;
+            border-radius: 18px;
+        }
+
+        .button-row {
+            flex-direction: column;
+        }
+
+        .form-title {
+            font-size: 1.6rem;
+        }
+
+        .registration-links {
+            flex-direction: column;
+        }
+
+        .registration-links .btn {
+            width: 100%;
+        }
+
+        .form-options {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="split-container">
+    <div class="form-section">
+        <div class="form-container">
+            <!-- Form Header -->
+            <div class="form-header">
+                <h1 class="form-title">Sign In</h1>
+                <div class="signin-banner">Access your FoodBank Hub account</div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="{% if 'success' in message.tags %}success-message{% elif 'error' in message.tags or 'danger' in message.tags %}error-message{% else %}info-message{% endif %}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                    <input type="email" 
+                           name="{{ form.email.name }}" 
+                           id="{{ form.email.id_for_label }}" 
+                           class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                           placeholder="Enter your email address"
+                           value="{{ form.email.value|default:'' }}"
+                           autocomplete="email"
+                           autofocus
+                           required>
+                    {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" 
+                               name="{{ form.password.name }}" 
+                               id="{{ form.password.id_for_label }}" 
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                               placeholder="Enter your password"
+                               autocomplete="current-password"
+                               required>
+                        <button type="button" id="togglePassword" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#6c757d; cursor:pointer;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        {% for error in form.password.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Form Options -->
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember_me">
+                        <span>Remember Me</span>
+                    </label>
+                    <a href="{% url 'password_reset' %}" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-row">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </button>
+                    <a href="{% url 'register_donor' %}" class="btn btn-secondary login-register-btn">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+
+                <!-- Divider -->
+                <div class="divider">
+                    <span>New to FoodBank Hub?</span>
+                </div>
+
+                <!-- Registration Options -->
+                <div class="registration-options">
+                    <p>Create an account as:</p>
+                    <div class="registration-links">
+                        <a href="{% url 'register_donor' %}" class="btn btn-primary">Donor</a>
+                        <a href="{% url 'register_foodbank' %}" class="btn btn-primary">Food Bank</a>
+                        <a href="{% url 'register_recipient' %}" class="btn btn-primary">Recipient</a>
+                    </div>
+                </div>
+
+                <!-- Back Link -->
+                <div class="back-link">
+                    <a href="{% url 'home' %}">Back to FoodBank Hub</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password show/hide toggle
+document.getElementById('togglePassword')?.addEventListener('click', function() {
+    const input = document.getElementById('{{ form.password.id_for_label }}');
+    const icon = this.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+});
+
+// CSRF Token refresh and form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.querySelector('.login-form');
+    
+    if (loginForm) {
+        // Refresh CSRF token when page loads
+        refreshCSRFToken();
+        
+        // Add form submission handler
+        loginForm.addEventListener('submit', function(e) {
+            // Ensure we have a fresh CSRF token before submitting
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (!csrfToken || !csrfToken.value) {
+                e.preventDefault();
+                refreshCSRFToken().then(() => {
+                    // Resubmit the form after getting fresh token
+                    loginForm.submit();
+                });
+            }
+        });
+    }
+});
+
+function refreshCSRFToken() {
+    return fetch('/login/', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Extract CSRF token from the response
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newToken = doc.querySelector('[name=csrfmiddlewaretoken]');
+        
+        if (newToken) {
+            const currentToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (currentToken) {
+                currentToken.value = newToken.value;
+                console.log('CSRF token refreshed');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Failed to refresh CSRF token:', error);
+    });
+}
+
+// Refresh CSRF token every 30 minutes to prevent expiration
+setInterval(refreshCSRFToken, 30 * 60 * 1000);
+</script>
+{% endblock %}

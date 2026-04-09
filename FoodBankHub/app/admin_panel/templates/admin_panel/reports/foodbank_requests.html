@@ -1,0 +1,188 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">
+                <i class="fas fa-clipboard-list text-success me-2"></i>{{ title }}
+            </h1>
+            <p class="text-muted mb-0">View and export foodbank request data</p>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-success">Export Options</h6>
+            <div class="export-buttons">
+                <a href="{% url 'custom_admin:export_report' 'foodbank_requests' %}?format=csv" 
+                   class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-csv me-1"></i> Export CSV
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'foodbank_requests' %}?format=excel" 
+                   class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                </a>
+                <a href="{% url 'custom_admin:export_report' 'foodbank_requests' %}?format=pdf" 
+                   class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if priority_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Donation Type</label>
+                    <select name="donation_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in donation_type_choices %}
+                        <option value="{{ value }}" {% if donation_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success me-2">
+                        <i class="fas fa-filter me-1"></i> Apply
+                    </button>
+                    <a href="{% url 'custom_admin:foodbank_requests_report' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by foodbank name, title, or description..." value="{{ search_query }}">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">
+                FoodBank Requests ({{ requests.count }} total)
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Foodbank</th>
+                            <th>Contact</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Quantity</th>
+                            <th>Linked Recipient</th>
+                            <th>Deadline</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td>{{ req.foodbank.foodbank_name }}</td>
+                            <td>
+                                <small>{{ req.foodbank.contact_person }}<br>
+                                {{ req.foodbank.user.email }}</small>
+                            </td>
+                            <td>{{ req.title }}</td>
+                            <td>{{ req.description|truncatewords:10 }}</td>
+                            <td><span class="badge bg-info">{{ req.get_donation_type_display }}</span></td>
+                            <td>
+                                {% if req.priority == 'urgent' %}
+                                    <span class="badge bg-danger">{{ req.get_priority_display }}</span>
+                                {% elif req.priority == 'high' %}
+                                    <span class="badge bg-warning">{{ req.get_priority_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ req.get_priority_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'fulfilled' %}
+                                    <span class="badge bg-success">{{ req.get_status_display }}</span>
+                                {% elif req.status == 'active' %}
+                                    <span class="badge bg-primary">{{ req.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.quantity_needed %}
+                                    {{ req.quantity_needed }} {{ req.quantity_unit }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.original_request %}
+                                    <small>{{ req.original_request.recipient.full_name }}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.deadline %}
+                                    <small>{{ req.deadline|date:"Y-m-d H:i" }}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td><small>{{ req.created_at|date:"Y-m-d H:i" }}</small></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No foodbank requests found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

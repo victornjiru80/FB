@@ -1,0 +1,848 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sustainability Impact Report - Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #10b981;
+        --secondary-color: #3b82f6;
+        --success-color: #059669;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --dark-color: #1f2937;
+        --gray-color: #6b7280;
+        --light-gray: #f3f4f6;
+    }
+
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .report-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .report-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .report-title-section h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .report-subtitle {
+        color: var(--gray-color);
+        font-size: 1rem;
+        margin: 0;
+    }
+    
+    .export-btn {
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, var(--danger-color), #dc2626);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+    }
+
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
+        color: white;
+    }
+
+    /* Sustainability Metrics Section */
+    .sustainability-section {
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .section-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+    }
+    
+    .impact-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .impact-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .impact-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .impact-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .impact-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin: 0 auto 1.5rem auto;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .impact-card.primary .impact-icon { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+    .impact-card.success .impact-icon { background: linear-gradient(135deg, #10b981, #059669); }
+    .impact-card.warning .impact-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .impact-card.info .impact-icon { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+    .impact-card.danger .impact-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .impact-card.purple .impact-icon { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .impact-card.emerald .impact-icon { background: linear-gradient(135deg, #10b981, #047857); }
+    .impact-card.rose .impact-icon { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+    
+    .impact-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--dark-color), var(--gray-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    
+    .impact-label {
+        color: var(--gray-color);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .impact-description {
+        color: #9ca3af;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        line-height: 1.5;
+    }
+
+    /* Charts Section */
+    .charts-section {
+        margin-bottom: 3rem;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 2rem;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .chart-card:hover {
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .chart-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+    }
+
+    /* Tables Section */
+    .tables-section {
+        margin-bottom: 3rem;
+    }
+
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 2rem;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 1.5rem;
+        color: white;
+    }
+
+    .table-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th {
+        background: var(--light-gray);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark-color);
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: var(--gray-color);
+    }
+
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: var(--gray-color);
+    }
+
+    .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tables-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .report-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .impact-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .impact-number {
+            font-size: 2.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <!-- Header -->
+    <div class="report-header">
+        <div class="report-title-section">
+            <h1>🌍 Sustainability Impact Report</h1>
+            <p class="report-subtitle">Your contributions are making a real difference</p>
+        </div>
+        <div class="report-actions">
+            <a href="{% url 'export_donor_impact_pdf' %}" class="export-btn">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Basic Impact Metrics -->
+    <div class="sustainability-section">
+        <div class="section-header">
+            <h2>📊 Your Impact at a Glance</h2>
+            <p>See the difference you're making in the community</p>
+        </div>
+        
+        <div class="impact-cards">
+            <div class="impact-card primary">
+                <div class="impact-icon">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+                <div class="impact-number">{{ total_donations }}</div>
+                <div class="impact-label">Total Donations</div>
+                <p class="impact-description">Every donation counts towards building a better community</p>
+            </div>
+
+            <div class="impact-card success">
+                <div class="impact-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="impact-number">{{ lives_impacted }}</div>
+                <div class="impact-label">Lives Impacted</div>
+                <p class="impact-description">People who benefited from your generosity</p>
+            </div>
+
+            <div class="impact-card warning">
+                <div class="impact-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="impact-number">{{ meals_provided }}</div>
+                <div class="impact-label">Meals Provided</div>
+                <p class="impact-description">Nutritious meals delivered to those in need</p>
+            </div>
+
+            <div class="impact-card info">
+                <div class="impact-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="impact-number">{{ communities_helped }}</div>
+                <div class="impact-label">Communities Helped</div>
+                <p class="impact-description">Food banks you've supported</p>
+            </div>
+
+            <div class="impact-card danger">
+                <div class="impact-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="impact-number">{{ urgent_donations }}</div>
+                <div class="impact-label">Urgent Responses</div>
+                <p class="impact-description">Critical needs you helped address</p>
+            </div>
+
+            <div class="impact-card purple">
+                <div class="impact-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="impact-number">KES {{ total_amount|floatformat:0 }}</div>
+                <div class="impact-label">Monetary Donations</div>
+                <p class="impact-description">Direct financial support provided</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sustainability Metrics -->
+    <div class="sustainability-section">
+        <div class="section-header">
+            <h2>🌱 Environmental Impact</h2>
+            <p>Your donations are helping save the planet</p>
+        </div>
+        
+        <div class="impact-cards">
+            <div class="impact-card emerald">
+                <div class="impact-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="impact-number">{{ food_waste_prevented_kg|floatformat:0 }}</div>
+                <div class="impact-label">Food Waste Prevented (kg)</div>
+                <p class="impact-description">Food saved from going to landfills through your donations</p>
+            </div>
+
+            <div class="impact-card success">
+                <div class="impact-icon">
+                    <i class="fas fa-cloud"></i>
+                </div>
+                <div class="impact-number">{{ co2_saved_tons|floatformat:2 }}</div>
+                <div class="impact-label">CO₂ Saved (tons)</div>
+                <p class="impact-description">Carbon emissions prevented (1 kg food waste = 2.5 kg CO₂)</p>
+            </div>
+
+            <div class="impact-card info">
+                <div class="impact-icon">
+                    <i class="fas fa-recycle"></i>
+                </div>
+                <div class="impact-number">{{ non_food_waste_reduced_kg|floatformat:0 }}</div>
+                <div class="impact-label">Non-Food Waste Reduced (kg)</div>
+                <p class="impact-description">Clothing, hygiene products, and other items saved from waste</p>
+            </div>
+
+            <div class="impact-card warning">
+                <div class="impact-icon">
+                    <i class="fas fa-trash-restore"></i>
+                </div>
+                <div class="impact-number">{{ total_waste_prevented_kg|floatformat:0 }}</div>
+                <div class="impact-label">Total Waste Prevented (kg)</div>
+                <p class="impact-description">Combined food and non-food waste reduction</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSR & Monetary Impact -->
+    <div class="sustainability-section">
+        <div class="section-header">
+            <h2>💼 CSR & Financial Contributions</h2>
+            <p>Corporate social responsibility and monetary impact</p>
+        </div>
+        
+        <div class="impact-cards">
+            <div class="impact-card rose">
+                <div class="impact-icon">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="impact-number">KES {{ total_monetary_value|floatformat:0 }}</div>
+                <div class="impact-label">Total Monetary Value</div>
+                <p class="impact-description">Combined value of all donations (including market value of subsidized goods)</p>
+            </div>
+
+            <div class="impact-card purple">
+                <div class="impact-icon">
+                    <i class="fas fa-award"></i>
+                </div>
+                <div class="impact-number">{{ csr_donations_count }}</div>
+                <div class="impact-label">CSR Initiatives</div>
+                <p class="impact-description">Corporate social responsibility programs supported</p>
+            </div>
+
+            <div class="impact-card primary">
+                <div class="impact-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="impact-number">{{ csr_impact_score }}</div>
+                <div class="impact-label">CSR Impact Score</div>
+                <p class="impact-description">Weighted score based on initiative types (Environmental: 100, Humanitarian: 80, etc.)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <div class="section-header">
+            <h2>📈 Trends & Analytics</h2>
+            <p>Visualize your donation patterns over time</p>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3 class="chart-title">Monthly Donation Trends</h3>
+                <div class="chart-container">
+                    <canvas id="monthlyTrendsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 class="chart-title">Donation Type Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="donationTypeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 class="chart-title">Donation Category Breakdown</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 class="chart-title">Environmental Impact Overview</h3>
+                <div class="chart-container">
+                    <canvas id="environmentalImpactChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Section -->
+    <div class="tables-section">
+        <div class="section-header">
+            <h2>📋 Detailed Breakdown</h2>
+            <p>Explore your donation data in detail</p>
+        </div>
+        
+        <div class="tables-grid">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3 class="table-title">Top Food Banks Supported</h3>
+                </div>
+                {% if top_foodbanks %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Food Bank</th>
+                            <th>Donations</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for foodbank in top_foodbanks %}
+                        <tr>
+                            <td>{{ foodbank.foodbank__foodbank_name }}</td>
+                            <td>{{ foodbank.donation_count }}</td>
+                            <td>KES {{ foodbank.total_amount|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">
+                    <i class="fas fa-building"></i>
+                    <h3>No Food Banks Supported Yet</h3>
+                    <p>Start making donations to see your impact here.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3 class="table-title">Monthly Trends</h3>
+                </div>
+                {% if monthly_trends %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Donations</th>
+                            <th>Amount (KES)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trend in monthly_trends %}
+                        <tr>
+                            <td>{{ trend.month|date:"M Y" }}</td>
+                            <td>{{ trend.count }}</td>
+                            <td>{{ trend.amount|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>No Data Available</h3>
+                    <p>Start making donations to see trends here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // Parse data from Django context
+    const monthlyTrendsData = {{ monthly_trends_json|safe }};
+    const donationTypeData = {{ donation_type_json|safe }};
+    const categoryData = {{ category_json|safe }};
+
+    // Chart.js default configuration
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6b7280';
+
+    // 1. Monthly Trends Chart (Line Chart)
+    const monthlyCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyTrendsData.labels,
+            datasets: [{
+                label: 'Number of Donations',
+                data: monthlyTrendsData.donations,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y'
+            }, {
+                label: 'Amount (KES)',
+                data: monthlyTrendsData.amounts,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Number of Donations'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Amount (KES)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Donation Type Chart (Doughnut Chart)
+    const typeCtx = document.getElementById('donationTypeChart').getContext('2d');
+    new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: donationTypeData.labels,
+            datasets: [{
+                data: donationTypeData.values,
+                backgroundColor: [
+                    '#3b82f6',
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. Category Chart (Pie Chart)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: categoryData.labels,
+            datasets: [{
+                data: categoryData.values,
+                backgroundColor: [
+                    '#10b981',
+                    '#06b6d4',
+                    '#f59e0b',
+                    '#8b5cf6',
+                    '#ef4444'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 4. Environmental Impact Chart (Bar Chart)
+    const environmentalCtx = document.getElementById('environmentalImpactChart').getContext('2d');
+    new Chart(environmentalCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Food Waste Prevented', 'CO₂ Saved', 'Non-Food Waste', 'Total Waste Prevented'],
+            datasets: [{
+                label: 'Environmental Impact (kg)',
+                data: [
+                    {{ food_waste_prevented_kg }},
+                    {{ co2_saved_tons }} * 1000,
+                    {{ non_food_waste_reduced_kg }},
+                    {{ total_waste_prevented_kg }}
+                ],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(6, 182, 212, 0.8)',
+                    'rgba(245, 158, 11, 0.8)'
+                ],
+                borderColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#06b6d4',
+                    '#f59e0b'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += context.parsed.y.toFixed(2) + ' kg';
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Weight (kg)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

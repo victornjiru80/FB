@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}All Donations to Acknowledge{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">Available Donations</h2>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Cards Row -->
+            <div class="row g-3">
+                {% for allocation in unacknowledged_allocations %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                {{ allocation.donation.item_name|default:allocation.donation.get_donation_type_display }}
+                            </h6>
+
+                            <p class="card-text mb-1">
+                                {% if allocation.quantity %}
+                                    {{ allocation.quantity }} {{ allocation.donation.quantity_unit }}
+                                {% elif allocation.amount %}
+                                    Ksh {{ allocation.amount }}
+                                {% else %}
+                                    (Details not provided)
+                                {% endif %}
+                            </p>
+
+                            {% if allocation.donation.subsidized_price %}
+                            <p class="text-muted small mb-1">
+                                Subsidized: Ksh {{ allocation.donation.subsidized_price }}  
+                                (Market: Ksh {{ allocation.donation.subsidized_market_price|default:"—" }})
+                                Discount: {{ allocation.donation.subsidized_discount_percentage|default:"—" }}%
+                            </p>
+                            {% endif %}
+
+                            <p class="small mb-1">Donor: {{ allocation.donation.donor.email }}</p>
+                            <p class="small">Delivery: {{ allocation.donation.get_delivery_status_display }}</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <form method="post" action="{% url 'acknowledge_donation' allocation.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm w-100">Acknowledge</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">No donations to acknowledge right now.</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

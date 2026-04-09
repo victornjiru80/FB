@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Start Discussion - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'available_other_donations' %}" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="fas fa-arrow-left me-2"></i>Back to Available Donations
+            </a>
+            <h1 class="h2 mb-0">
+                <i class="fas fa-comments me-2 text-info"></i>Start Discussion
+            </h1>
+            <p class="text-muted">Reach out to the donor about their special donation</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Donation Details Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-gift me-2"></i>Donation Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Donor:</h6>
+                            <p>{{ donation.donor.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Posted:</h6>
+                            <p>{{ donation.donated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="donation-description">
+                        <h6 class="text-muted">Description:</h6>
+                        <div class="description-box">
+                            {{ donation.other_description }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discussion Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Start Your Discussion
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Your Message</label>
+                            <textarea name="message" id="message" class="form-control" rows="6" 
+                                      placeholder="Introduce yourself and explain your interest in this donation. Ask any questions you have about the terms, delivery, etc." required></textarea>
+                            <div class="form-text">
+                                Be clear about your needs and circumstances. This helps the donor understand how their donation will help you.
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>How it works:</strong> Your message will be sent to the donor. They can respond, and you can continue the conversation until you both agree on the terms. Once agreed, the donation will be allocated to you.
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-info btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message & Start Discussion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.donation-description {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.description-box {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #17a2b8;
+    font-style: italic;
+    color: #495057;
+}
+
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-control:focus {
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    border: none;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

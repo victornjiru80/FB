@@ -1,0 +1,292 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Subscription Details -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card"></i> Subscription Details
+                    <span class="badge {% if subscription.status == 'active' %}bg-success{% elif subscription.status == 'trial' %}bg-primary{% elif subscription.status == 'expired' %}bg-danger{% else %}bg-secondary{% endif %} ms-2">
+                        {{ subscription.get_status_display }}
+                    </span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Food Bank Information</h6>
+                        <p class="mb-1"><strong>{{ subscription.foodbank.foodbank_name }}</strong></p>
+                        <p class="mb-1 text-muted">{{ subscription.foodbank.user.email }}</p>
+                        <p class="mb-1 text-muted">{{ subscription.foodbank.user.phone_number }}</p>
+                        <p class="mb-0 text-muted">Contact: {{ subscription.foodbank.contact_person }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Subscription Status</h6>
+                        <p class="mb-1">
+                            <strong>Plan:</strong> 
+                            <span class="badge bg-info">{{ subscription.get_plan_display }}</span>
+                        </p>
+                        <p class="mb-1">
+                            <strong>Status:</strong> 
+                            <span class="badge {% if subscription.status == 'active' %}bg-success{% elif subscription.status == 'trial' %}bg-primary{% elif subscription.status == 'expired' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ subscription.get_status_display }}
+                            </span>
+                        </p>
+                        <p class="mb-1">
+                            <strong>Access:</strong>
+                            {% if subscription.can_access_features %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> Enabled</span>
+                            {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i> Disabled</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Days Remaining:</strong> 
+                            {% if subscription.days_remaining > 0 %}
+                                <span class="text-success">{{ subscription.days_remaining }} days</span>
+                            {% else %}
+                                <span class="text-danger">Expired</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Trial Period</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Start Date:</strong></td>
+                                <td>{{ subscription.trial_start_date|date:"F d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>End Date:</strong></td>
+                                <td>{{ subscription.trial_end_date|date:"F d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if subscription.is_trial_active %}
+                                        <span class="badge bg-primary">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ended</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Paid Subscription</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Start Date:</strong></td>
+                                <td>
+                                    {% if subscription.subscription_start_date %}
+                                        {{ subscription.subscription_start_date|date:"F d, Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Not started</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>End Date:</strong></td>
+                                <td>
+                                    {% if subscription.subscription_end_date %}
+                                        {{ subscription.subscription_end_date|date:"F d, Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if subscription.is_subscription_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-muted">Timeline</h6>
+                        <p class="mb-1"><strong>Created:</strong> {{ subscription.created_at|date:"F d, Y H:i" }}</p>
+                        <p class="mb-0"><strong>Last Updated:</strong> {{ subscription.updated_at|date:"F d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history"></i> Payment History
+                    <span class="badge bg-secondary ms-2">{{ payment_history.count }} payments</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ current_filters.date_from|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ current_filters.date_to|default:'' }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                        <a href="{% url 'custom_admin:subscription_detail' subscription.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </form>
+                {% if payment_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Plan</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Transaction Ref</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payment_history %}
+                                    <tr>
+                                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                        <td><span class="badge bg-info">{{ payment.get_plan_type_display }}</span></td>
+                                        <td><strong>KSH {{ payment.amount|floatformat:2 }}</strong></td>
+                                        <td>{{ payment.get_payment_method_display }}</td>
+                                        <td><code>{{ payment.transaction_reference }}</code></td>
+                                        <td><span class="badge {{ payment.get_status_badge_class }}">{{ payment.get_status_display }}</span></td>
+                                        <td>
+                                            <a href="{% url 'custom_admin:payment_detail' payment.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No payment history</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Sidebar -->
+    <div class="col-md-4">
+        <!-- Quick Actions -->
+        <div class="card mb-3">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                {% if subscription.status == 'suspended' or subscription.status == 'expired' %}
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="activate">
+                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Activate this subscription?');">
+                        <i class="fas fa-play"></i> Activate Subscription
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if subscription.status == 'active' %}
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="suspend">
+                    <button type="submit" class="btn btn-warning w-100" onclick="return confirm('Suspend this subscription?');">
+                        <i class="fas fa-pause"></i> Suspend Subscription
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if subscription.status == 'trial' %}
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="extend_trial">
+                    <div class="input-group mb-2">
+                        <input type="number" name="days" class="form-control" placeholder="Days" value="30" min="1">
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Extend trial period?');">
+                            <i class="fas fa-calendar-plus"></i> Extend
+                        </button>
+                    </div>
+                </form>
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reduce_trial">
+                    <div class="input-group mb-2">
+                        <input type="number" name="days" class="form-control" placeholder="Days" value="7" min="1">
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Reduce trial period?');">
+                            <i class="fas fa-calendar-minus"></i> Reduce
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancel">
+                    <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to cancel this subscription? This action cannot be undone.');">
+                        <i class="fas fa-ban"></i> Cancel Subscription
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Subscription Info -->
+        <div class="card mb-3">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Subscription Info</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Current Plan Price:</strong></p>
+                <p class="text-success mb-3"><strong>KSH {{ subscription.get_plan_price|floatformat:2 }}</strong></p>
+
+                <p class="mb-2"><strong>Total Payments:</strong></p>
+                <p class="mb-3">{{ payment_history.count }} payments</p>
+
+                <p class="mb-2"><strong>Approved Payments:</strong></p>
+                <p class="mb-0">{{ payment_history|length }} approved</p>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-link"></i> Quick Links</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'custom_admin:subscription_management' %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

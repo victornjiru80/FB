@@ -1,0 +1,283 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<!-- Revenue Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h6 class="card-title">Total Subscriptions</h6>
+                <h2 class="mb-0">{{ total_subscriptions }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card success">
+            <div class="card-body text-center">
+                <h6 class="card-title">Active Subscriptions</h6>
+                <h2 class="mb-0">{{ active_subscriptions }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card info">
+            <div class="card-body text-center">
+                <h6 class="card-title">Trial Subscriptions</h6>
+                <h2 class="mb-0">{{ trial_subscriptions }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card warning">
+            <div class="card-body text-center">
+                <h6 class="card-title">Expired</h6>
+                <h2 class="mb-0">{{ expired_subscriptions }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Total Revenue</h6>
+                <h3 class="text-success mb-0">KSH {{ total_revenue|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Monthly Revenue</h6>
+                <h3 class="text-primary mb-0">KSH {{ monthly_revenue|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Yearly Revenue</h6>
+                <h3 class="text-info mb-0">KSH {{ yearly_revenue|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Reports -->
+<div class="card mb-4">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h6 class="mb-1">Download Reports</h6>
+            <small class="text-muted">Export all subscriptions using current filters</small>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'custom_admin:export_subscriptions_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a href="{% url 'custom_admin:export_subscriptions_excel' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+            <a href="{% url 'custom_admin:export_subscriptions_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-secondary">
+                <i class="fas fa-file-csv"></i> CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="plan" class="form-label">Plan</label>
+                <select class="form-select" id="plan" name="plan">
+                    <option value="">All Plans</option>
+                    {% for value, label in plan_choices %}
+                        <option value="{{ value }}" {% if current_filters.plan == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control search-box" id="search" name="search" 
+                       placeholder="Search by food bank name or email..." value="{{ current_filters.search|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ current_filters.date_from|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ current_filters.date_to|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                    <a href="{% url 'custom_admin:subscription_management' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Subscriptions Table -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">
+            <i class="fas fa-credit-card"></i> All Subscriptions
+            <span class="badge bg-secondary ms-2">{{ page_obj.paginator.count }} total</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>S/No</th>
+                            <th>Food Bank</th>
+                            <th>Email</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Days Remaining</th>
+                            <th>Trial Start</th>
+                            <th>Trial End</th>
+                            <th>Subscription End</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in page_obj %}
+                            <tr>
+                                <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                <td>
+                                    <strong>{{ subscription.foodbank.foodbank_name }}</strong>
+                                </td>
+                                <td>{{ subscription.foodbank.user.email }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ subscription.get_plan_display }}</span>
+                                </td>
+                                <td>
+                                    {% if subscription.status == 'trial' %}
+                                        <span class="badge bg-primary">{{ subscription.get_status_display }}</span>
+                                    {% elif subscription.status == 'active' %}
+                                        <span class="badge bg-success">{{ subscription.get_status_display }}</span>
+                                    {% elif subscription.status == 'expired' %}
+                                        <span class="badge bg-danger">{{ subscription.get_status_display }}</span>
+                                    {% elif subscription.status == 'suspended' %}
+                                        <span class="badge bg-warning">{{ subscription.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ subscription.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if subscription.can_access_features %}
+                                        <span class="text-success">
+                                            <i class="fas fa-check-circle"></i> {{ subscription.days_remaining }} days
+                                        </span>
+                                    {% else %}
+                                        <span class="text-danger">
+                                            <i class="fas fa-times-circle"></i> Expired
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if subscription.trial_start_date %}
+                                        {{ subscription.trial_start_date|date:"M d, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if subscription.trial_end_date %}
+                                        {{ subscription.trial_end_date|date:"M d, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if subscription.subscription_end_date %}
+                                        {{ subscription.subscription_end_date|date:"M d, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'custom_admin:subscription_detail' subscription.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.plan %}&plan={{ current_filters.plan }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No subscriptions found</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

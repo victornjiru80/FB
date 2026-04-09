@@ -1,0 +1,670 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 2rem;
+    }
+    .chart-card {
+        background: var(--ca-card-bg);
+        border: 1px solid var(--ca-card-border);
+        color: var(--ca-text);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: var(--ca-card-shadow);
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">
+            <i class="fas fa-leaf text-success me-2"></i>Environmental Impact Reports
+        </h2>
+        <p class="text-muted mb-0">CO₂ Emissions, Food Waste Prevention & Impact Analysis</p>
+    </div>
+    <div class="d-flex gap-2">
+        <!-- Export PDF Button -->
+        <a href="{% url 'custom_admin:export_environmental_reports_pdf' %}?days={{ days }}" class="btn btn-danger">
+            <i class="fas fa-file-pdf me-2"></i>Download PDF
+        </a>
+        
+        <!-- Time Period Filter -->
+        <form method="get" class="d-inline-block">
+            <select name="days" class="form-select" onchange="this.form.submit()">
+                <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 Days</option>
+                <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 Days</option>
+                <option value="180" {% if days == 180 %}selected{% endif %}>Last 6 Months</option>
+                <option value="365" {% if days == 365 %}selected{% endif %}>Last 12 Months</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <i class="fas fa-leaf fa-2x text-success mb-2"></i>
+                <h3 class="text-success mb-1">{{ summary.total_co2_saved_tons }}</h3>
+                <p class="text-muted mb-0 small">Tons CO₂ Saved</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <i class="fas fa-trash-restore fa-2x text-warning mb-2"></i>
+                <h3 class="text-warning mb-1">{{ summary.total_waste_prevented_kg|floatformat:0 }}</h3>
+                <p class="text-muted mb-0 small">Kg Waste Prevented</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <i class="fas fa-utensils fa-2x text-primary mb-2"></i>
+                <h3 class="text-primary mb-1">{{ summary.total_food_donated_kg|floatformat:0 }}</h3>
+                <p class="text-muted mb-0 small">Kg Food Donated</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <i class="fas fa-hand-holding-heart fa-2x text-info mb-2"></i>
+                <h3 class="text-info mb-1">{{ summary.total_donations }}</h3>
+                <p class="text-muted mb-0 small">Total Donations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visualizations Section -->
+<div class="row mb-4">
+    <!-- Monthly Trends Chart -->
+    <div class="col-md-12 mb-4">
+        <div class="chart-card">
+            <h5 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Monthly Environmental Impact Trends</h5>
+            <div class="chart-container">
+                <canvas id="monthlyTrendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Impact Metrics Charts -->
+    <div class="col-md-6 mb-4">
+        <div class="chart-card">
+            <h5 class="mb-3"><i class="fas fa-chart-bar me-2 text-success"></i>Impact Metrics Overview</h5>
+            <div class="chart-container">
+                <canvas id="impactMetricsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="chart-card">
+            <h5 class="mb-3"><i class="fas fa-chart-pie me-2 text-warning"></i>Donation Category Distribution</h5>
+            <div class="chart-container">
+                <canvas id="categoryDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Impact Table -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-table me-2"></i>Detailed Impact Analysis by Donation Type
+        </h5>
+        <a href="{% url 'custom_admin:impact_donations_list' %}?days={{ days }}" class="btn btn-light btn-sm">View all donations</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>S/No</th>
+                        <th>Category</th>
+                        <th>Mode</th>
+                        <th>Count</th>
+                        <th>Food Donated (kg)</th>
+                        <th>Subsidized Food (kg)</th>
+                        <th>Non-Food (units)</th>
+                        <th>Waste Prevented (kg)</th>
+                        <th>CO₂ Saved (tons)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in donation_details %}
+                    <tr>
+                        <td>{{ detail.serial_no }}</td>
+                        <td>
+                            <span class="badge {% if detail.category == 'Food' %}bg-success{% elif detail.category == 'Non_food' %}bg-primary{% else %}bg-info{% endif %}">
+                                {{ detail.category }}
+                            </span>
+                        </td>
+                        <td>{{ detail.mode }}</td>
+                        <td>{{ detail.count }}</td>
+                        <td>{{ detail.food_donated_kg|floatformat:2 }}</td>
+                        <td>{{ detail.subsidized_food_kg|floatformat:2 }}</td>
+                        <td>{{ detail.non_food_units }}</td>
+                        <td><strong class="text-warning">{{ detail.waste_prevented_kg }}</strong></td>
+                        <td><strong class="text-success">{{ detail.co2_saved_tons }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            No donation data available for the selected period
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if donation_details %}
+                    <tr class="table-success fw-bold">
+                        <td colspan="4" class="text-end">TOTAL:</td>
+                        <td>{{ summary.total_food_donated_kg|floatformat:2 }}</td>
+                        <td>{{ summary.total_subsidized_food_kg|floatformat:2 }}</td>
+                        <td>{{ summary.total_non_food_units }}</td>
+                        <td>{{ summary.total_waste_prevented_kg|floatformat:2 }}</td>
+                        <td>{{ summary.total_co2_saved_tons }}</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Breakdown -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>Monthly Impact Breakdown (Last 12 Months)
+        </h5>
+        <a href="{% url 'custom_admin:impact_monthly_breakdown' %}?months=12" class="btn btn-light btn-sm">View full monthly breakdown</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Month</th>
+                        <th>Donations</th>
+                        <th>Food Donated (kg)</th>
+                        <th>Subsidized Food (kg)</th>
+                        <th>Waste Prevented (kg)</th>
+                        <th>CO₂ Saved (tons)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for month in monthly_data %}
+                    <tr>
+                        <td><strong>{{ month.month }}</strong></td>
+                        <td>{{ month.donation_count }}</td>
+                        <td>{{ month.food_donated }}</td>
+                        <td>{{ month.subsidized_food }}</td>
+                        <td class="text-warning"><strong>{{ month.waste_prevented }}</strong></td>
+                        <td class="text-success"><strong>{{ month.co2_saved }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No monthly data available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Received Donations with Environmental Impact -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-hand-holding-heart me-2"></i>Received Donations with Environmental Impact
+        </h5>
+        <a href="{% url 'custom_admin:received_donations_impact_list' %}?days={{ days }}" class="btn btn-light btn-sm">View all received donations</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="px-3 py-2 border-bottom bg-light small text-muted">
+            Showing {{ received_donations|length }} of {{ received_donations_total_count }} received donations in the selected period. Use the link above to filter and view all.
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Donor</th>
+                        <th>Foodbank</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Quantity/Amount</th>
+                        <th>Waste Prevented (kg)</th>
+                        <th>CO₂ Saved (tons)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in received_donations %}
+                    <tr>
+                        <td>{{ donation.donated_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if donation.donor.donor_profile and donation.donor.donor_profile.full_name %}
+                                {{ donation.donor.donor_profile.full_name }}
+                            {% else %}
+                                {{ donation.donor.email }}
+                            {% endif %}
+                        </td>
+                        <td>{{ donation.foodbank.foodbank_name|default:"—" }}</td>
+                        <td>
+                            {% if donation.donation_type == 'item' %}Free Goods{% else %}{{ donation.get_donation_type_display|default:"—" }}{% endif %}
+                        </td>
+                        <td><span class="badge bg-primary">{{ donation.get_donation_category_display|default:"—" }}</span></td>
+                        <td>
+                            {% if donation.donation_type == 'item' %}
+                                {{ donation.item_name|default:"Item Donation" }}
+                            {% elif donation.donation_type == 'money' %}
+                                Monetary Donation
+                            {% elif donation.donation_type == 'subsidized' %}
+                                {{ donation.subsidized_product_type|default:"Subsidized Goods" }}
+                            {% elif donation.donation_type == 'csr' %}
+                                CSR — {{ donation.get_csr_subcategory_display|default:"" }}
+                            {% else %}
+                                {{ donation.other_description|default:"Donation" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if donation.donation_type == 'item' %}
+                                <strong>{{ donation.quantity|default:"—" }}</strong> {{ donation.quantity_unit|default:"units" }}
+                            {% elif donation.donation_type == 'money' %}
+                                <strong>{{ donation.amount|default:0|floatformat:0 }}</strong>
+                            {% elif donation.donation_type == 'subsidized' %}
+                                {{ donation.subsidized_quantity|default:"—" }} {{ donation.subsidized_quantity_unit|default:"" }}
+                            {% elif donation.donation_type == 'csr' or donation.donation_type == 'other' %}
+                                {% if donation.quantity %}{{ donation.quantity }} {{ donation.quantity_unit|default:"" }}{% endif %}
+                                {% if donation.amount %}{{ donation.amount|floatformat:0 }}{% endif %}
+                                {% if not donation.quantity and not donation.amount %}—{% endif %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td class="text-warning"><strong>{{ donation.waste_prevented_kg }}</strong></td>
+                        <td class="text-success"><strong>{{ donation.co2_saved_tons }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            No received donations in the selected period
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- CO₂ Emissions Calculation Methodology -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-calculator me-2"></i>CO₂ Emissions Calculation Methodology
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-info">Food Waste Prevention</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check-circle text-success me-2"></i><strong>Free Food:</strong> 1.0 kg per unit (100% waste prevention)</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i><strong>Subsidized Food:</strong> 0.8 kg per unit (80% waste prevention)</li>
+                </ul>
+                <div class="alert alert-light">
+                    <strong>Formula:</strong><br>
+                    Waste Prevented = (Free Food × 1.0) + (Subsidized Food × 0.8)
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-success">CO₂ Calculation</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-leaf text-success me-2"></i><strong>Food:</strong> 1 kg waste = 2.5 kg CO₂ equivalent</li>
+                    <li><i class="fas fa-leaf text-success me-2"></i><strong>Non-Food:</strong> 1 unit = 0.5 kg CO₂ equivalent</li>
+                </ul>
+                <div class="alert alert-light">
+                    <strong>Formula:</strong><br>
+                    CO₂ Saved (tons) = (Waste Prevented × 2.5) ÷ 1000
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Note:</strong> Calculations based on UNEP (United Nations Environment Programme) and WRAP (Waste and Resources Action Programme) benchmarks for food waste and carbon emissions.
+        </div>
+    </div>
+</div>
+
+<!-- Top Contributors -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>Top 10 Donors by Impact
+                </h5>
+                <a href="{% url 'custom_admin:impact_donors_list' %}?days={{ days }}" class="btn btn-dark btn-sm">View all donors</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Donor</th>
+                                <th>Donations</th>
+                                <th>Quantity (kg)</th>
+                                <th>Amount (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donor in top_donors %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <small>
+                                        {% if donor.donor__first_name %}
+                                            {{ donor.donor__first_name }} {{ donor.donor__last_name }}
+                                        {% else %}
+                                            {{ donor.donor__email }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>{{ donor.total_donations }}</td>
+                                <td>{{ donor.total_quantity|default:0|floatformat:0 }}</td>
+                                <td>{% if donor.total_amount %}{{ donor.total_amount|floatformat:0 }}{% else %}—{% endif %}{% if donor.total_subsidized_value %}<br><small class="text-muted">Subsidized: {{ donor.total_subsidized_value|floatformat:0 }}</small>{% endif %}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>Top 10 Food Banks by Volume
+                </h5>
+                <a href="{% url 'custom_admin:impact_foodbanks_list' %}?days={{ days }}" class="btn btn-light btn-sm">View all food banks</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Food Bank</th>
+                                <th>Received</th>
+                                <th>Quantity (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for foodbank in top_foodbanks %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><small>{{ foodbank.foodbank__foodbank_name }}</small></td>
+                                <td>{{ foodbank.total_received }}</td>
+                                <td>{{ foodbank.total_quantity|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Statistics -->
+<div class="card">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i>Additional Statistics
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="p-3">
+                    <i class="fas fa-users fa-3x text-primary mb-2"></i>
+                    <h4>{{ summary.unique_donors }}</h4>
+                    <p class="text-muted mb-0">Unique Donors</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3">
+                    <i class="fas fa-building fa-3x text-success mb-2"></i>
+                    <h4>{{ summary.unique_foodbanks }}</h4>
+                    <p class="text-muted mb-0">Food Banks Served</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3">
+                    <i class="fas fa-user-circle fa-3x text-info mb-2"></i>
+                    <h4>{{ summary.unique_recipients }}</h4>
+                    <p class="text-muted mb-0">Recipients Helped</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const monthlyChartLabels = JSON.parse('{{ monthly_chart_labels|escapejs }}');
+    const monthlyFoodDonatedData = JSON.parse('{{ monthly_food_donated_data|escapejs }}');
+    const monthlyWastePreventedData = JSON.parse('{{ monthly_waste_prevented_data|escapejs }}');
+    const monthlyCo2SavedData = JSON.parse('{{ monthly_co2_saved_data|escapejs }}');
+    const impactMetricsData = JSON.parse('{{ impact_metrics_data|escapejs }}');
+    const categoryDistributionData = JSON.parse('{{ category_distribution_data|escapejs }}');
+
+    // Monthly Trends Chart
+    const monthlyTrendsCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+    const monthlyTrendsChart = new Chart(monthlyTrendsCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyChartLabels,
+            datasets: [
+                {
+                    label: 'Food Donated (kg)',
+                    data: monthlyFoodDonatedData,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Waste Prevented (kg)',
+                    data: monthlyWastePreventedData,
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'CO₂ Saved (tons)',
+                    data: monthlyCo2SavedData,
+                    borderColor: 'rgb(245, 158, 11)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += context.parsed.y.toFixed(2);
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Weight (kg)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'CO₂ (tons)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+
+    // Impact Metrics Bar Chart
+    const impactMetricsCtx = document.getElementById('impactMetricsChart').getContext('2d');
+    const impactMetricsChart = new Chart(impactMetricsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Food Donated', 'Subsidized Food', 'Waste Prevented', 'Non-Food Items'],
+            datasets: [{
+                label: 'Quantity',
+                data: impactMetricsData,
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(99, 102, 241, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(59, 130, 246)',
+                    'rgb(99, 102, 241)',
+                    'rgb(16, 185, 129)',
+                    'rgb(245, 158, 11)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + ' kg/units';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Quantity (kg/units)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Distribution Pie Chart
+    const categoryDistributionCtx = document.getElementById('categoryDistributionChart').getContext('2d');
+
+    const categoryDistributionChart = new Chart(categoryDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Food Donations', 'Non-Food Items', 'Monetary'],
+            datasets: [{
+                data: categoryDistributionData,
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(245, 158, 11, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(16, 185, 129)',
+                    'rgb(59, 130, 246)',
+                    'rgb(245, 158, 11)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': ' + value + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

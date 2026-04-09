@@ -1,0 +1,858 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register as Food Bank - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { padding-top: 30px; }
+    .split-container {
+        display: flex;
+        background: #fff;
+    }
+
+    /* removed hero image section for compact layout */
+
+    .form-section {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #fff;
+    }
+
+    .form-container {
+        max-width: 720px;
+        width: 100%;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .logo-section { display: none; }
+
+    .logo-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .logo-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .kenya-emblem {
+        width: 30px;
+        height: 30px;
+        background: #28a745;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+
+    .ict-logo {
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(45deg, #dc3545, #28a745);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+
+    .form-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .register-banner { display: none; }
+
+    .form-group { margin-bottom: 0.75rem; }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .form-control::placeholder {
+        color: #6c757d;
+    }
+
+    .form-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
+    .form-row .form-group { margin-bottom: 0; }
+
+    .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #28a745;
+        margin-top: 0.2rem;
+    }
+
+    .checkbox-group label {
+        font-size: 0.9rem;
+        color: #495057;
+        line-height: 1.4;
+        margin-bottom: 0;
+    }
+
+    .password-strength {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+
+    .password-strength h6 {
+        margin-bottom: 0.5rem;
+        color: #495057;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .strength-meter {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 3px;
+    }
+
+    .strength-weak .strength-fill { background: #dc3545; width: 25%; }
+    .strength-fair .strength-fill { background: #ffc107; width: 50%; }
+    .strength-good .strength-fill { background: #17a2b8; width: 75%; }
+    .strength-strong .strength-fill { background: #28a745; width: 100%; }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .requirements-list li {
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .requirements-list li.valid {
+        color: #28a745;
+    }
+
+    .requirements-list li.invalid {
+        color: #6c757d;
+    }
+
+    .requirements-list li i {
+        font-size: 0.7rem;
+    }
+
+    .btn { 
+        width: 100%; 
+        padding: 0.75rem; 
+        border: none; 
+        border-radius: 0.5rem; 
+        font-size: 1rem; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.2s ease; 
+        text-decoration: none; 
+        text-align: center; 
+        display: inline-block; 
+        margin-bottom: 0.75rem; 
+    }
+
+    .btn-primary {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .divider {
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #e9ecef;
+    }
+
+    .divider span {
+        background: #fff;
+        padding: 0 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .back-link {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .back-link a {
+        color: #28a745;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+
+    * Success messages */
+    .success {
+        color: #28a745;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(40, 167, 69, 0.1);
+        border-radius: 0.5rem;
+        border-left: 3px solid #28a745;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(220, 53, 69, 0.1);
+        border-radius: 0.5rem;
+        border-left: 3px solid #dc3545;
+    }
+
+    .help-text {
+        color: #6c757d;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        font-style: italic;
+    }
+
+    .button-row { display: flex; gap: 0.75rem; margin-top: 0.5rem; align-items: stretch; }
+    .button-row .btn { margin-bottom: 0; }
+
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-secondary:hover { background: #5a6268; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(108,117,125,0.3); }
+
+    @media (max-width: 992px) {
+        .split-container {
+            flex-direction: column;
+        }
+        .form-section {
+            flex: none;
+            padding: 1rem;
+        }
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+
+    @media (max-width: 576px) {
+        .form-section {
+            padding: 1.5rem 1rem;
+        }
+        
+        .form-title {
+            font-size: 2rem;
+        }
+        
+        .form-container {
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="split-container">
+    <div class="form-section">
+        <div class="form-container">
+            <!-- Form Header -->
+            <div class="form-header">
+                <h1 class="form-title">Register as Food Bank</h1>
+                <div class="register-banner">Create your food bank account to start managing donations</div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="{{ message.tags }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Registration Form -->
+            <form method="post" class="registration-form" id="foodbankForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Food Bank Information -->
+                <div class="form-group">
+                    <label for="{{ form.foodbank_name.id_for_label }}" class="form-label">
+                        <i class="fas fa-warehouse me-1"></i>Food Bank Name
+                    </label>
+                    <input type="text" 
+                           name="{{ form.foodbank_name.name }}" 
+                           id="{{ form.foodbank_name.id_for_label }}" 
+                           class="form-control {% if form.foodbank_name.errors %}is-invalid{% endif %}"
+                           placeholder="Enter food bank name"
+                           value="{{ form.foodbank_name.value|default:'' }}"
+                           autocomplete="organization"
+                           autofocus
+                           required>
+                    {% if form.foodbank_name.errors %}
+                        {% for error in form.foodbank_name.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.contact_first_name.id_for_label }}" class="form-label">
+                            <i class="fas fa-user me-1"></i>Contact First Name
+                        </label>
+                        <input type="text" 
+                               name="{{ form.contact_first_name.name }}" 
+                               id="{{ form.contact_first_name.id_for_label }}" 
+                               class="form-control {% if form.contact_first_name.errors %}is-invalid{% endif %}"
+                               placeholder="Enter contact first name"
+                               value="{{ form.contact_first_name.value|default:'' }}"
+                               autocomplete="given-name"
+                               required>
+                        {% if form.contact_first_name.errors %}
+                            {% for error in form.contact_first_name.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.contact_last_name.id_for_label }}" class="form-label">
+                            <i class="fas fa-user me-1"></i>Contact Last Name
+                        </label>
+                        <input type="text" 
+                               name="{{ form.contact_last_name.name }}" 
+                               id="{{ form.contact_last_name.id_for_label }}" 
+                               class="form-control {% if form.contact_last_name.errors %}is-invalid{% endif %}"
+                               placeholder="Enter contact last name"
+                               value="{{ form.contact_last_name.value|default:'' }}"
+                               autocomplete="family-name"
+                               required>
+                        {% if form.contact_last_name.errors %}
+                            {% for error in form.contact_last_name.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Service Type Field -->
+                <div class="form-group">
+                    <label for="{{ form.service_type.id_for_label }}" class="form-label">
+                        <i class="fas fa-hands-helping me-1"></i>Service Type
+                    </label>
+                    <select name="{{ form.service_type.name }}" 
+                            id="{{ form.service_type.id_for_label }}" 
+                            class="form-control {% if form.service_type.errors %}is-invalid{% endif %}"
+                            required>
+                        <option value="">Select service type</option>
+                        {% for value, label in form.service_type.field.choices %}
+                            <option value="{{ value }}" {% if form.service_type.value == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.service_type.errors %}
+                        {% for error in form.service_type.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="help-text">{{ form.service_type.help_text }}</div>
+                </div>
+
+                <div class="form-row">
+                        <!-- Location Information -->
+                        <div class="form-group">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>Location/Address
+                            </label>
+                            <input type="text" 
+                                   name="{{ form.address.name }}" 
+                                   id="{{ form.address.id_for_label }}" 
+                                   class="form-control {% if form.address.errors %}is-invalid{% endif %}"
+                                   placeholder="Enter your location (City, State, Country)"
+                                   value="{{ form.address.value|default:'' }}">
+                            {% if form.address.errors %}
+                                {% for error in form.address.errors %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="help-text">Enter your food bank's location to help recipients find you</div>
+                        </div>
+                                                        
+                    </div>
+
+                <div class="form-group"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>Email Address
+                        </label>
+                        <input type="email" 
+                               name="{{ form.email.name }}" 
+                               id="{{ form.email.id_for_label }}" 
+                               class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                               placeholder="Enter your email address"
+                               value="{{ form.email.value|default:'' }}"
+                               autocomplete="email"
+                               required>
+                        {% if form.email.errors %}
+                            {% for error in form.email.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                    <label for="phone_number" class="form-label">
+                        <i class="fas fa-phone me-1"></i>Phone Number
+                    </label>
+                    <input type="tel" 
+                           name="phone_number" 
+                           id="phone_number"
+                           class="form-control"
+                           placeholder="Enter phone number with country code (e.g., +1234567890)"
+                           required>
+                </div>
+                </div>
+                    
+                
+
+                <!-- Image Upload Fields -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.authority_picture.id_for_label }}" class="form-label">Authority Picture (Optional)</label>
+                        <input type="file" 
+                               name="{{ form.authority_picture.name }}" 
+                               id="{{ form.authority_picture.id_for_label }}" 
+                               class="form-control {% if form.authority_picture.errors %}is-invalid{% endif %}"
+                               accept="image/*">
+                        {% if form.authority_picture.errors %}
+                            {% for error in form.authority_picture.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        <div class="help-text">Upload a picture of your authority letter or permit</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.urgent_request_picture.id_for_label }}" class="form-label">Urgent Request Picture (Optional)</label>
+                        <input type="file" 
+                               name="{{ form.urgent_request_picture.name }}" 
+                               id="{{ form.urgent_request_picture.id_for_label }}" 
+                               class="form-control {% if form.urgent_request_picture.errors %}is-invalid{% endif %}"
+                               accept="image/*">
+                        {% if form.urgent_request_picture.errors %}
+                            {% for error in form.urgent_request_picture.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        <div class="help-text">Upload a picture for urgent requests</div>
+                    </div>
+                </div>
+
+                <!-- Additional Documents Field -->
+                <div class="form-group">
+                    <label for="{{ form.additional_documents.id_for_label }}" class="form-label">Additional Documentation (Optional)</label>
+                    <input type="file" 
+                           name="{{ form.additional_documents.name }}" 
+                           id="{{ form.additional_documents.id_for_label }}" 
+                           class="form-control {% if form.additional_documents.errors %}is-invalid{% endif %}"
+                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    {% if form.additional_documents.errors %}
+                        {% for error in form.additional_documents.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="help-text">Upload any additional documentation such as permits, certificates, or registration documents (PDF, DOC, or images)</div>
+                </div>
+
+                <!-- Password Fields -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                        <div style="position: relative;">
+                        <input type="password" 
+                               name="{{ form.password1.name }}" 
+                               id="{{ form.password1.id_for_label }}" 
+                               class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                               placeholder="Create a strong password"
+                               autocomplete="new-password"
+                               required>
+                        <button type="button" id="togglePwd1" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#6c757d; cursor:pointer;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        </div>
+                        {% if form.password1.errors %}
+                            {% for error in form.password1.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Password Strength Meter -->
+                        <div class="password-strength" id="passwordStrength" style="display: none;">
+                            <h6>Password Strength</h6>
+                            <div class="strength-meter">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <ul class="requirements-list" id="requirementsList">
+                                <li class="invalid" data-requirement="length"><i class="fas fa-circle"></i> At least 8 characters</li>
+                                <li class="invalid" data-requirement="uppercase"><i class="fas fa-circle"></i> One uppercase letter</li>
+                                <li class="invalid" data-requirement="lowercase"><i class="fas fa-circle"></i> One lowercase letter</li>
+                                <li class="invalid" data-requirement="digit"><i class="fas fa-circle"></i> One number</li>
+                                <li class="invalid" data-requirement="special"><i class="fas fa-circle"></i> One special character</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                        <div style="position: relative;">
+                        <input type="password" 
+                               name="{{ form.password2.name }}" 
+                               id="{{ form.password2.id_for_label }}" 
+                               class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                               placeholder="Confirm your password"
+                               autocomplete="new-password"
+                               required>
+                        <button type="button" id="togglePwd2" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#6c757d; cursor:pointer;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        </div>
+                        {% if form.password2.errors %}
+                            {% for error in form.password2.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="checkbox-group">
+                    <input type="checkbox" name="terms_accepted" id="termsAccepted" required>
+                    <label for="termsAccepted">
+                        I agree to the
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" style="color: #28a745;">Terms and Conditions</a> 
+                        and 
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" style="color: #28a745;">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <!-- Consent to Receive Goods -->
+                <div class="checkbox-group">
+                    <input type="checkbox" name="consent_to_receive_goods" id="consentToReceiveGoods" required>
+                    <label for="consentToReceiveGoods">
+                        I consent to receive goods at subsidized or free rates as requested
+                    </label>
+                </div>
+
+                <!-- Actions -->
+                <div class="button-row">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-warehouse me-2"></i>Create Account
+                    </button>
+                    <a href="{% url 'login' %}" class="btn btn-secondary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </a>
+                </div>
+                
+                <script>
+                // Loading state on form submission
+                document.getElementById('foodbankForm').addEventListener('submit', function() {
+                    const submitBtn = document.getElementById('submitBtn');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+                });
+                </script>
+
+                <!-- Back Link -->
+                <div class="back-link">
+                    <a href="{% url 'home' %}">Back to FoodBank Hub</a>
+                </div>
+            </form>
+            <!-- Terms Modal -->
+            <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions - Food Banks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Acceptance of Terms</h6>
+                    <p>
+                    By registering as a food bank on FoodBank Hub, you agree to comply with these Terms and Conditions and act responsibly in distributing donations to recipients.
+                    </p>
+
+                    <h6>2. Eligibility</h6>
+                    <p>
+                    Only legitimate food banks or organizations authorized to distribute food assistance may register. You must provide accurate organizational information.
+                    </p>
+
+                    <h6>3. Responsibilities</h6>
+                    <ul>
+                    <li>Ensure all distributed donations are handled safely and ethically.</li>
+                    <li>Fulfill recipient requests to the best of your ability and notify the platform of any challenges.</li>
+                    <li>Comply with local laws, regulations, and food safety standards.</li>
+                    <li>Maintain transparency and fairness in serving recipients.</li>
+                    </ul>
+
+                    <h6>4. Donations and Requests</h6>
+                    <p>
+                    FoodBank Hub acts only as a facilitator. The food bank is responsible for the quality, safety, and delivery of donated items. Requests accepted must be honored in good faith.
+                    </p>
+
+                    <h6>5. Data Accuracy</h6>
+                    <p>
+                    You are responsible for providing accurate and up-to-date organizational and contact information.
+                    </p>
+
+                    <h6>6. Limitation of Liability</h6>
+                    <p>
+                    FoodBank Hub is not liable for any damages or disputes arising from your activities as a food bank on the platform.
+                    </p>
+
+                    <h6>7. Amendments</h6>
+                    <p>
+                    FoodBank Hub reserves the right to update these Terms and Conditions at any time. Continued use of the platform indicates acceptance of any changes.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Privacy Policy Modal -->
+            <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">Privacy Policy - Food Banks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Information We Collect</h6>
+                    <p>
+                    We collect organizational and contact information such as food bank name, address, phone number, email, and uploaded documents to verify your eligibility and facilitate recipient requests.
+                    </p>
+
+                    <h6>2. How We Use Your Information</h6>
+                    <ul>
+                    <li>To verify your food bank and authorize access to the platform.</li>
+                    <li>To connect your food bank with recipients and donors.</li>
+                    <li>To communicate important updates regarding requests or platform policies.</li>
+                    </ul>
+
+                    <h6>3. Data Sharing</h6>
+                    <p>
+                    Your information will be shared only with relevant recipients, donors, or FoodBank Hub staff to facilitate requests. Data will not be sold or shared with unauthorized third parties.
+                    </p>
+
+                    <h6>4. Data Security</h6>
+                    <p>
+                    Reasonable measures are taken to protect your data, including encrypted storage and restricted access. However, FoodBank Hub cannot guarantee complete protection against unauthorized access.
+                    </p>
+
+                    <h6>5. Your Rights</h6>
+                    <p>
+                    You may request to update, correct, or delete your account information at any time by contacting our support team.
+                    </p>
+
+                    <h6>6. Updates to this Policy</h6>
+                    <p>
+                    FoodBank Hub may update this Privacy Policy from time to time. You will be notified of significant changes via email or the platform.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+// Password show/hide toggles for Foodbank
+document.getElementById('togglePwd1')?.addEventListener('click', function() {
+    const input = document.getElementById('{{ form.password1.id_for_label }}');
+    const icon = this.querySelector('i');
+    if (input.type === 'password') { input.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+    else { input.type = 'password'; icon.className = 'fas fa-eye'; }
+});
+document.getElementById('togglePwd2')?.addEventListener('click', function() {
+    const input = document.getElementById('{{ form.password2.id_for_label }}');
+    const icon = this.querySelector('i');
+    if (input.type === 'password') { input.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+    else { input.type = 'password'; icon.className = 'fas fa-eye'; }
+});
+// Password strength validation
+document.getElementById('{{ form.password1.id_for_label }}').addEventListener('input', function() {
+    const password = this.value;
+    const strengthMeter = document.getElementById('passwordStrength');
+    const strengthFill = document.getElementById('strengthFill');
+    const requirementsList = document.getElementById('requirementsList');
+    
+    if (password.length > 0) {
+        strengthMeter.style.display = 'block';
+        
+        // Check requirements
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            digit: /\d/.test(password),
+            special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+        };
+        
+        // Update requirement indicators
+        Object.keys(requirements).forEach(req => {
+            const li = requirementsList.querySelector(`[data-requirement="${req}"]`);
+            const icon = li.querySelector('i');
+            
+            if (requirements[req]) {
+                li.className = 'valid';
+                icon.className = 'fas fa-check-circle';
+            } else {
+                li.className = 'invalid';
+                icon.className = 'fas fa-circle';
+            }
+        });
+        
+        // Calculate strength
+        const validCount = Object.values(requirements).filter(Boolean).length;
+        let strength = 'weak';
+        let width = '25%';
+        
+        if (validCount >= 4) {
+            strength = 'strong';
+            width = '100%';
+        } else if (validCount >= 3) {
+            strength = 'good';
+            width = '75%';
+        } else if (validCount >= 2) {
+            strength = 'fair';
+            width = '50%';
+        }
+        
+        // Update strength meter
+        strengthFill.style.width = width;
+        strengthMeter.className = `strength-meter strength-${strength}`;
+        
+        // Enable/disable submit button
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = validCount < 4;
+        
+    } else {
+        strengthMeter.style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+    }
+});
+
+// Password confirmation validation
+document.getElementById('{{ form.password2.id_for_label }}').addEventListener('input', function() {
+    const password1 = document.getElementById('{{ form.password1.id_for_label }}').value;
+    const password2 = this.value;
+    
+    if (password2 && password1 !== password2) {
+        this.setCustomValidity('Passwords do not match');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+    }
+});
+
+</script>
+{% endblock %}

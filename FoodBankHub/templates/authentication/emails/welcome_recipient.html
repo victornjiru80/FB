@@ -1,0 +1,11 @@
+<html>
+  <body style="font-family: Arial, sans-serif; background: #f7f7f7; padding: 2rem;">
+    <div style="max-width: 500px; margin: auto; background: #fff; border-radius: 1rem; box-shadow: 0 4px 24px rgba(102,126,234,0.08); padding: 2rem;">
+      <h2 style="color: #764ba2;">Welcome to FoodBank Hub, {{ user.get_full_name|default:user.email }}!</h2>
+      <p>Thank you for registering as a <strong>Recipient</strong> on FoodBank Hub. We're here to help you access food support from local food banks and generous donors.</p>
+      <p>You can now log in, request food assistance, and track your requests easily through your dashboard.</p>
+      <p style="margin-top:2rem;">If you have any questions, feel free to reply to this email or visit our <a href="{{ site_url|default:'#' }}">website</a>.</p>
+      <p style="margin-top:2rem; color: #888;">With care,<br>FoodBank Hub Team</p>
+    </div>
+  </body>
+</html> 

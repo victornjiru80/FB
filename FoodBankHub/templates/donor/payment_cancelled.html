@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Cancelled - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="payment-cancelled-container">
+    <div class="cancelled-card">
+        <div class="cancelled-icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        
+        <div class="cancelled-content">
+            <h2>Payment Cancelled</h2>
+            <p class="cancelled-message">
+                Your payment was cancelled. No charges have been made to your account.
+            </p>
+            
+            <div class="cancelled-actions">
+                <a href="{% url 'donate' %}" class="btn btn-primary">
+                    <i class="fas fa-credit-card me-2"></i>Try Again
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-cancelled-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.cancelled-card {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 500px;
+    width: 100%;
+}
+
+.cancelled-icon {
+    font-size: 4rem;
+    color: #ef4444;
+    margin-bottom: 1.5rem;
+}
+
+.cancelled-content h2 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.cancelled-message {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.cancelled-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #16a34a;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #15803d;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: white;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+}
+
+.btn-outline:hover {
+    background: #f9fafb;
+    color: #374151;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+    .cancelled-card {
+        padding: 2rem;
+    }
+    
+    .cancelled-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

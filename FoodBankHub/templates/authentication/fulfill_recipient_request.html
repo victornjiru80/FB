@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fulfill Request - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="mb-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary mb-3">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+                <h2 class="mb-2">Fulfill Request</h2>
+                <p class="text-muted">Choose how to fulfill this recipient request</p>
+            </div>
+
+            <!-- Request Details Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Request Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Recipient</label>
+                            <p class="fw-bold mb-0">
+                                {% if recipient_request.is_anonymous %}
+                                    <span class="badge bg-info">Anonymous Request</span>
+                                {% else %}
+                                    {{ recipient_request.recipient.full_name }}
+                                {% endif %}
+                            </p>
+                            {% if not recipient_request.is_anonymous %}
+                            <small class="text-muted">{{ recipient_request.recipient.phone_number }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Request Title</label>
+                            <p class="fw-bold mb-0">{{ recipient_request.title }}</p>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="text-muted small">Description</label>
+                            <p class="mb-0">{{ recipient_request.description }}</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Quantity Requested</label>
+                            <p class="fw-bold mb-0">{{ recipient_request.quantity }} {{ recipient_request.quantity_unit }}</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Location</label>
+                            <p class="mb-0">{{ recipient_request.location|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Delivery Method</label>
+                            <p class="mb-0">{{ recipient_request.delivery_method|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fulfillment Options -->
+            <div class="row">
+                <!-- Option 1: Allocate from Existing Donation -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-box me-2"></i>Allocate from Inventory</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Fulfill this request using donations you've already received.</p>
+                            
+                            {% if available_donations %}
+                            <form method="POST" id="allocationForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="fulfillment_type" value="allocate_donation">
+                                
+                                <div class="mb-3">
+                                    <label for="donationId" class="form-label">Available Donations <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="donationId" name="donation_id" required>
+                                        <option value="">Choose a donation...</option>
+                                        {% for donation in available_donations %}
+                                        <option value="{{ donation.id }}">
+                                            {% if donation.donation_type == 'item' %}
+                                                {{ donation.item_name }} ({{ donation.quantity }} {{ donation.quantity_unit }})
+                                            {% elif donation.donation_type == 'money' %}
+                                                Money - {{ donation.amount|floatformat:0 }}
+                                            {% else %}
+                                                {{ donation.subsidized_item }} - {{ donation.subsidized_price|floatformat:0 }}
+                                            {% endif %}
+                                            - Donated {{ donation.donated_at|date:"M d, Y" }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label">Quantity to Allocate <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" 
+                                           placeholder="Enter quantity" min="1" step="0.01" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Notes (Optional)</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                              placeholder="Any notes about this allocation..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check-circle me-2"></i> Allocate & Fulfill Request
+                                </button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No recent donations available in inventory. Create a donor request instead.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Option 2: Create Donor Request -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-bullhorn me-2"></i>Request from Donors</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Don't have the items? Create a request for donors to contribute.</p>
+                            
+                            <form method="POST" id="donorRequestForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="fulfillment_type" value="create_donor_request">
+                                
+                                <div class="mb-3">
+                                    <label for="donorRequestTitle" class="form-label">Request Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="donorRequestTitle" name="donor_request_title" 
+                                           value="{{ recipient_request.title }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="donorRequestDescription" class="form-label">Description <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="donorRequestDescription" name="donor_request_description" 
+                                              rows="3" required>{{ recipient_request.description }}</textarea>
+                                    <small class="text-muted">This will be visible to donors</small>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="donorRequestQuantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="donorRequestQuantity" name="donor_request_quantity" 
+                                               value="{{ recipient_request.quantity }}" min="1" step="0.01" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="donorRequestUnit" class="form-label">Unit <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="donorRequestUnit" name="donor_request_quantity_unit" required>
+                                            {% for unit_code, unit_name in QUANTITY_UNITS %}
+                                            <option value="{{ unit_code }}" {% if recipient_request.quantity_unit == unit_code %}selected{% endif %}>
+                                                {{ unit_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="priority" name="priority" required>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="high" selected>High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                    <small class="text-muted">Urgent and High priority requests notify active donors</small>
+                                </div>
+
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="fas fa-bullhorn me-2"></i> Create Donor Request
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> All fulfillments must be traceable. You can either allocate from existing donations or create a request for donors to contribute.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 600;
+}
+
+.card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation and confirmation
+    const allocationForm = document.getElementById('allocationForm');
+    const donorRequestForm = document.getElementById('donorRequestForm');
+
+    if (allocationForm) {
+        allocationForm.addEventListener('submit', function(e) {
+            if (!confirm('Confirm allocation? The recipient will be notified.')) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    if (donorRequestForm) {
+        donorRequestForm.addEventListener('submit', function(e) {
+            if (!confirm('Create donor request? This will be visible to all donors.')) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

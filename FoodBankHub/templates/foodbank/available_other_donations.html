@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Available Donations for Discussion{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-handshake me-2"></i>Donations Requiring Discussion</h2>
+                    <p class="text-muted">CSR and Other donations that need discussion before acceptance</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>About These Donations:</strong> CSR and "Other" type donations require discussion to clarify details, 
+                negotiate terms, or arrange logistics before acceptance. Start a discussion to communicate with the donor.
+            </div>
+
+            <!-- Donations List -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Available Donations 
+                        <span class="badge bg-primary">{{ other_donations.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if other_donations %}
+                        <div class="list-group list-group-flush">
+                            {% for donation in other_donations %}
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-start mb-2">
+                                            <div class="me-3">
+                                                {% if donation.donation_type == 'csr' %}
+                                                    <i class="fas fa-building fa-2x text-success"></i>
+                                                {% else %}
+                                                    <i class="fas fa-gift fa-2x text-primary"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    {% if donation.donation_type == 'csr' %}
+                                                        <span class="badge bg-success me-2">CSR</span>
+                                                        {{ donation.csr_subcategory|title }} Initiative
+                                                    {% else %}
+                                                        <span class="badge bg-primary me-2">Other</span>
+                                                        Other Type Donation
+                                                    {% endif %}
+                                                </h6>
+                                                <p class="mb-2 text-muted">
+                                                    <i class="fas fa-user me-2"></i>
+                                                    <strong>Donor:</strong> {{ donation.donor.email }}
+                                                    {% if donation.donor.donor_profile.is_organization %}
+                                                        ({{ donation.donor.donor_profile.organization_name }})
+                                                    {% endif %}
+                                                </p>
+                                                <p class="mb-2">
+                                                    <strong>Description:</strong>
+                                                    {% if donation.donation_type == 'csr' %}
+                                                        {{ donation.csr_description|truncatewords:30|default:"No description provided" }}
+                                                    {% else %}
+                                                        {{ donation.other_description|truncatewords:30|default:"No description provided" }}
+                                                    {% endif %}
+                                                </p>
+                                                <div class="d-flex gap-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        Donated {{ donation.donated_at|timesince }} ago
+                                                    </small>
+                                                    {% if donation.message %}
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-comment me-1"></i>
+                                                        Has message
+                                                    </small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <a href="{% url 'start_donation_discussion' donation.id %}" 
+                                           class="btn btn-primary">
+                                            <i class="fas fa-comments me-2"></i>Start Discussion
+                                        </a>
+                                        {% if donation.message %}
+                                        <button type="button" class="btn btn-sm btn-outline-info mt-2" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#messageModal{{ donation.id }}">
+                                            <i class="fas fa-envelope me-1"></i>View Message
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Additional Details (Collapsible) -->
+                                {% if donation.donation_type == 'csr' %}
+                                <div class="mt-3 pt-3 border-top">
+                                    <small class="text-muted">
+                                        <strong>CSR Category:</strong> {{ donation.get_csr_subcategory_display }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Message Modal -->
+                            {% if donation.message %}
+                            <div class="modal fade" id="messageModal{{ donation.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Donor's Message</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>{{ donation.message }}</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <a href="{% url 'start_donation_discussion' donation.id %}" 
+                                               class="btn btn-primary">
+                                                <i class="fas fa-comments me-2"></i>Start Discussion
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Donations Requiring Discussion</h5>
+                            <p class="text-muted">
+                                When donors submit CSR or "Other" type donations, they will appear here for you to review and discuss.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="text-info"><i class="fas fa-question-circle me-2"></i>How It Works</h6>
+                    <ol class="mb-0 small">
+                        <li>Review the donation details and donor information</li>
+                        <li>Click "Start Discussion" to initiate a conversation with the donor</li>
+                        <li>Discuss details, terms, and logistics through the chat interface</li>
+                        <li>Once agreed, accept the donation to proceed with distribution</li>
+                        <li>If terms cannot be agreed upon, you can decline the donation</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Link to Active Discussions -->
+            <div class="text-center mt-4">
+                <a href="{% url 'my_donation_discussions' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-comments me-2"></i>View My Active Discussions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

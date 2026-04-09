@@ -1,0 +1,204 @@
+<!-- Privacy Settings -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Privacy Settings - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="mb-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary mb-3">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+                <h2 class="mb-2"><i class="fas fa-shield-alt me-2 text-primary"></i>Privacy Settings</h2>
+                <p class="text-muted">Control how your information is shared and used on FoodBank Hub</p>
+            </div>
+
+            <!-- Privacy Settings Form -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="privacy-section mb-4">
+                            <h5 class="mb-3">Profile Visibility</h5>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="allowPublicProfile" name="allow_public_profile" 
+                                    {% if recipient_profile.allow_public_profile|default:True %}checked{% endif %}>
+                                <label class="form-check-label" for="allowPublicProfile">
+                                    <strong>Allow public profile</strong>
+                                    <p class="text-muted small mb-0">Food banks can view your basic profile information</p>
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="showDonationHistory" name="show_donation_history"
+                                    {% if recipient_profile.show_donation_history|default:False %}checked{% endif %}>
+                                <label class="form-check-label" for="showDonationHistory">
+                                    <strong>Show donation history</strong>
+                                    <p class="text-muted small mb-0">Display your received donations on your profile</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="privacy-section mb-4">
+                            <h5 class="mb-3">Communication Preferences</h5>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="receiveEmailNotifications" name="receive_email_notifications"
+                                    {% if recipient_profile.receive_email_notifications|default:True %}checked{% endif %}>
+                                <label class="form-check-label" for="receiveEmailNotifications">
+                                    <strong>Email notifications</strong>
+                                    <p class="text-muted small mb-0">Receive email updates about your requests and donations</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="privacy-section mb-4">
+                            <h5 class="mb-3">Data & Privacy</h5>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Your data is secure</strong>
+                                <p class="mb-0 small">We use industry-standard encryption to protect your personal information. Your data is never sold to third parties.</p>
+                            </div>
+
+                            <div class="list-group">
+                                <a href="{% url 'download_recipient_data' %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">Download my data</h6>
+                                        <small><i class="fas fa-download"></i></small>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Request a copy of all your data</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 text-danger">Delete my account</h6>
+                                        <small><i class="fas fa-trash text-danger"></i></small>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Permanently delete your account and data</p>
+                                </a>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-save me-2"></i> Save Privacy Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy Policy Info -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-3">Privacy & Security</h5>
+                    <p class="text-muted">Learn more about how we protect your information:</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>End-to-end encryption</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>GDPR compliant</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Regular security audits</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Anonymous request options</li>
+                    </ul>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#privacyModal">
+                        Read Full Privacy Policy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Information We Collect</h6>
+                <p>We collect personal details such as your name, email, and location to facilitate food donations and matching between food banks, donors, and recipients.</p>
+
+                <h6>2. How We Use Your Information</h6>
+                <ul>
+                    <li>To verify your identity and manage your account.</li>
+                    <li>To connect recipients with food banks and donors.</li>
+                    <li>To communicate updates regarding your requests and donations.</li>
+                    <li>To improve FoodBank Hub’s features and user experience.</li>
+                </ul>
+
+                <h6>3. Data Sharing</h6>
+                <p>Your data is only shared with relevant food banks, donors, or recipients for request and donation coordination. We do not sell or trade your personal information.</p>
+
+                <h6>4. Data Security</h6>
+                <p>We use encryption and access controls to protect your data. However, no system is completely secure, and users are encouraged to safeguard their login information.</p>
+
+                <h6>5. Your Rights</h6>
+                <p>You can request to update, download, or delete your data anytime through your account settings or by contacting support.</p>
+
+                <h6>6. Updates to this Policy</h6>
+                <p>We may revise this policy periodically. Major updates will be communicated via the platform or email notifications.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Delete Account</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Warning:</strong> This action cannot be undone!</p>
+                <p>Deleting your account will:</p>
+                <ul>
+                    <li>Permanently delete all your requests</li>
+                    <li>Remove your profile information</li>
+                    <li>Cancel all pending requests</li>
+                </ul>
+                <p class="text-muted">If you're sure, please contact support to proceed with account deletion.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'recipient_contact_support' %}" class="btn btn-danger">Contact Support</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.privacy-section h5 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

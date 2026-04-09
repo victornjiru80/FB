@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Support Messages{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-headset me-2"></i>My Support Messages</h2>
+                <div class="d-flex gap-2">
+                    {% if user.user_type == 'FOODBANK' %}
+                        <a href="{% url 'foodbank_contact_support' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create New Message
+                        </a>
+                    {% elif user.user_type == 'DONOR' %}
+                        <a href="{% url 'donor_contact_support' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create New Message
+                        </a>
+                    {% else %}
+                        <a href="{% url 'recipient_contact_support' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create New Message
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                            <h3 class="mb-0">{{ support_messages.count }}</h3>
+                            <p class="text-muted mb-0">Total Messages</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="fas fa-reply fa-2x text-success mb-2"></i>
+                            <h3 class="mb-0">{{ messages_with_responses }}</h3>
+                            <p class="text-muted mb-0">With Responses</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h3 class="mb-0">{{ pending_count|default:0 }}</h3>
+                            <p class="text-muted mb-0">Pending Response</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">All</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="subject" class="form-label">Subject</label>
+                            <select name="subject" id="subject" class="form-select">
+                                <option value="">All</option>
+                                {% for value, label in subject_choices %}
+                                    <option value="{{ value }}" {% if subject_filter == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">From</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_to" class="form-label">To</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                        </div>
+                        <div class="col-12">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" id="search" class="form-control" placeholder="Search subject, message, or ID" value="{{ search_query }}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Apply
+                            </button>
+                            <a href="{% url 'my_support_messages' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Messages List -->
+            {% if support_messages %}
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Support Messages</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Response</th>
+                                        <th>Created</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for message in support_messages %}
+                                    <tr>
+                                        <td><strong>#{{ message.id }}</strong></td>
+                                        <td>
+                                            <i class="fas fa-comment-dots me-1"></i>
+                                            {{ message.get_subject_display }}
+                                        </td>
+                                        <td>
+                                            {% if message.status == 'new' %}
+                                                <span class="badge bg-info">New</span>
+                                            {% elif message.status == 'in_progress' %}
+                                                <span class="badge bg-warning">In Progress</span>
+                                            {% elif message.status == 'resolved' %}
+                                                <span class="badge bg-success">Resolved</span>
+                                            {% elif message.status == 'closed' %}
+                                                <span class="badge bg-secondary">Closed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if message.admin_response %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Responded
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-hourglass-half me-1"></i>Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ message.created_at|date:"M d, Y" }}<br>
+                                                {{ message.created_at|time:"g:i A" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'support_message_detail_user' message.id %}" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h4>No Support Messages Yet</h4>
+                    <p>You haven't submitted any support messages. If you need help, please contact support from your dashboard.</p>
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary mt-2">
+                        <i class="fas fa-arrow-left me-1"></i>Go to Dashboard
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .table tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

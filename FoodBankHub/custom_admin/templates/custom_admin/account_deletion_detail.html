@@ -1,0 +1,347 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Deletion Request Detail - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'custom_admin:account_deletion_requests' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Requests
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-user-times me-2"></i>Account Deletion Request</h2>
+            <p class="text-muted">Request ID: #{{ deletion_request.id }}</p>
+        </div>
+        <div>
+            {% if deletion_request.status == 'pending' %}
+            <button class="btn btn-success" onclick="approveRequest()">
+                <i class="fas fa-check me-2"></i>Approve Request
+            </button>
+            <button class="btn btn-danger" onclick="rejectRequest()">
+                <i class="fas fa-times me-2"></i>Reject Request
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Request Information -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Request Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            {% if deletion_request.status == 'pending' %}
+                            <span class="badge bg-warning text-dark ms-2">
+                                <i class="fas fa-clock me-1"></i>Pending Review
+                            </span>
+                            {% elif deletion_request.status == 'approved' %}
+                            <span class="badge bg-success ms-2">
+                                <i class="fas fa-check me-1"></i>Approved
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger ms-2">
+                                <i class="fas fa-times me-1"></i>Rejected
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Requested At:</strong>
+                            <span class="text-muted">{{ deletion_request.requested_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                    </div>
+
+                    {% if deletion_request.processed_at %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Processed By:</strong>
+                            <span class="text-muted">{{ deletion_request.processed_by.email }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Processed At:</strong>
+                            <span class="text-muted">{{ deletion_request.processed_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if deletion_request.admin_notes %}
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Admin Notes:</strong>
+                            <div class="alert alert-info mt-2">
+                                {{ deletion_request.admin_notes }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>User Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Email:</strong>
+                            <p class="text-muted">{{ deletion_request.user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>User Type:</strong>
+                            <p><span class="badge bg-secondary">{{ deletion_request.user.user_type }}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Full Name:</strong>
+                            <p class="text-muted">{{ deletion_request.user.get_full_name|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Account Status:</strong>
+                            <p>
+                                {% if deletion_request.user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Deactivated</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Date Joined:</strong>
+                            <p class="text-muted">{{ deletion_request.user.date_joined|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Login:</strong>
+                            <p class="text-muted">{{ deletion_request.user.last_login|date:"F d, Y H:i"|default:"Never" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Activity & Impact -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Account Activity & Deletion Impact</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Impact Assessment:</strong> Review the user's activity before approving deletion.
+                    </div>
+
+                    {% if user_data.profile_type == 'DONOR' %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-box p-3 border rounded mb-3">
+                                <h4 class="text-primary">{{ user_data.donations_count }}</h4>
+                                <small class="text-muted">Total Donations Made</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box p-3 border rounded mb-3">
+                                <h4 class="text-success">KES {{ user_data.total_donated|floatformat:2|default:"0.00" }}</h4>
+                                <small class="text-muted">Total Amount Donated</small>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Donation records will be preserved for reporting purposes.
+                    </p>
+
+                    {% elif user_data.profile_type == 'FOODBANK' %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-box p-3 border rounded mb-3">
+                                <h4 class="text-primary">{{ user_data.requests_count }}</h4>
+                                <small class="text-muted">Requests Created</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box p-3 border rounded mb-3">
+                                <h4 class="text-success">{{ user_data.donations_received }}</h4>
+                                <small class="text-muted">Donations Received</small>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-danger">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Warning:</strong> Deleting a foodbank account may affect active requests and donor relationships.
+                    </p>
+
+                    {% elif user_data.profile_type == 'RECIPIENT' %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-box p-3 border rounded mb-3">
+                                <h4 class="text-primary">{{ user_data.requests_count }}</h4>
+                                <small class="text-muted">Requests Made</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box p-3 border rounded mb-3">
+                                <h4 class="text-success">{{ user_data.allocations_count }}</h4>
+                                <small class="text-muted">Allocations Received</small>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Allocation records will be preserved for reporting purposes.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="col-md-4">
+            {% if deletion_request.status == 'pending' %}
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Action Required</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">This deletion request is pending your review.</p>
+                    
+                    <button class="btn btn-success w-100 mb-2" onclick="approveRequest()">
+                        <i class="fas fa-check me-2"></i>Approve Deletion
+                    </button>
+                    
+                    <button class="btn btn-danger w-100" onclick="rejectRequest()">
+                        <i class="fas fa-times me-2"></i>Reject Request
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Guidelines -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-book me-2"></i>Review Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">Before Approving:</h6>
+                    <ul class="small">
+                        <li>Verify the user's identity and request legitimacy</li>
+                        <li>Review account activity and impact</li>
+                        <li>Check for any pending transactions or requests</li>
+                        <li>Consider data retention requirements</li>
+                    </ul>
+
+                    <h6 class="text-danger mt-3">Approval Effects:</h6>
+                    <ul class="small">
+                        <li>User account will be immediately deactivated</li>
+                        <li>User will no longer be able to log in</li>
+                        <li>Historical data will be preserved</li>
+                        <li>User will receive a notification</li>
+                    </ul>
+
+                    <h6 class="text-warning mt-3">Rejection Reasons:</h6>
+                    <ul class="small">
+                        <li>Pending transactions or obligations</li>
+                        <li>Active requests requiring resolution</li>
+                        <li>Suspected fraudulent request</li>
+                        <li>Policy violations under investigation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Approve Deletion Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'custom_admin:approve_deletion_request' deletion_request.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will immediately deactivate the user account.
+                    </div>
+                    
+                    <p>Are you sure you want to approve this deletion request for:</p>
+                    <p class="text-center"><strong>{{ deletion_request.user.email }}</strong></p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Admin Notes (Optional)</label>
+                        <textarea name="admin_notes" class="form-control" rows="3" placeholder="Add any notes about this approval..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Approve Deletion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Reject Deletion Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'custom_admin:reject_deletion_request' deletion_request.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>You are rejecting the deletion request for:</p>
+                    <p class="text-center"><strong>{{ deletion_request.user.email }}</strong></p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                        <textarea name="admin_notes" class="form-control" rows="4" required placeholder="Explain why this request is being rejected. This will be sent to the user."></textarea>
+                    </div>
+                    
+                    <p class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        The user will receive a notification with your rejection reason.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>Reject Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveRequest() {
+    new bootstrap.Modal(document.getElementById('approveModal')).show();
+}
+
+function rejectRequest() {
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+</script>
+{% endblock %}

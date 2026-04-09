@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}System Notifications - Foodbank{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">System Notifications</h2>
+    {% if notifications %}
+    <ul class="list-group mb-4">
+        {% for note in notifications %}
+        <li class="list-group-item d-flex justify-content-between align-items-start {% if not note.is_read %}list-group-item-warning{% endif %}">
+            <div>
+                <i class="fas fa-info-circle text-info me-2"></i>
+                {{ note.message }}<br>
+                <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+            <div>
+                {% if not note.is_read %}
+                <a href="{% url 'mark_notification_read' note.pk %}" class="btn btn-sm btn-outline-primary">Mark as read</a>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="alert alert-info">No system notifications yet.</div>
+    {% endif %}
+</div>
+{% endblock %} 

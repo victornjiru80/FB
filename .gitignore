@@ -1,0 +1,47 @@
+*.log
+*.log
+
+# Secret admin URL - DO NOT COMMIT
+DJANGO_ADMIN_SECRET.md
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Database files
+db.sqlite3
+*.db
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Logs
+logs/
+*.log
+
+# Media files (optional - uncomment if you don't want to track uploads)
+# media/
+
+# Static files collected for production
+staticfiles/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Office temp locks
+~$*
+
+# Local tooling
+.python-version

@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create New Request - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="request-shell py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h4 class="mb-0">New Request</h4>
+                                <small class="text-muted">Fill out the essentials and reach donors fast.</small>
+                            </div>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i> Dashboard
+                            </a>
+                        </div>
+
+                        <form method="post" novalidate id="requestForm" autocomplete="off">
+                            {% csrf_token %}
+                            <!-- Donation Type -->
+                            <div class="mb-3">
+                                <label for="{{ form.donation_type.id_for_label }}" class="form-label fw-bold">
+                                    Donation Type *
+                                </label>
+                                {{ form.donation_type }}
+
+                                {% if form.donation_type.help_text %}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>{{ form.donation_type.help_text }}
+                                    </div>
+                                {% endif %}
+                                {% for error in form.donation_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Request Title -->
+                            <div class="mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                                    Request Title *
+                                </label>
+                                {{ form.title }}
+
+                                {% if form.title.help_text %}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>{{ form.title.help_text }}
+                                    </div>
+                                {% endif %}
+                                {% for error in form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                    Description *
+                                </label>
+                                {{ form.description }}
+
+                                {% if form.description.help_text %}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>{{ form.description.help_text }}
+                                    </div>
+                                {% endif %}
+                                {% for error in form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Priority and Quantity Row -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <div>
+                                        <label for="{{ form.priority.id_for_label }}" class="form-label fw-bold">
+                                            Priority *
+                                        </label>
+                                        {{ form.priority }}
+
+                                        {% if form.priority.help_text %}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>{{ form.priority.help_text }}
+                                            </div>
+                                        {% endif %}
+                                        {% for error in form.priority.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div>
+                                        <label for="{{ form.delivery_method.id_for_label }}" class="form-label fw-bold">
+                                            Delivery Method *
+                                        </label>
+                                        {{ form.delivery_method }}
+
+                                        {% if form.delivery_method.help_text %}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>{{ form.delivery_method.help_text }}
+                                            </div>
+                                        {% endif %}
+                                        {% for error in form.delivery_method.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div>
+                                        <label for="{{ form.deadline.id_for_label }}" class="form-label fw-bold">
+                                            Deadline *
+                                        </label>
+                                        {{ form.deadline }}
+
+                                        {% for error in form.deadline.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Row -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div>
+                                        <label for="{{ form.quantity_needed.id_for_label }}" class="form-label fw-bold">
+                                            Quantity Needed *
+                                        </label>
+                                        {{ form.quantity_needed }}
+
+                                        {% if form.quantity_needed.help_text %}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>{{ form.quantity_needed.help_text }}
+                                            </div>
+                                        {% endif %}
+                                        {% for error in form.quantity_needed.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div>
+                                        <label for="{{ form.quantity_unit.id_for_label }}" class="form-label fw-bold">
+                                            Unit of Measurement *
+                                        </label>
+                                        {{ form.quantity_unit }}
+
+                                        {% if form.quantity_unit.help_text %}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>{{ form.quantity_unit.help_text }}
+                                            </div>
+                                        {% endif %}
+                                        {% for error in form.quantity_unit.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Custom Unit Field (Initially Hidden) -->
+                                    <div class="mt-3" id="customUnitGroup" style="display: none;">
+                                        <label for="{{ form.custom_unit.id_for_label }}" class="form-label fw-bold">
+                                            Custom Unit
+                                        </label>
+                                        <div class="input-group">
+                                            {{ form.custom_unit }}
+                                            <button type="button" class="btn btn-outline-primary" id="customUnitSaveBtn">Save</button>
+                                        </div>
+
+                                        {% if form.custom_unit.help_text %}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>{{ form.custom_unit.help_text }}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text" id="customUnitFeedback">
+                                            <i class="fas fa-info-circle me-1"></i>Specify your custom unit of measurement.
+                                        </div>
+                                        {% for error in form.custom_unit.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">Create Request</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom Styles for Create Request Page */
+.request-shell {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+.compact-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.compact-header .breadcrumb-item a {
+    color: var(--primary-color);
+}
+
+.compact-header .breadcrumb-item.active {
+    color: #6c757d;
+}
+
+.form-section {
+    background: white;
+}
+
+.form-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* Form Styling */
+.form-label {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    color: #2d3748;
+}
+
+.form-control,
+.form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.1);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: #a0aec0;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Priority Guide */
+.priority-guide .card {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+}
+
+.priority-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.priority-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.priority-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.priority-content strong {
+    font-size: 0.9rem;
+}
+
+.priority-content small {
+    font-size: 0.75rem;
+}
+
+/* Form Actions */
+.form-actions {
+    background: #f8fafc;
+    margin: 0 -2.5rem -2.5rem -2.5rem;
+    padding: 2rem 2.5rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: #d84315;
+    border-color: #d84315;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3);
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+}
+
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .compact-header {
+        padding: 1rem 0;
+    }
+    
+    .form-card .card-body {
+        padding: 2rem 1.5rem;
+    }
+    
+    .form-actions {
+        margin: 0 -1.5rem -1.5rem -1.5rem;
+        padding: 1.5rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .priority-guide .row {
+        row-gap: 1rem !important;
+    }
+    
+    .priority-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+}
+
+/* Animation */
+.form-card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus states for accessibility */
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.15);
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.25);
+}
+
+/* Loading state */
+.btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn.loading .fas {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('requestForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const navEntries = performance.getEntriesByType && performance.getEntriesByType('navigation');
+    const isReload = navEntries && navEntries.length && navEntries[0].type === 'reload';
+    
+    // Add Bootstrap classes to form fields
+    const formFields = form.querySelectorAll('input, select, textarea');
+    formFields.forEach(field => {
+        if (!field.classList.contains('form-control') && !field.classList.contains('form-select')) {
+            field.classList.add('form-control');
+        }
+    });
+    
+    // Priority field styling
+    const priorityField = document.getElementById('{{ form.priority.id_for_label }}');
+    if (priorityField) {
+        priorityField.classList.add('form-select');
+    }
+    const deliveryMethodField = document.getElementById('{{ form.delivery_method.id_for_label }}');
+    if (deliveryMethodField) {
+        deliveryMethodField.classList.add('form-select');
+        deliveryMethodField.required = true;
+    }
+
+    const quantityNeededField = document.getElementById('{{ form.quantity_needed.id_for_label }}');
+    // Quantity unit field styling
+    const quantityUnitField = document.getElementById('{{ form.quantity_unit.id_for_label }}');
+    if (quantityUnitField) {
+        quantityUnitField.classList.add('form-select');
+        quantityUnitField.required = true;
+    }
+    if (quantityNeededField) {
+        quantityNeededField.required = true;
+    }
+
+    // Custom unit field styling
+    const customUnitField = document.getElementById('{{ form.custom_unit.id_for_label }}');
+    const customUnitSaveBtn = document.getElementById('customUnitSaveBtn');
+    const customUnitFeedback = document.getElementById('customUnitFeedback');
+    if (customUnitField) {
+        customUnitField.classList.add('form-control');
+        customUnitField.style.display = 'block'; // Override the inline style from form
+    }
+    
+    // Show/hide custom unit field based on quantity unit selection
+    function toggleCustomUnitField() {
+        const quantityUnitValue = quantityUnitField.value;
+        const customUnitGroup = document.getElementById('customUnitGroup');
+        
+        if (quantityUnitValue === 'other') {
+            customUnitGroup.style.display = 'block';
+            customUnitField.required = true;
+            // Add smooth animation
+            customUnitGroup.style.opacity = '0';
+            customUnitGroup.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                customUnitGroup.style.transition = 'all 0.3s ease';
+                customUnitGroup.style.opacity = '1';
+                customUnitGroup.style.transform = 'translateY(0)';
+            }, 10);
+        } else {
+            customUnitGroup.style.display = 'none';
+            customUnitField.required = false;
+            customUnitField.value = ''; // Clear the field when hidden
+            if (customUnitFeedback) {
+                customUnitFeedback.innerHTML = '<i class="fas fa-info-circle me-1"></i>Specify your custom unit of measurement.';
+            }
+        }
+    }
+    
+    // Add event listener for quantity unit change
+    if (quantityUnitField) {
+        quantityUnitField.addEventListener('change', toggleCustomUnitField);
+        // Check initial state on page load
+        toggleCustomUnitField();
+    }
+
+    // On hard/soft refresh, clear previously typed values.
+    if (isReload) {
+        form.reset();
+        if (quantityUnitField) {
+            toggleCustomUnitField();
+        }
+    }
+
+    if (customUnitSaveBtn) {
+        customUnitSaveBtn.addEventListener('click', function() {
+            const label = (customUnitField.value || '').trim();
+            if (!label) {
+                if (customUnitFeedback) {
+                    customUnitFeedback.textContent = 'Please enter a custom unit before saving.';
+                }
+                return;
+            }
+
+            // Keep custom units request-specific (do not add to global/shared unit list).
+            customUnitField.value = label;
+            if (customUnitFeedback) {
+                customUnitFeedback.textContent = 'Saved for this request only. Other users will not see this unit in their list.';
+            }
+        });
+    }
+
+    function validateQuantityFields() {
+        let isValid = true;
+
+        if (quantityNeededField) {
+            if (!quantityNeededField.value.trim()) {
+                isValid = false;
+                quantityNeededField.classList.add('is-invalid');
+                quantityNeededField.setCustomValidity('Please provide the quantity needed for this request.');
+            } else {
+                quantityNeededField.classList.remove('is-invalid');
+                quantityNeededField.setCustomValidity('');
+            }
+        }
+
+        if (quantityUnitField) {
+            if (!quantityUnitField.value) {
+                isValid = false;
+                quantityUnitField.classList.add('is-invalid');
+                quantityUnitField.setCustomValidity('Please select a unit of measurement for the quantity provided.');
+            } else {
+                quantityUnitField.classList.remove('is-invalid');
+                quantityUnitField.setCustomValidity('');
+            }
+        }
+
+        if (deliveryMethodField) {
+            if (!deliveryMethodField.value) {
+                isValid = false;
+                deliveryMethodField.classList.add('is-invalid');
+                deliveryMethodField.setCustomValidity('Please select a delivery method for this request.');
+            } else {
+                deliveryMethodField.classList.remove('is-invalid');
+                deliveryMethodField.setCustomValidity('');
+            }
+        }
+
+        if (!isValid) {
+            const firstInvalidField = [quantityNeededField, quantityUnitField, deliveryMethodField].find(field => field && !field.checkValidity());
+            if (firstInvalidField) {
+                firstInvalidField.reportValidity();
+                firstInvalidField.focus();
+            }
+        }
+
+        return isValid;
+    }
+
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        if (!validateQuantityFields()) {
+            e.preventDefault();
+            return;
+        }
+
+        // Add loading state
+        submitBtn.classList.add('loading');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Request...';
+        submitBtn.disabled = true;
+
+        // Re-enable after a delay (in case of errors)
+        setTimeout(() => {
+            submitBtn.classList.remove('loading');
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Create Request';
+            submitBtn.disabled = false;
+        }, 10000);
+    });
+
+});
+</script>
+
+{% endblock %}

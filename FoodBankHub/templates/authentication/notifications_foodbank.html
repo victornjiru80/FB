@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Notifications - Foodbank{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Your Notifications</h2>
+    {% if notifications %}
+    <ul class="list-group mb-4">
+        {% for note in notifications %}
+        <li class="list-group-item d-flex justify-content-between align-items-start {% if not note.is_read %}list-group-item-warning{% endif %}">
+            <div>
+                <span class="me-2">
+                    {% if note.notification_type == 'system' or note.notification_type == 'system_maintenance' %}
+                        <i class="fas fa-info-circle text-info"></i>
+                    {% elif note.notification_type == 'donation_received' %}
+                        <i class="fas fa-gift text-success"></i>
+                    {% elif note.notification_type == 'request_fulfilled' %}
+                        <i class="fas fa-check-circle text-success"></i>
+                    {% elif note.notification_type == 'urgent_request' %}
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                    {% elif note.notification_type == 'request_expiring' %}
+                        <i class="fas fa-hourglass-end text-warning"></i>
+                    {% else %}
+                        <i class="fas fa-bell text-primary"></i>
+                    {% endif %}
+                </span>
+                {{ note.message }}<br>
+                <small class="text-muted">{{ note.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+            <div>
+                {% if not note.is_read %}
+                <a href="{% url 'mark_notification_read' note.pk %}" class="btn btn-sm btn-outline-primary">Mark as read</a>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="alert alert-info">No notifications yet.</div>
+    {% endif %}
+</div>
+{% endblock %} 

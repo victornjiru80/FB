@@ -1,0 +1,3008 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if foodbank_request %}
+        Respond to Request - {{ foodbank_request.title }}
+    {% else %}
+        Make a Donation - FoodBank Hub
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="donation-container">
+    {% if foodbank_request %}
+        <!-- Request Response Flow -->
+        <div class="request-response-flow">
+            <!-- Header -->
+            <div class="response-header">
+                <div class="header-content">
+                    <div class="back-navigation">
+                        <a href="{% url 'dashboard' %}" class="back-link">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                    <div class="response-title">
+                        <h2>Respond to Request</h2>
+                        <p>Help {{ foodbank_request.foodbank.foodbank_name }} fulfill their need</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Details Card -->
+            <div class="request-summary-card">
+                <div class="request-info">
+                    <div class="foodbank-badge">
+                        <i class="fas fa-building"></i>
+                        <span>{{ foodbank_request.foodbank.foodbank_name }}</span>
+                    </div>
+                    <h3 class="request-title">{{ foodbank_request.title }}</h3>
+                    {% if show_request_card_description %}
+                    <p class="request-description">{{ request_card_description }}</p>
+                    {% endif %}
+                    
+                    <div class="request-details">
+                        <div class="detail-item">
+                            <i class="fas fa-flag priority-{{ foodbank_request.priority }}"></i>
+                            <span class="priority-badge priority-{{ foodbank_request.priority }}">
+                                {{ foodbank_request.priority|title }} Priority
+                            </span>
+                        </div>
+                        {% if foodbank_request.quantity_needed %}
+                            <div class="detail-item">
+                                <i class="fas fa-weight"></i>
+                                <span><strong>{{ foodbank_request.quantity_needed }} {{ request_unit_label }}</strong> requested</span>
+                            </div>
+                        {% endif %}
+                        {% if foodbank_request.deadline %}
+                            <div class="detail-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Needed by {{ foodbank_request.deadline|date:"M d, Y" }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Posted {{ foodbank_request.created_at|timesince }} ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Form -->
+            <div class="response-form-card">
+                <form method="post" id="responseForm" class="response-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="request_id" value="{{ foodbank_request.id }}">
+
+                    <input type="hidden" name="donation_category" id="hiddenDonationCategory" value="{{ foodbank_request.donation_type }}">
+                    
+                    <!-- Dynamic donation type based on response type selection -->
+                    <input type="hidden" name="donation_type" value="item" id="hiddenDonationType">
+                    <input type="hidden" name="donation_mode" value="free" id="hiddenDonationMode">
+                    
+                    <!-- Display form errors -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</h6>
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    <div class="error-item">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            {% for field, errors in form.errors.items %}
+                                {% if field != '__all__' %}
+                                    {% for error in errors %}
+                                        <div class="error-item"><strong>{{ field|title }}:</strong> {{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="form-header">
+                        <h4>Your Response</h4>
+                        <p>Choose how you'd like to respond to this request</p>
+                    </div>
+
+                    <!-- Response Type Selection -->
+                    <div class="response-type-section">
+                        <label class="form-label">How would you like to respond?</label>
+                        <div class="response-type-options">
+                            <div class="response-type-option">
+                                <input type="radio" id="responseFree" name="response_type" value="free" checked>
+                                <label for="responseFree">
+                                    <i class="fas fa-gift"></i>
+                                    <div class="option-content">
+                                        <span class="option-title">Free Donation</span>
+                                        <span class="option-desc">Give items for free to the food bank</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="response-type-option">
+                                <input type="radio" id="responseSubsidized" name="response_type" value="subsidized">
+                                <label for="responseSubsidized">
+                                    <i class="fas fa-tags"></i>
+                                    <div class="option-content">
+                                        <span class="option-title">Subsidized Offer</span>
+                                        <span class="option-desc">Offer items at a reduced price</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="response-type-option">
+                                <input type="radio" id="responseMonetary" name="response_type" value="monetary">
+                                <label for="responseMonetary">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <div class="option-content">
+                                        <span class="option-title">Monetary Donation</span>
+                                        <span class="option-desc">Give cash instead of physical items</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FREE DONATION SECTION -->
+                    <div class="free-response-fields response-fields">
+                    <!-- Quantity Selection (for item requests) -->
+                    {% if foodbank_request.quantity_needed %}
+                        <div class="quantity-section">
+                            <label class="form-label">How much would you like to donate?</label>
+                            <div class="quantity-options">
+                                <div class="quantity-preset active" data-amount="{{ foodbank_request.quantity_needed }}">
+                                    <div class="preset-amount">{{ foodbank_request.quantity_needed }} {{ request_unit_label }}</div>
+                                    <div class="preset-label">Full Request (100%)</div>
+                                </div>
+                                {% if foodbank_request.quantity_needed > 1 %}
+                                    <div class="quantity-preset" data-amount="{% widthratio foodbank_request.quantity_needed 2 1 %}">
+                                        <div class="preset-amount">{% widthratio foodbank_request.quantity_needed 2 1 %} {{ request_unit_label }}</div>
+                                        <div class="preset-label">Half Request (50%)</div>
+                                    </div>
+                                    <div class="quantity-preset" data-amount="{% widthratio foodbank_request.quantity_needed 4 1 %}">
+                                        <div class="preset-amount">{% widthratio foodbank_request.quantity_needed 4 1 %} {{ request_unit_label }}</div>
+                                        <div class="preset-label">Quarter Request (25%)</div>
+                                    </div>
+                                {% endif %}
+                                <div class="quantity-preset custom-preset">
+                                    <div class="preset-amount">
+                                        Custom {{ request_unit_label }}
+                                    </div>
+                                    <div class="preset-label">Specify your own</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom quantity input -->
+                            <div class="custom-quantity-input" style="display: none;">
+                                <label for="customQuantity">
+                                    Enter custom {{ request_unit_label }}:
+                                </label>
+                                <div class="quantity-input-group">
+                                    <input type="number" id="customQuantity" name="quantity" min="1" class="form-control">
+                                    <span class="quantity-unit">{{ request_unit_label }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden inputs for form submission -->
+                            <input type="hidden" name="item_name" value="{{ foodbank_request.title|slice:':255' }}">
+                            <input type="hidden" name="quantity_unit" value="{{ request_unit_value }}">
+                            <input type="hidden" name="quantity" id="selectedQuantity" value="{{ foodbank_request.quantity_needed }}">
+    </div>
+{% endif %}
+
+                    <!-- Delivery Details -->
+                    <div class="delivery-section">
+                        <h5>Delivery Details</h5>
+                        <div class="delivery-options">
+                            <div class="delivery-option">
+                                <input type="radio" id="pickup" name="delivery_method" value="pickup" checked>
+                                <label for="pickup">
+                                    <i class="fas fa-truck"></i>
+                                    <div class="option-content">
+                                        <span class="option-title">Pickup by Food Bank</span>
+                                        <span class="option-desc">Food bank will collect the donation</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="delivery-option">
+                                <input type="radio" id="dropoff" name="delivery_method" value="dropoff">
+                                <label for="dropoff">
+                                    <i class="fas fa-hands-helping"></i>
+                                    <div class="option-content">
+                                        <span class="option-title">Drop Off</span>
+                                        <span class="option-desc">You'll deliver to the food bank</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Pickup time -->
+                        <div class="pickup-time-section">
+                            <label for="pickupTime">Preferred pickup/delivery time:</label>
+                            <input type="datetime-local" id="pickupTime" name="pickup_time" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Personal Message -->
+                    <div class="message-section">
+                        <label for="freeMessage">Personal Message (Optional)</label>
+                        <textarea id="freeMessage" name="message" class="form-control" rows="3" 
+                                  placeholder="Share an encouraging message with the food bank..."></textarea>
+                    </div>
+                    </div><!-- End free-response-fields -->
+
+                    <!-- SUBSIDIZED RESPONSE SECTION -->
+                    <div class="subsidized-response-fields response-fields" style="display: none;">
+                        <div class="subsidized-info-banner">
+                            <i class="fas fa-info-circle"></i>
+                            <p>You're offering to provide the requested items at a reduced price. The food bank will pay the subsidized amount you specify.</p>
+                        </div>
+
+                        <!-- Product Details -->
+                        <div class="form-group">
+                            <label for="subsidizedProductType">Product Type</label>
+                            <input type="text" id="subsidizedProductType" name="subsidized_product_type" 
+                                   class="form-control" value="{{ foodbank_request.title|slice:':255' }}" 
+                                   placeholder="e.g., Tissue Paper, Pens, Pencils">
+
+                        </div>
+
+                        <!-- Quantity Display for Subsidized (Full Request Only) -->
+                        <div class="subsidized-quantity-section">
+                            <label class="form-label">Quantity you're offering</label>
+                            <div class="subsidized-full-request-display">
+                                <div class="full-request-card">
+                                    <i class="fas fa-box-open"></i>
+                                    <div class="full-request-details">
+                                        <span class="full-request-amount">{{ foodbank_request.quantity_needed }} {{ request_unit_label }}</span>
+                                        <span class="full-request-label">Full Request Amount</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="subsidized_quantity" id="selectedSubsidizedQuantity" value="{{ foodbank_request.quantity_needed }}">
+                            <input type="hidden" name="subsidized_quantity_unit" value="{{ request_unit_value }}">
+                        </div>
+
+                        <!-- Pricing Section -->
+                        <div class="pricing-section">
+                            <h5><i class="fas fa-tag me-2"></i>Pricing Details</h5>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="subsidizedMarketPrice">Market Price (KES)</label>
+                                    <input type="number" id="subsidizedMarketPrice" name="subsidized_market_price" 
+                                           class="form-control" placeholder="Original market price" min="1" step="0.01">
+                                    <small class="form-text text-muted">What this would normally cost</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="subsidizedOfferPrice">Your Offer Price (KES)</label>
+                                    <input type="number" id="subsidizedOfferPrice" name="subsidized_price" 
+                                           class="form-control" placeholder="Your subsidized price" min="0" step="0.01">
+                                    <small class="form-text text-muted">Price you're offering to the food bank</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Savings Display -->
+                            <div class="subsidized-savings-display">
+                                <div class="savings-card">
+                                    <div class="savings-label">Food Bank Saves</div>
+                                    <div class="savings-value" id="subsidizedSavingsAmount">KES 0.00</div>
+                                    <div class="savings-percent" id="subsidizedSavingsPercent">0% discount</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Details for Subsidized -->
+                        <div class="delivery-section">
+                            <h5>Delivery Details</h5>
+                            <div class="delivery-options">
+                                <div class="delivery-option">
+                                    <input type="radio" id="subsidizedPickup" name="delivery_method" value="pickup" checked>
+                                    <label for="subsidizedPickup">
+                                        <i class="fas fa-truck"></i>
+                                        <div class="option-content">
+                                            <span class="option-title">Pickup by Food Bank</span>
+                                            <span class="option-desc">Food bank will collect the items</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="delivery-option">
+                                    <input type="radio" id="subsidizedDropoff" name="delivery_method" value="dropoff">
+                                    <label for="subsidizedDropoff">
+                                        <i class="fas fa-hands-helping"></i>
+                                        <div class="option-content">
+                                            <span class="option-title">Drop Off</span>
+                                            <span class="option-desc">You'll deliver to the food bank</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="pickup-time-section">
+                                <label for="subsidizedPickupTime">Preferred pickup/delivery time:</label>
+                                <input type="datetime-local" id="subsidizedPickupTime" name="pickup_time" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Message for Subsidized -->
+                        <div class="message-section">
+                            <label for="subsidizedMessage">Personal Message (Optional)</label>
+                            <textarea id="subsidizedMessage" name="message" class="form-control" rows="3" 
+                                      placeholder="Any additional details about your offer..."></textarea>
+                        </div>
+                    </div><!-- End subsidized-response-fields -->
+
+                    <!-- MONETARY RESPONSE SECTION -->
+                    <div class="monetary-response-fields response-fields" style="display: none;">
+                        <div class="monetary-info-banner">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Instead of providing physical items, you're offering a monetary donation to help the food bank purchase what they need.</p>
+                        </div>
+
+                        <!-- Amount Section -->
+                        <div class="monetary-amount-section">
+                            <h5><i class="fas fa-money-bill-wave me-2"></i>Donation Amount</h5>
+                            <div class="amount-input-group">
+                                <div class="currency-symbol">KES</div>
+                                <input type="number" id="monetaryAmount" name="amount" class="form-control" 
+                                       placeholder="Enter amount" min="1" step="0.01">
+                            </div>
+                            <div class="amount-suggestions">
+                                <p class="suggestion-label">Quick amounts:</p>
+                                <div class="suggestion-buttons">
+                                    <button type="button" class="amount-btn" data-amount="500">500</button>
+                                    <button type="button" class="amount-btn" data-amount="1000">1,000</button>
+                                    <button type="button" class="amount-btn" data-amount="2500">2,500</button>
+                                    <button type="button" class="amount-btn" data-amount="5000">5,000</button>
+                                    <button type="button" class="amount-btn" data-amount="10000">10,000</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message for Monetary -->
+                        <div class="message-section">
+                            <label for="monetaryMessage">Personal Message (Optional)</label>
+                            <textarea id="monetaryMessage" name="message" class="form-control" rows="3" 
+                                      placeholder="Share an encouraging message with the food bank..."></textarea>
+                        </div>
+                    </div><!-- End monetary-response-fields -->
+
+                    <!-- Confirmation -->
+                    <div class="confirmation-section">
+                        <div class="confirmation-summary">
+                            <h6>Donation Summary:</h6>
+                            <div class="summary-details">
+                                <div class="summary-item">
+                                    <span class="summary-label">Food Bank:</span>
+                                    <span class="summary-value">{{ foodbank_request.foodbank.foodbank_name }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Item:</span>
+                                    <span class="summary-value" title="{{ foodbank_request.title }}">{{ foodbank_request.title }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Quantity:</span>
+                                    <span class="summary-value" id="summaryQuantity">{{ foodbank_request.quantity_needed }} {{ request_unit_label }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Delivery:</span>
+                                    <span class="summary-value" id="summaryDelivery">Pickup by Food Bank</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" onclick="history.back()">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="confirmDonation">
+                                <i class="fas fa-heart me-2"></i>Confirm Donation
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- General Donation Flow -->
+        <div class="general-donation-flow">
+            <!-- Keep the existing general donation form structure but simplified -->
+            <div class="donation-header">
+                <div class="header-content">
+                    <div class="back-navigation">
+                        <a href="{% url 'dashboard' %}" class="back-link">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                    <div class="donation-title">
+                        <h2>Make Unspecified Donations</h2>
+                        <p>Choose a food bank and specify what you'd like to donate</p>
+                    </div>
+                </div>
+        </div>
+
+            <!-- General donation form content would go here -->
+            <div class="general-form-card">
+                <form method="post" id="generalDonationForm" class="general-donation-form">
+                    {% csrf_token %}
+                    
+                    <!-- Display form errors -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</h6>
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    <div class="error-item">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            {% for field, errors in form.errors.items %}
+                                {% if field != '__all__' %}
+                                    {% for error in errors %}
+                                        <div class="error-item"><strong>{{ field|title }}:</strong> {{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Food Bank Selection -->
+                    <div class="foodbank-selection">
+                        <h4>Select Food Bank</h4>
+                        {{ form.foodbank }}
+                        {% if form.foodbank.errors %}
+                            <div class="field-errors">
+                                {% for error in form.foodbank.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+        </div>
+
+                    <!-- Donation Type Selection -->
+                    <div class="donation-type-selection">
+                        <h4>What would you like to donate?</h4>
+                        <div class="donation-types">
+                            <div class="donation-type-option">
+                                <input type="radio" id="itemDonation" name="donation_type" value="item" {% if form.donation_type.value == 'item' or not form.donation_type.value %}checked{% endif %}>
+                                <label for="itemDonation">
+                                    <i class="fas fa-box"></i>
+                                    <span>Food Items</span>
+                                </label>
+                            </div>
+                            <div class="donation-type-option">
+                                <input type="radio" id="moneyDonation" name="donation_type" value="money" {% if form.donation_type.value == 'money' %}checked{% endif %}>
+                                <label for="moneyDonation">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    <span>Money</span>
+                                </label>
+                            </div>
+                            <div class="donation-type-option">
+                                <input type="radio" id="subsidizedDonation" name="donation_type" value="subsidized" {% if form.donation_type.value == 'subsidized' %}checked{% endif %}>
+                                <label for="subsidizedDonation">
+                                    <i class="fas fa-tags"></i>
+                                    <span>Subsidized Goods</span>
+                                </label>
+                            </div>
+                        </div>
+                        {% if form.donation_type.errors %}
+                            <div class="field-errors">
+                                {% for error in form.donation_type.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+        </div>
+
+                    <!-- Dynamic form sections based on donation type -->
+                    <div class="donation-details-section">
+                        <!-- Item donation fields -->
+                        <div class="item-donation-fields donation-fields">
+                            <div class="form-group">
+                                <label for="{{ form.item_name.id_for_label }}">Item Name</label>
+                                {{ form.item_name }}
+                                {% if form.item_name.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.item_name.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="{{ form.quantity.id_for_label }}">Quantity</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.quantity.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ form.quantity_unit.id_for_label }}">Unit</label>
+                                    {{ form.quantity_unit }}
+                                    {% if form.quantity_unit.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.quantity_unit.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Delivery Options for Food Items -->
+                            <div class="delivery-section">
+                                <h5>Delivery Details</h5>
+                                <div class="delivery-options">
+                                    <div class="delivery-option">
+                                        <input type="radio" id="itemPickup" name="delivery_method" value="pickup" checked>
+                                        <label for="itemPickup">
+                                            <i class="fas fa-truck"></i>
+                                            <div class="option-content">
+                                                <span class="option-title">Pickup by Food Bank</span>
+                                                <span class="option-desc">Food bank will collect the donation</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="delivery-option">
+                                        <input type="radio" id="itemDropoff" name="delivery_method" value="dropoff">
+                                        <label for="itemDropoff">
+                                            <i class="fas fa-hands-helping"></i>
+                                            <div class="option-content">
+                                                <span class="option-title">Drop Off</span>
+                                                <span class="option-desc">You'll deliver to the food bank</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="pickup-time-section">
+                                    <label for="{{ form.pickup_time.id_for_label }}">Preferred pickup/delivery time:</label>
+                                    {{ form.pickup_time }}
+                                    {% if form.pickup_time.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.pickup_time.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Message Section for Food Items -->
+                            <div class="message-section">
+                                <label for="{{ form.message.id_for_label }}">Personal Message (Optional)</label>
+                                {{ form.message }}
+                                {% if form.message.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.message.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+        </div>
+
+                        <!-- Money donation fields -->
+                        <div class="money-donation-fields donation-fields" style="display: none;">
+                            <!-- Payment Method Selection -->
+                            <div class="payment-method-selection">
+                                <h5>Payment Method</h5>
+                                <div class="payment-methods">
+                                    <div class="payment-method-option">
+                                        <input type="radio" id="creditCardPayment" name="payment_method" value="credit_card" checked>
+                                        <label for="creditCardPayment">
+                                            <i class="fas fa-credit-card"></i>
+                                            <span>Credit Card</span>
+                                            <small>Secure payment via Stripe</small>
+                                        </label>
+                                    </div>
+                                    <div class="payment-method-option">
+                                        <input type="radio" id="mpesaPayment" name="payment_method" value="mpesa">
+                                        <label for="mpesaPayment">
+                                            <i class="fas fa-mobile-alt"></i>
+                                            <span>M-Pesa</span>
+                                            <small>Mobile money payment</small>
+                                        </label>
+                                    </div>
+                                    <div class="payment-method-option">
+                                        <input type="radio" id="cashPayment" name="payment_method" value="cash">
+                                        <label for="cashPayment">
+                                            <i class="fas fa-money-bill"></i>
+                                            <span>Cash/Other</span>
+                                            <small>Arrange with food bank</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Amount Section for Money Donations -->
+                            <div class="amount-section">
+                                <h5>Donation Amount</h5>
+                                <div class="amount-input-group">
+                                    <div class="currency-symbol">KES</div>
+                                    {{ form.amount }}
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.amount.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="amount-suggestions">
+                                    <p class="suggestion-label">Quick amounts:</p>
+                                    <div class="suggestion-buttons">
+                                        <button type="button" class="amount-btn" data-amount="500">500</button>
+                                        <button type="button" class="amount-btn" data-amount="1000">1,000</button>
+                                        <button type="button" class="amount-btn" data-amount="2500">2,500</button>
+                                        <button type="button" class="amount-btn" data-amount="5000">5,000</button>
+                                        <button type="button" class="amount-btn" data-amount="10000">10,000</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Credit Card Payment Form -->
+                            <div class="credit-card-form" id="creditCardForm">
+                                <h6>Credit Card Details</h6>
+                                <div id="card-element">
+                                    <!-- Stripe Elements will be inserted here -->
+                                </div>
+                                <div id="card-errors" role="alert"></div>
+                            </div>
+                            
+                            <!-- M-Pesa Payment Form -->
+                            <div class="mpesa-form" id="mpesaForm">
+                                <h6>M-Pesa Payment Details</h6>
+                                <div class="mpesa-info">
+                                    <div class="mpesa-icon">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div class="mpesa-details">
+                                        <p class="mpesa-title">Pay with M-Pesa</p>
+                                        <p class="mpesa-description">You'll receive an M-Pesa prompt on your phone to complete the payment</p>
+                                    </div>
+                                </div>
+                                <div class="mpesa-phone-section">
+                                    <label for="mpesaPhone">M-Pesa Phone Number</label>
+                                    <div class="phone-input-group">
+                                        <span class="country-code">+254</span>
+                                        <input type="tel" id="mpesaPhone" name="mpesa_phone" placeholder="700000000" maxlength="9" pattern="[0-9]{9}">
+                                    </div>
+                                    <small class="phone-help">Enter your M-Pesa registered phone number (without +254)</small>
+                                </div>
+                            </div>
+        </div>
+
+                        <!-- Subsidized goods fields -->
+                        <div class="subsidized-donation-fields donation-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="{{ form.subsidized_product_type.id_for_label }}">Product Type</label>
+                                {{ form.subsidized_product_type }}
+                                {% if form.subsidized_product_type.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.subsidized_product_type.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="{{ form.subsidized_quantity.id_for_label }}">Quantity</label>
+                                    {{ form.subsidized_quantity }}
+                                    {% if form.subsidized_quantity.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.subsidized_quantity.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ form.subsidized_quantity_unit.id_for_label }}">Unit</label>
+                                    {{ form.subsidized_quantity_unit }}
+                                    {% if form.subsidized_quantity_unit.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.subsidized_quantity_unit.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="{{ form.subsidized_market_price.id_for_label }}">Market Price (KES)</label>
+                                    {{ form.subsidized_market_price }}
+                                    {% if form.subsidized_market_price.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.subsidized_market_price.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ form.subsidized_price.id_for_label }}">Your Subsidized Price (KES)</label>
+                                    {{ form.subsidized_price }}
+                                    <small class="form-text text-muted">Enter the price you're offering to the food bank</small>
+                                    {% if form.subsidized_price.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.subsidized_price.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Savings for Food Bank</label>
+                                    <div class="savings-display" id="savingsDisplay">
+                                        <span class="savings-amount">KES 0.00</span>
+                                        <small class="savings-percentage">0% off</small>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Discount Percentage</label>
+                                    <div class="discount-display" id="discountDisplay">
+                                        <span class="discount-percentage">0%</span>
+                                        <small class="discount-amount">KES 0.00 saved</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Debug button (remove in production) -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <button type="button" onclick="calculateDiscountAndSavings()" class="btn btn-outline btn-sm">
+                                        Test Calculation
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Delivery Options for Subsidized Goods -->
+                            <div class="delivery-section">
+                                <h5>Delivery Details</h5>
+                                <div class="delivery-options">
+                                    <div class="delivery-option">
+                                        <input type="radio" id="subsidizedPickup" name="delivery_method" value="pickup" checked>
+                                        <label for="subsidizedPickup">
+                                            <i class="fas fa-truck"></i>
+                                            <div class="option-content">
+                                                <span class="option-title">Pickup by Food Bank</span>
+                                                <span class="option-desc">Food bank will collect the subsidized goods</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="delivery-option">
+                                        <input type="radio" id="subsidizedDropoff" name="delivery_method" value="dropoff">
+                                        <label for="subsidizedDropoff">
+                                            <i class="fas fa-hands-helping"></i>
+                                            <div class="option-content">
+                                                <span class="option-title">Drop Off</span>
+                                                <span class="option-desc">You'll deliver the subsidized goods to the food bank</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="pickup-time-section">
+                                    <label for="{{ form.pickup_time.id_for_label }}">Preferred pickup/delivery time:</label>
+                                    {{ form.pickup_time }}
+                                    {% if form.pickup_time.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.pickup_time.errors %}
+                                                <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Message Section for Subsidized Goods -->
+                            <div class="message-section">
+                                <label for="{{ form.message.id_for_label }}">Personal Message (Optional)</label>
+                                {{ form.message }}
+                                {% if form.message.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.message.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="subsidized-info">
+                                <div class="info-card">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div class="info-content">
+                                        <h6>Subsidized Donation Info</h6>
+                                        <p>You're offering a product at a reduced price to help the food bank. The discount percentage shows how much you're waiving from the original cost.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        </div>
+
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-gift me-2"></i>Submit Donation
+                        </button>
+                    </div>
+    </form>
+</div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+/* Modern Donation Page Styles */
+:root {
+    --primary: #16a34a;
+    --primary-dark: #15803d;
+    --primary-light: #dcfce7;
+    --secondary: #6b7280;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #06b6d4;
+    --light: #f8fafc;
+    --dark: #111827;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --transition: all 0.2s ease;
+}
+
+.donation-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Error Display Styles */
+.alert-danger {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--danger);
+}
+
+.alert-danger h6 {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-danger h6 i {
+    font-size: 1.1rem;
+}
+
+.error-item {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(220, 38, 38, 0.1);
+}
+
+.error-item:last-child {
+    border-bottom: none;
+}
+
+.field-errors {
+    margin-top: 0.5rem;
+}
+
+.field-errors .text-danger {
+    color: var(--danger) !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Savings Display Styles */
+.savings-display {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #22c55e;
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.savings-amount {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0369a1;
+    margin-bottom: 0.25rem;
+}
+
+.savings-percentage {
+    display: block;
+    font-size: 0.875rem;
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.form-text.text-muted {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Discount Display Styles */
+.discount-display {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid #22c55e;
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.discount-percentage {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #15803d;
+    margin-bottom: 0.25rem;
+}
+
+.discount-amount {
+    display: block;
+    font-size: 0.875rem;
+    color: #16a34a;
+    font-weight: 600;
+}
+
+/* Payment Method Styles */
+.payment-method-selection {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.payment-method-selection h5 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.payment-method-option {
+    flex: 1;
+    min-width: 200px;
+}
+
+.payment-method-option input[type="radio"] {
+    display: none;
+}
+
+.payment-method-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    text-align: center;
+}
+
+.payment-method-option label:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.payment-method-option input[type="radio"]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.payment-method-option label i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.payment-method-option label span {
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.payment-method-option label small {
+    color: var(--gray-600);
+    font-size: 0.85rem;
+}
+
+/* Amount Section Styles */
+.amount-section {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.amount-section h5 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.amount-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 1rem;
+    color: var(--gray-600);
+    font-weight: 600;
+    font-size: 1.1rem;
+    z-index: 1;
+}
+
+.amount-input-group input[type="number"] {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    background: white;
+    transition: var(--transition);
+}
+
+.amount-input-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.amount-suggestions {
+    margin-top: 1rem;
+}
+
+.suggestion-label {
+    margin: 0 0 0.75rem 0;
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.suggestion-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.amount-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    background: white;
+    color: var(--gray-700);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.amount-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.amount-btn:active {
+    transform: translateY(1px);
+}
+
+/* Credit Card Form Styles */
+.credit-card-form {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+    display: none;
+    transition: all 0.3s ease;
+}
+
+/* M-Pesa Form Styles */
+.mpesa-form {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.mpesa-form h6 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.mpesa-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f0f9ff;
+    border: 1px solid #22c55e;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 1.5rem;
+}
+
+.mpesa-icon {
+    font-size: 2rem;
+    color: #22c55e;
+}
+
+.mpesa-details p {
+    margin: 0;
+}
+
+.mpesa-title {
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem !important;
+}
+
+.mpesa-description {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+}
+
+.mpesa-phone-section {
+    margin-top: 1rem;
+}
+
+.mpesa-phone-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.phone-input-group {
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    background: white;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.phone-input-group:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.country-code {
+    padding: 1rem;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-weight: 600;
+    border-right: 1px solid var(--gray-300);
+}
+
+.phone-input-group input {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: transparent;
+}
+
+.phone-help {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--gray-500);
+    font-size: 0.85rem;
+}
+
+/* Delivery and Message Section Styles for Food Items */
+.delivery-section, .message-section {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.delivery-section h5 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.delivery-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.delivery-option {
+    flex: 1;
+    min-width: 200px;
+}
+
+.delivery-option input[type="radio"] {
+    display: none;
+}
+
+.delivery-option label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.delivery-option label:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.delivery-option input[type="radio"]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.delivery-option label i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.option-title {
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.option-desc {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.pickup-time-section {
+    margin-top: 1rem;
+}
+
+.pickup-time-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.pickup-time-section input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.pickup-time-section input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.message-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.message-section textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    transition: var(--transition);
+}
+
+.message-section textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Subsidized Goods Info Card */
+.subsidized-info {
+    margin-top: 1.5rem;
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f0f9ff;
+    border: 1px solid #22c55e;
+    border-radius: var(--border-radius-sm);
+}
+
+.info-card i {
+    font-size: 1.25rem;
+    color: #22c55e;
+    margin-top: 0.125rem;
+}
+
+.info-content h6 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.info-content p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Enhanced form styling for subsidized goods */
+.subsidized-donation-fields .form-group label {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.subsidized-donation-fields input[type="text"],
+.subsidized-donation-fields input[type="number"],
+.subsidized-donation-fields select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.subsidized-donation-fields input[type="text"]:focus,
+.subsidized-donation-fields input[type="number"]:focus,
+.subsidized-donation-fields select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+@media (max-width: 640px) {
+    .delivery-options {
+        flex-direction: column;
+    }
+    
+    .delivery-option {
+        min-width: auto;
+    }
+    
+    .info-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+
+.credit-card-form h6 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+#card-element {
+    padding: 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    background: white;
+    margin-bottom: 1rem;
+}
+
+#card-errors {
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+    .payment-methods {
+        flex-direction: column;
+    }
+    
+    .payment-method-option {
+        min-width: auto;
+    }
+    
+    .suggestion-buttons {
+        justify-content: center;
+    }
+    
+    .amount-btn {
+        flex: 1;
+        min-width: 60px;
+        text-align: center;
+    }
+}
+
+/* Header Styles */
+.response-header,
+.donation-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 2rem 0;
+}
+
+.header-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.back-navigation {
+    margin-bottom: 1rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-600);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.back-link:hover {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.response-title h2,
+.donation-title h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.response-title p,
+.donation-title p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 1.125rem;
+}
+
+/* Request Summary Card */
+.request-summary-card {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.request-info {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary);
+}
+
+.foodbank-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.request-title {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 500;
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.request-description {
+    margin: 0 0 1.5rem 0;
+    color: var(--gray-600);
+    font-size: 1rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.request-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    min-width: 0;
+}
+
+.detail-item span,
+.detail-item strong {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+}
+
+.detail-item i {
+    width: 20px;
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.priority-urgent {
+    color: var(--danger) !important;
+}
+
+.priority-high {
+    color: var(--warning) !important;
+}
+
+.priority-medium {
+    color: var(--info) !important;
+}
+
+.priority-low {
+    color: var(--success) !important;
+}
+
+.priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority-urgent.priority-badge {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.priority-high.priority-badge {
+    background: var(--warning);
+    color: var(--white);
+}
+
+.priority-medium.priority-badge {
+    background: var(--info);
+    color: var(--white);
+}
+
+.priority-low.priority-badge {
+    background: var(--success);
+    color: var(--white);
+}
+
+/* Response Form */
+.response-form-card,
+.general-form-card {
+    max-width: 1000px;
+    margin: 0 auto 2rem auto;
+    padding: 0 2rem;
+}
+
+.response-form,
+.general-donation-form {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.form-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 1rem;
+}
+
+.form-header h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.form-header p {
+    margin: 0;
+    color: var(--gray-600);
+}
+
+/* Quantity Selection */
+.quantity-section {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 1rem;
+    color: var(--gray-700);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.quantity-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.quantity-preset {
+    border: 2px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.quantity-preset:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow);
+}
+
+.quantity-preset.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.preset-amount {
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.preset-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.custom-quantity-input {
+    margin-top: 1rem;
+}
+
+.quantity-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-unit {
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+/* Delivery Options */
+.delivery-section {
+    margin-bottom: 2rem;
+}
+
+.delivery-section h5 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.delivery-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.delivery-option {
+    position: relative;
+}
+
+.delivery-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.delivery-option label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.delivery-option input[type="radio"]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.delivery-option label i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.option-title {
+    display: block;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.option-desc {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.pickup-time-section {
+    margin-top: 1rem;
+}
+
+.pickup-time-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+/* Message Section */
+.message-section {
+    margin-bottom: 2rem;
+}
+
+.message-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--gray-700);
+    font-weight: 600;
+}
+
+/* Response Type Selection Styles */
+.response-type-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.response-type-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.response-type-option {
+    position: relative;
+}
+
+.response-type-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.response-type-option label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--white);
+}
+
+.response-type-option label:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.response-type-option input[type="radio"]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.response-type-option label i {
+    font-size: 1.75rem;
+    color: var(--primary);
+    width: 40px;
+    text-align: center;
+}
+
+/* Response Fields Sections */
+.response-fields {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Subsidized and Monetary Info Banners */
+.subsidized-info-banner,
+.monetary-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #22c55e;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 1.5rem;
+}
+
+.subsidized-info-banner i,
+.monetary-info-banner i {
+    font-size: 1.25rem;
+    color: #22c55e;
+    margin-top: 0.125rem;
+}
+
+.subsidized-info-banner p,
+.monetary-info-banner p {
+    margin: 0;
+    color: var(--gray-700);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.subsidized-quantity-section {
+    margin-bottom: 1.5rem;
+}
+
+.subsidized-full-request-display {
+    margin-top: 0.75rem;
+}
+
+.full-request-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius-sm);
+}
+
+.full-request-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.full-request-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.full-request-amount {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+.full-request-label {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+}
+
+.subsidized-quantity-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.subsidized-custom-quantity-input {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.pricing-section {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.pricing-section h5 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.subsidized-savings-display {
+    margin-top: 1.5rem;
+}
+
+.savings-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid #22c55e;
+    border-radius: var(--border-radius-sm);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.savings-label {
+    font-size: 0.85rem;
+    color: #166534;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.savings-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #15803d;
+    margin-bottom: 0.25rem;
+}
+
+.savings-percent {
+    font-size: 0.9rem;
+    color: #16a34a;
+    font-weight: 600;
+}
+
+/* Monetary Response Styles */
+.monetary-amount-section,
+.payment-method-section {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.monetary-amount-section h5,
+.payment-method-section h5 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.payment-method-section .mpesa-phone-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+@media (max-width: 640px) {
+    .response-type-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .subsidized-quantity-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Confirmation Section */
+.confirmation-section {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 2rem;
+}
+
+.confirmation-summary {
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.confirmation-summary h6 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.summary-details {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.summary-item {
+    display: grid;
+    grid-template-columns: minmax(90px, 120px) minmax(0, 1fr);
+    column-gap: 0.9rem;
+    align-items: start;
+    padding: 0.2rem 0;
+}
+
+.summary-label {
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.summary-value {
+    color: var(--gray-800);
+    font-weight: 600;
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+    .summary-item {
+        grid-template-columns: 1fr;
+        row-gap: 0.2rem;
+    }
+
+    .summary-value {
+        text-align: left;
+    }
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+    justify-content: center;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    color: var(--white);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    color: var(--gray-800);
+    text-decoration: none;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+}
+
+/* General Donation Specific Styles */
+.foodbank-selection,
+.donation-type-selection,
+.donation-details-section {
+    margin-bottom: 2rem;
+}
+
+.foodbank-selection h4,
+.donation-type-selection h4 {
+    margin: 0 0 1rem 0;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.donation-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.donation-type-option {
+    position: relative;
+}
+
+.donation-type-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.donation-type-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.donation-type-option input[type="radio"]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.donation-type-option label i {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.donation-type-option label span {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.donation-fields {
+    display: none;
+}
+
+.donation-fields.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content {
+        padding: 0 1rem;
+    }
+    
+    .response-form-card,
+    .general-form-card {
+        padding: 0 1rem;
+    }
+    
+    .response-form,
+    .general-donation-form {
+        padding: 1.5rem;
+    }
+    
+    .quantity-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .delivery-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .request-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .donation-types {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ==================== RESPONSE TYPE HANDLING (Request Response Flow) ====================
+    const responseTypes = document.querySelectorAll('input[name="response_type"]');
+    const responseFields = document.querySelectorAll('.response-fields');
+    const hiddenDonationType = document.getElementById('hiddenDonationType');
+    const hiddenDonationMode = document.getElementById('hiddenDonationMode');
+    const hiddenDonationCategory = document.getElementById('hiddenDonationCategory');
+    
+    // Function to toggle response fields based on selected type
+    function toggleResponseFields(selectedType) {
+        console.log('Response type changed to:', selectedType);
+        
+        // Hide all response fields and disable their inputs
+        responseFields.forEach(field => {
+            field.style.display = 'none';
+            // Disable all inputs in hidden sections
+            const inputs = field.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.disabled = true;
+            });
+        });
+        
+        // Show selected response fields and enable their inputs
+        const selectedFields = document.querySelector(`.${selectedType}-response-fields`);
+        if (selectedFields) {
+            selectedFields.style.display = 'block';
+            // Enable all inputs in visible section
+            const inputs = selectedFields.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.disabled = false;
+            });
+        }
+        
+        // Update hidden donation_type and donation_mode based on response type
+        if (selectedType === 'free') {
+            if (hiddenDonationType) hiddenDonationType.value = 'item';
+            if (hiddenDonationMode) hiddenDonationMode.value = 'free';
+        } else if (selectedType === 'subsidized') {
+            if (hiddenDonationType) hiddenDonationType.value = 'subsidized';
+            if (hiddenDonationMode) hiddenDonationMode.value = 'subsidized';
+            // Initialize subsidized calculations
+            setTimeout(initializeResponseSubsidizedCalculations, 100);
+        } else if (selectedType === 'monetary') {
+            if (hiddenDonationType) hiddenDonationType.value = 'money';
+            if (hiddenDonationMode) hiddenDonationMode.value = 'free';
+            if (hiddenDonationCategory) hiddenDonationCategory.value = 'monetary';
+        }
+        
+        // Update summary display
+        updateResponseSummary(selectedType);
+    }
+    
+    // Add event listeners for response type changes
+    responseTypes.forEach(type => {
+        type.addEventListener('change', function() {
+            toggleResponseFields(this.value);
+        });
+    });
+    
+    // Initialize response fields on page load
+    function initializeResponseFields() {
+        const initialResponseType = document.querySelector('input[name="response_type"]:checked');
+        if (initialResponseType) {
+            toggleResponseFields(initialResponseType.value);
+        }
+    }
+    
+    // Initialize on load
+    initializeResponseFields();
+    
+    // Subsidized quantity preset handling
+    const subsidizedQtyPresets = document.querySelectorAll('.subsidized-qty-preset');
+    const subsidizedCustomQtyInput = document.querySelector('.subsidized-custom-quantity-input');
+    const selectedSubsidizedQty = document.getElementById('selectedSubsidizedQuantity');
+    const subsidizedCustomQtyField = document.getElementById('subsidizedCustomQty');
+    
+    subsidizedQtyPresets.forEach(preset => {
+        preset.addEventListener('click', function() {
+            subsidizedQtyPresets.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (this.classList.contains('subsidized-custom-preset')) {
+                if (subsidizedCustomQtyInput) subsidizedCustomQtyInput.style.display = 'block';
+                if (subsidizedCustomQtyField) subsidizedCustomQtyField.focus();
+            } else {
+                if (subsidizedCustomQtyInput) subsidizedCustomQtyInput.style.display = 'none';
+                const amount = this.getAttribute('data-amount');
+                if (selectedSubsidizedQty) selectedSubsidizedQty.value = amount;
+            }
+        });
+    });
+    
+    if (subsidizedCustomQtyField) {
+        subsidizedCustomQtyField.addEventListener('input', function() {
+            if (selectedSubsidizedQty) selectedSubsidizedQty.value = this.value;
+        });
+    }
+    
+    // Subsidized pricing calculations for response form
+    function initializeResponseSubsidizedCalculations() {
+        const marketPriceInput = document.getElementById('subsidizedMarketPrice');
+        const offerPriceInput = document.getElementById('subsidizedOfferPrice');
+        const savingsAmount = document.getElementById('subsidizedSavingsAmount');
+        const savingsPercent = document.getElementById('subsidizedSavingsPercent');
+        
+        function calculateSavings() {
+            const marketPrice = parseFloat(marketPriceInput?.value) || 0;
+            const offerPrice = parseFloat(offerPriceInput?.value) || 0;
+            
+            if (marketPrice > 0 && offerPrice >= 0 && offerPrice < marketPrice) {
+                const savings = marketPrice - offerPrice;
+                const percent = (savings / marketPrice) * 100;
+                
+                if (savingsAmount) savingsAmount.textContent = `KES ${savings.toFixed(2)}`;
+                if (savingsPercent) savingsPercent.textContent = `${percent.toFixed(1)}% discount`;
+            } else {
+                if (savingsAmount) savingsAmount.textContent = 'KES 0.00';
+                if (savingsPercent) savingsPercent.textContent = '0% discount';
+            }
+        }
+        
+        if (marketPriceInput) marketPriceInput.addEventListener('input', calculateSavings);
+        if (offerPriceInput) offerPriceInput.addEventListener('input', calculateSavings);
+    }
+    
+    // Monetary amount quick buttons
+    const monetaryAmountBtns = document.querySelectorAll('.monetary-amount-section .amount-btn');
+    const monetaryAmountInput = document.getElementById('monetaryAmount');
+    
+    monetaryAmountBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const amount = this.getAttribute('data-amount');
+            if (monetaryAmountInput) {
+                monetaryAmountInput.value = amount;
+                monetaryAmountInput.focus();
+            }
+        });
+    });
+    
+    // Monetary payment method toggle (M-Pesa phone visibility)
+    const monetaryPaymentMethods = document.querySelectorAll('.payment-method-section input[name="payment_method"]');
+    const monetaryMpesaPhone = document.getElementById('monetaryMpesaPhone');
+    
+    monetaryPaymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            if (monetaryMpesaPhone) {
+                monetaryMpesaPhone.style.display = this.value === 'mpesa' ? 'block' : 'none';
+            }
+        });
+    });
+    
+    // Update summary based on response type
+    function updateResponseSummary(responseType) {
+        const summaryQuantity = document.getElementById('summaryQuantity');
+        const summaryDelivery = document.getElementById('summaryDelivery');
+        
+        // Update summary based on type
+        if (responseType === 'monetary' && summaryQuantity) {
+            const amount = document.getElementById('monetaryAmount')?.value || '0';
+            summaryQuantity.textContent = `KES ${amount} (Monetary)`;
+        }
+    }
+    
+    // ==================== END RESPONSE TYPE HANDLING ====================
+    
+    // Quantity preset selection
+    const quantityPresets = document.querySelectorAll('.quantity-preset');
+    const customQuantityInput = document.querySelector('.custom-quantity-input');
+    const selectedQuantityField = document.getElementById('selectedQuantity');
+    const summaryQuantity = document.getElementById('summaryQuantity');
+    const customQuantityField = document.getElementById('customQuantity');
+    
+    quantityPresets.forEach(preset => {
+        preset.addEventListener('click', function() {
+            // Remove active class from all presets
+            quantityPresets.forEach(p => p.classList.remove('active'));
+            // Add active class to clicked preset
+            this.classList.add('active');
+            
+            if (this.classList.contains('custom-preset')) {
+                // Show custom input
+                customQuantityInput.style.display = 'block';
+                customQuantityField.focus();
+            } else {
+                // Hide custom input
+                customQuantityInput.style.display = 'none';
+                // Set quantity from data attribute
+                const amount = this.getAttribute('data-amount');
+                selectedQuantityField.value = amount;
+                updateSummary();
+            }
+        });
+    });
+    
+    // Custom quantity input
+    if (customQuantityField) {
+        customQuantityField.addEventListener('input', function() {
+            selectedQuantityField.value = this.value;
+            updateSummary();
+        });
+    }
+    
+    // Delivery method change
+    const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
+    const summaryDelivery = document.getElementById('summaryDelivery');
+    
+    deliveryMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            const label = this.value === 'pickup' ? 'Pickup by Food Bank' : 'Drop Off';
+            if (summaryDelivery) {
+                summaryDelivery.textContent = label;
+            }
+        });
+    });
+    
+    // General donation type switching
+    const donationTypes = document.querySelectorAll('input[name="donation_type"]');
+    const donationFields = document.querySelectorAll('.donation-fields');
+    
+    console.log('Found donation types:', donationTypes.length);
+    console.log('Found donation fields:', donationFields.length);
+    
+    // Test function to manually trigger donation type change
+    window.testDonationType = function(type) {
+        console.log('Testing donation type:', type);
+        const radio = document.querySelector(`input[name="donation_type"][value="${type}"]`);
+        if (radio) {
+            radio.checked = true;
+            toggleDonationFields(type);
+            console.log('Successfully set donation type to:', type);
+        } else {
+            console.log('Radio button not found for type:', type);
+        }
+    };
+    
+    // Add visual feedback for debugging
+    donationTypes.forEach((type, index) => {
+        console.log(`Donation type ${index + 1}:`, type.value, type.checked);
+    });
+    
+    // Function to toggle donation fields
+    function toggleDonationFields(selectedType) {
+        // Hide all donation fields
+        donationFields.forEach(field => {
+            field.style.display = 'none';
+            field.classList.remove('active');
+        });
+        
+        // Show selected donation fields
+        const selectedFields = document.querySelector(`.${selectedType}-donation-fields`);
+        if (selectedFields) {
+            selectedFields.style.display = 'block';
+            selectedFields.classList.add('active');
+        }
+        
+        // If subsidized goods is selected, initialize calculations
+        if (selectedType === 'subsidized') {
+            setTimeout(initializeSubsidizedCalculations, 100);
+        }
+    }
+    
+    donationTypes.forEach(type => {
+        type.addEventListener('change', function() {
+            console.log('Donation type changed to:', this.value);
+            toggleDonationFields(this.value);
+        });
+        
+        // Also add click event listener as backup
+        type.addEventListener('click', function() {
+            console.log('Donation type clicked:', this.value);
+            setTimeout(() => {
+                if (this.checked) {
+                    toggleDonationFields(this.value);
+                }
+            }, 10);
+        });
+    });
+    
+    // Add click handlers to labels as well (since radio buttons are hidden)
+    const donationLabels = document.querySelectorAll('.donation-type-option label');
+    donationLabels.forEach(label => {
+        label.addEventListener('click', function(e) {
+            const radioInput = this.previousElementSibling;
+            if (radioInput && radioInput.type === 'radio') {
+                console.log('Label clicked for:', radioInput.value);
+                radioInput.checked = true;
+                toggleDonationFields(radioInput.value);
+            }
+        });
+    });
+    
+    // Initialize donation fields on page load
+    function initializeDonationFields() {
+        const initialDonationType = document.querySelector('input[name="donation_type"]:checked');
+        if (initialDonationType) {
+            toggleDonationFields(initialDonationType.value);
+        } else {
+            // Default to showing item donation fields
+            toggleDonationFields('item');
+        }
+    }
+    
+    initializeDonationFields();
+    
+    function updateSummary() {
+        if (summaryQuantity && selectedQuantityField) {
+            const quantity = selectedQuantityField.value;
+            const unit = document.querySelector('input[name="quantity_unit"]').value;
+            summaryQuantity.textContent = `${quantity} ${unit}`;
+        }
+    }
+    
+    // Calculate discount and savings automatically
+    function calculateDiscountAndSavings() {
+        console.log('calculateDiscountAndSavings called');
+        
+        const marketPriceInput = document.getElementById('subsidized_market_price');
+        const subsidizedPriceInput = document.getElementById('subsidized_price_input');
+        const savingsDisplay = document.getElementById('savingsDisplay');
+        const discountDisplay = document.getElementById('discountDisplay');
+        
+        console.log('Elements found:', {
+            marketPriceInput: !!marketPriceInput,
+            subsidizedPriceInput: !!subsidizedPriceInput,
+            savingsDisplay: !!savingsDisplay,
+            discountDisplay: !!discountDisplay
+        });
+        
+        if (marketPriceInput && subsidizedPriceInput && savingsDisplay && discountDisplay) {
+            const marketPrice = parseFloat(marketPriceInput.value) || 0;
+            const subsidizedPrice = parseFloat(subsidizedPriceInput.value) || 0;
+            
+            console.log('Values:', { marketPrice, subsidizedPrice });
+            
+            if (marketPrice > 0 && subsidizedPrice > 0 && subsidizedPrice < marketPrice) {
+                const discountAmount = marketPrice - subsidizedPrice;
+                const discountPercentage = (discountAmount / marketPrice) * 100;
+                
+                console.log('Calculated:', { discountAmount, discountPercentage });
+                
+                // Update savings display
+                const savingsAmount = savingsDisplay.querySelector('.savings-amount');
+                const savingsPercentage = savingsDisplay.querySelector('.savings-percentage');
+                
+                if (savingsAmount && savingsPercentage) {
+                    savingsAmount.textContent = `KES ${discountAmount.toFixed(2)}`;
+                    savingsPercentage.textContent = `${discountPercentage.toFixed(1)}% off`;
+                    console.log('Updated savings display');
+                }
+                
+                // Update discount display
+                const discountPercentageSpan = discountDisplay.querySelector('.discount-percentage');
+                const discountAmountSpan = discountDisplay.querySelector('.discount-amount');
+                
+                if (discountPercentageSpan && discountAmountSpan) {
+                    discountPercentageSpan.textContent = `${discountPercentage.toFixed(1)}%`;
+                    discountAmountSpan.textContent = `KES ${discountAmount.toFixed(2)} saved`;
+                    console.log('Updated discount display');
+                }
+            } else {
+                console.log('Invalid values, resetting displays');
+                // Reset displays
+                const savingsAmount = savingsDisplay.querySelector('.savings-amount');
+                const savingsPercentage = savingsDisplay.querySelector('.savings-percentage');
+                const discountPercentageSpan = discountDisplay.querySelector('.discount-percentage');
+                const discountAmountSpan = discountDisplay.querySelector('.discount-amount');
+                
+                if (savingsAmount && savingsPercentage) {
+                    savingsAmount.textContent = 'KES 0.00';
+                    savingsPercentage.textContent = '0% off';
+                }
+                if (discountPercentageSpan && discountAmountSpan) {
+                    discountPercentageSpan.textContent = '0%';
+                    discountAmountSpan.textContent = 'KES 0.00 saved';
+                }
+            }
+        } else {
+            console.log('Some elements not found');
+        }
+    }
+    
+    // Add event listeners for discount and savings calculation
+    function initializeSubsidizedCalculations() {
+        const marketPriceInput = document.getElementById('subsidized_market_price');
+        const subsidizedPriceInput = document.getElementById('subsidized_price_input');
+        
+        console.log('Initializing subsidized calculations...');
+        console.log('Market price input:', marketPriceInput);
+        console.log('Subsidized price input:', subsidizedPriceInput);
+        
+        if (marketPriceInput) {
+            marketPriceInput.addEventListener('input', calculateDiscountAndSavings);
+            console.log('Added event listener to market price input');
+        }
+        if (subsidizedPriceInput) {
+            subsidizedPriceInput.addEventListener('input', calculateDiscountAndSavings);
+            console.log('Added event listener to subsidized price input');
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeSubsidizedCalculations);
+    } else {
+        initializeSubsidizedCalculations();
+    }
+    
+    // Form submission
+    const responseForm = document.getElementById('responseForm');
+    if (responseForm) {
+        responseForm.addEventListener('submit', function(e) {
+            const confirmBtn = document.getElementById('confirmDonation');
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            confirmBtn.disabled = true;
+        });
+    }
+    
+    // Initialize
+    updateSummary();
+    
+    // Stripe Integration
+    const stripe = Stripe('{{ STRIPE_PUBLISHABLE_KEY }}');
+    let elements;
+    let cardElement;
+    
+    // Initialize Stripe Elements when money donation is selected
+    function initializeStripe() {
+        if (!elements) {
+            elements = stripe.elements();
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                },
+            });
+            cardElement.mount('#card-element');
+            
+            cardElement.on('change', function(event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+        }
+    }
+    
+    // Payment method change handler
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const creditCardForm = document.getElementById('creditCardForm');
+    const mpesaForm = document.getElementById('mpesaForm');
+    
+    // Function to toggle payment forms based on payment method
+    function togglePaymentForms(paymentMethod) {
+        // Hide all forms first
+        creditCardForm.style.display = 'none';
+        mpesaForm.style.display = 'none';
+        
+        if (paymentMethod === 'credit_card') {
+            creditCardForm.style.display = 'block';
+            initializeStripe();
+        } else if (paymentMethod === 'mpesa') {
+            mpesaForm.style.display = 'block';
+        }
+        // For 'cash', both forms remain hidden
+    }
+    
+    // Initialize payment forms on page load
+    function initializePaymentForm() {
+        const initialPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (initialPaymentMethod) {
+            togglePaymentForms(initialPaymentMethod.value);
+        } else {
+            // Default to hiding all payment forms
+            togglePaymentForms('cash');
+        }
+    }
+    
+    // Run initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePaymentForm);
+    } else {
+        initializePaymentForm();
+    }
+    
+    // Add event listeners for payment method changes
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            togglePaymentForms(this.value);
+        });
+    });
+    
+    // Amount suggestion buttons functionality
+    const amountButtons = document.querySelectorAll('.amount-btn');
+    const amountInput = document.querySelector('input[name="amount"]');
+    
+    amountButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const amount = this.getAttribute('data-amount');
+            if (amountInput) {
+                amountInput.value = amount;
+                amountInput.focus();
+            }
+        });
+    });
+    
+    // M-Pesa phone number formatting
+    const mpesaPhoneInput = document.getElementById('mpesaPhone');
+    if (mpesaPhoneInput) {
+        mpesaPhoneInput.addEventListener('input', function() {
+            // Remove any non-numeric characters
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Limit to 9 digits
+            if (this.value.length > 9) {
+                this.value = this.value.slice(0, 9);
+            }
+        });
+        
+        mpesaPhoneInput.addEventListener('keypress', function(e) {
+            // Only allow numeric input
+            if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Enhanced form submission for credit card payments
+    const generalForm = document.getElementById('generalDonationForm');
+    if (generalForm) {
+        generalForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const donationType = document.querySelector('input[name="donation_type"]:checked')?.value;
+            const paymentMethodElement = document.querySelector('input[name="payment_method"]:checked');
+            const paymentMethod = paymentMethodElement ? paymentMethodElement.value : null;
+            
+            console.log('Form submission - Donation type:', donationType, 'Payment method:', paymentMethod);
+            
+            // Only handle special payment methods for money donations
+            if (donationType === 'money' && paymentMethod === 'credit_card') {
+                await handleCreditCardPayment();
+            } else if (donationType === 'money' && paymentMethod === 'mpesa') {
+                await handleMpesaPayment();
+            } else {
+                // Submit regular form for all other donation types and cash payments
+                console.log('Submitting form normally...');
+                this.submit();
+            }
+        });
+    }
+    
+    async function handleMpesaPayment() {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        try {
+            // Validate M-Pesa phone number
+            const phoneInput = document.getElementById('mpesaPhone');
+            const phoneNumber = phoneInput.value.trim();
+            
+            if (!phoneNumber || phoneNumber.length !== 9) {
+                alert('Please enter a valid 9-digit M-Pesa phone number');
+                phoneInput.focus();
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing M-Pesa Payment...';
+            submitBtn.disabled = true;
+            
+            // Get form data
+            const formData = new FormData(document.getElementById('generalDonationForm'));
+            formData.append('mpesa_phone', phoneNumber);
+            
+            // Submit M-Pesa payment
+            const response = await fetch('{% url "confirm_payment" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Redirect to success page
+                window.location.href = result.redirect_url || '{% url "payment_success" %}';
+            } else {
+                throw new Error(result.message || 'M-Pesa payment failed');
+            }
+            
+        } catch (error) {
+            console.error('M-Pesa payment error:', error);
+            alert('M-Pesa payment failed: ' + error.message);
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+    
+    async function handleCreditCardPayment() {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        try {
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+            submitBtn.disabled = true;
+            
+            // Get form data
+            const formData = new FormData(document.getElementById('generalDonationForm'));
+            const amount = parseFloat(formData.get('amount'));
+            const foodbankId = formData.get('foodbank');
+            const message = formData.get('message');
+            
+            if (!amount || amount <= 0) {
+                throw new Error('Please enter a valid amount');
+            }
+            
+            if (!foodbankId) {
+                throw new Error('Please select a food bank');
+            }
+            
+            // Create payment intent
+            const response = await fetch('/create-payment-intent/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    donation_id: null
+                })
+            });
+            
+            const { client_secret, payment_intent_id } = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(client_secret || 'Failed to create payment intent');
+            }
+            
+            // Confirm payment with Stripe
+            const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+                payment_method: {
+                    card: cardElement,
+                }
+            });
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            // Confirm payment on our server
+            const confirmResponse = await fetch('/confirm-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    payment_intent_id: payment_intent_id,
+                    foodbank_id: foodbankId,
+                    donation_type: 'money',
+                    message: message
+                })
+            });
+            
+            const result = await confirmResponse.json();
+            
+            if (!confirmResponse.ok) {
+                throw new Error(result.error || 'Payment confirmation failed');
+            }
+            
+            // Redirect to success page
+            window.location.href = `/payment-success/?donation_id=${result.donation_id}`;
+            
+        } catch (error) {
+            alert('Payment failed: ' + error.message);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+});
+
+</script>
+
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}

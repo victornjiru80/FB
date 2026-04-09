@@ -1,0 +1,446 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Account Deletion Requests - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-user-times me-2"></i>Account Deletion Requests</h2>
+            <p class="text-muted">Manage user account deletion requests and approvals</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ total_requests }}</h3>
+                            <small>Total Requests</small>
+                        </div>
+                        <i class="fas fa-list fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ pending_requests }}</h3>
+                            <small>Pending Review</small>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ approved_requests }}</h3>
+                            <small>Approved</small>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ rejected_requests }}</h3>
+                            <small>Rejected</small>
+                        </div>
+                        <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">User Type</label>
+                        <select name="user_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for type in user_types %}
+                            <option value="{{ type }}" {% if current_filters.user_type == type %}selected{% endif %}>
+                                {{ type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Date From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Date To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" placeholder="Search by email, name..." value="{{ current_filters.search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sort By</label>
+                        <select name="sort" class="form-select">
+                            <option value="-requested_at" {% if current_filters.sort == '-requested_at' %}selected{% endif %}>Newest First</option>
+                            <option value="requested_at" {% if current_filters.sort == 'requested_at' %}selected{% endif %}>Oldest First</option>
+                            <option value="user__email" {% if current_filters.sort == 'user__email' %}selected{% endif %}>Email A-Z</option>
+                            <option value="-user__email" {% if current_filters.sort == '-user__email' %}selected{% endif %}>Email Z-A</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-2"></i>Apply Filters
+                        </button>
+                        <a href="{% url 'custom_admin:account_deletion_requests' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    {% if page_obj %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <input type="checkbox" id="selectAll" class="form-check-input me-2">
+                    <label for="selectAll" class="form-check-label">Select All</label>
+                    <span id="selectedCount" class="ms-3 text-muted">(0 selected)</span>
+                </div>
+                <div id="bulkActions" style="display: none;">
+                    <button class="btn btn-success btn-sm" onclick="bulkApprove()">
+                        <i class="fas fa-check me-1"></i>Approve Selected
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="bulkReject()">
+                        <i class="fas fa-times me-1"></i>Reject Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Requests Table -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Deletion Requests ({{ page_obj.paginator.count }} total)</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="40">
+                                <input type="checkbox" id="selectAllTable" class="form-check-input">
+                            </th>
+                            <th>S/No</th>
+                            <th>User</th>
+                            <th>User Type</th>
+                            <th>Status</th>
+                            <th>Requested At</th>
+                            <th>Processed By</th>
+                            <th>Processed At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in page_obj %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input request-checkbox" value="{{ request.id }}">
+                            </td>
+                            <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                            <td>
+                                <div>
+                                    <strong>{{ request.user.email }}</strong>
+                                    {% if request.user.first_name %}
+                                    <br><small class="text-muted">{{ request.user.get_full_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ request.user.user_type }}</span>
+                            </td>
+                            <td>
+                                {% if request.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock me-1"></i>Pending
+                                </span>
+                                {% elif request.status == 'approved' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Approved
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Rejected
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ request.requested_at|date:"M d, Y H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if request.processed_by %}
+                                <small>{{ request.processed_by.email }}</small>
+                                {% else %}
+                                <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if request.processed_at %}
+                                <small>{{ request.processed_at|date:"M d, Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'custom_admin:account_deletion_detail' request.id %}" 
+                                       class="btn btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if request.status == 'pending' %}
+                                    <button onclick="approveRequest({{ request.id }})" 
+                                            class="btn btn-outline-success" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="rejectRequest({{ request.id }})" 
+                                            class="btn btn-outline-danger" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Deletion Requests Found</h5>
+                <p class="text-muted">There are no account deletion requests matching your filters.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Approve Deletion Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="approveForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Are you sure you want to approve this account deletion request?</p>
+                    <p class="text-danger"><strong>Warning:</strong> The user account will be deactivated immediately.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Admin Notes (Optional)</label>
+                        <textarea name="admin_notes" class="form-control" rows="3" placeholder="Add any notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Reject Deletion Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Please provide a reason for rejecting this deletion request:</p>
+                    <div class="mb-3">
+                        <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                        <textarea name="admin_notes" class="form-control" rows="3" required placeholder="Explain why the request is being rejected..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Checkbox selection
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.request-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateSelectedCount();
+});
+
+document.getElementById('selectAllTable').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.request-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateSelectedCount();
+});
+
+document.querySelectorAll('.request-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateSelectedCount);
+});
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.request-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = `(${selected} selected)`;
+    document.getElementById('bulkActions').style.display = selected > 0 ? 'block' : 'none';
+}
+
+// Single request actions
+function approveRequest(requestId) {
+    const form = document.getElementById('approveForm');
+    form.action = `/admin/account-deletions/${requestId}/approve/`;
+    new bootstrap.Modal(document.getElementById('approveModal')).show();
+}
+
+function rejectRequest(requestId) {
+    const form = document.getElementById('rejectForm');
+    form.action = `/admin/account-deletions/${requestId}/reject/`;
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+
+// Bulk actions
+function bulkApprove() {
+    if (!confirm('Are you sure you want to approve all selected deletion requests?')) return;
+    
+    const selectedIds = Array.from(document.querySelectorAll('.request-checkbox:checked')).map(cb => cb.value);
+    
+    fetch('/admin/account-deletions/bulk-process/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'action': 'approve',
+            'request_ids[]': selectedIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        }
+    });
+}
+
+function bulkReject() {
+    const reason = prompt('Please provide a reason for rejecting these requests:');
+    if (!reason) return;
+    
+    const selectedIds = Array.from(document.querySelectorAll('.request-checkbox:checked')).map(cb => cb.value);
+    
+    fetch('/admin/account-deletions/bulk-process/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'action': 'reject',
+            'request_ids[]': selectedIds,
+            'bulk_notes': reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

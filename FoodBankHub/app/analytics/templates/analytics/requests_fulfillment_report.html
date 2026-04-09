@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Requests Fulfillment Report - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root { --primary: #10b981; }
+    body { background: #f9fafb; }
+    .report-wrapper { padding: 2rem 0; min-height: 100vh; }
+    .report-header { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .report-title { font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-box { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
+    .stat-label { color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; }
+    .chart-card { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .chart-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
+    .filters-card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .export-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .btn-export { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-pdf { background: #ef4444; color: white; }
+    .btn-pdf:hover { background: #dc2626; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-wrapper">
+    <div class="container">
+        <div class="report-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="report-title">
+                        <i class="fas fa-clipboard-check me-3"></i>Requests Fulfillment Report
+                    </h1>
+                    <p class="text-muted mb-0">Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</p>
+                </div>
+                <a href="{% url 'foodbank_reports_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+            </div>
+        </div>
+
+        <div class="export-buttons">
+            <a href="#" onclick="window.print(); return false;" class="btn-export btn-pdf">
+                <i class="fas fa-print"></i> Print Report
+            </a>
+        </div>
+
+        <div class="filters-card">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="fulfilled" {% if selected_status == 'fulfilled' %}selected{% endif %}>Fulfilled</option>
+                        <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> Apply
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-value">{{ total_requests }}</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ fulfilled_requests }}</div>
+                <div class="stat-label">Fulfilled</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ pending_requests }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ fulfillment_rate|floatformat:1 }}%</div>
+                <div class="stat-label">Fulfillment Rate</div>
+            </div>
+            {% if avg_response_time %}
+            <div class="stat-box">
+                <div class="stat-value">{{ avg_response_time|floatformat:1 }}h</div>
+                <div class="stat-label">Avg Response Time</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title">Monthly Request Trends</h3>
+            <canvas id="monthlyRequestsChart" height="80"></canvas>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">Request Status Distribution</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">Top 10 Recipients</h3>
+                    <canvas id="recipientsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'foodbank_requests_view' %}" class="btn btn-lg btn-primary">
+                <i class="fas fa-tasks me-2"></i>Manage Requests
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    const monthlyReq = {{ monthly_requests|safe }};
+    new Chart(document.getElementById('monthlyRequestsChart'), {
+        type: 'line',
+        data: {
+            labels: monthlyReq.map(d => new Date(d.month).toLocaleDateString('en-US', {month: 'short', year: 'numeric'})),
+            datasets: [{
+                label: 'Total Requests',
+                data: monthlyReq.map(d => d.total),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Fulfilled',
+                data: monthlyReq.map(d => d.fulfilled),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Fulfilled', 'Pending', 'Cancelled'],
+            datasets: [{
+                data: [{{ fulfilled_requests }}, {{ pending_requests }}, {{ cancelled_requests }}],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const topRecip = {{ top_recipients|safe }};
+    new Chart(document.getElementById('recipientsChart'), {
+        type: 'bar',
+        data: {
+            labels: topRecip.map(d => (d.recipient__full_name || 'Unknown').substring(0, 15)),
+            datasets: [{
+                label: 'Requests',
+                data: topRecip.map(d => d.request_count),
+                backgroundColor: '#6366f1'
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+</script>
+{% endblock %}

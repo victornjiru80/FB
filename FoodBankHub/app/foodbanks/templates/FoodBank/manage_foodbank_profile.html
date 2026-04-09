@@ -1,0 +1,1091 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Public Profile - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="profile-management-container">
+    <!-- Header -->
+    <div class="management-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Manage Your Public Profile</h1>
+                <p>Customize how donors see your food bank</p>
+            </div>
+            <div class="header-right">
+                <div class="completion-indicator">
+                    <div class="completion-circle">
+                        <svg class="progress-ring" width="60" height="60">
+                            <circle class="progress-ring-circle" 
+                                    stroke="var(--primary)" 
+                                    stroke-width="4" 
+                                    fill="transparent" 
+                                    r="26" 
+                                    cx="30" 
+                                    cy="30"
+                                    stroke-dasharray="163.36"
+                                    stroke-dashoffset="{{ completion_percentage|add:'-100'|floatformat:0|add:'%' }}"
+                                    transform="rotate(-90 30 30)"/>
+                        </svg>
+                        <div class="percentage">{{ completion_percentage }}%</div>
+                    </div>
+                    <div class="completion-text">
+                        {% if is_complete %}
+                            <strong>Profile Complete!</strong>
+                        {% else %}
+                            <strong>{{ completion_percentage }}% Complete</strong>
+                        {% endif %}
+                        <small>Fill all sections for better visibility</small>
+                    </div>
+                </div>
+                <a href="{% url 'foodbank_public_profile' profile.id %}" class="btn btn-outline" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Preview Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Management Sections -->
+    <div class="management-content">
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Header Photo Section -->
+                <div class="management-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-image"></i>
+                            Header Photo
+                            {% if not profile.header_photo %}
+                                <span class="required-badge">Required</span>
+                            {% endif %}
+                        </h2>
+                        <p>Upload a compelling header image that represents your food bank</p>
+                    </div>
+                    <div class="section-content">
+                        <form method="post" enctype="multipart/form-data" class="profile-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_profile">
+                            
+                            {% if profile.header_photo %}
+                                <div class="current-header">
+                                    <img src="{{ profile.header_photo.url }}" alt="Current header">
+                                    <div class="header-overlay">
+                                        <span>Current Header Photo</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="upload-area">
+                                <input type="file" name="header_photo" id="header_photo" accept="image/*" class="file-input">
+                                <label for="header_photo" class="upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose Header Photo</span>
+                                    <small>Recommended ratio: 3:1 (e.g. 1200x400 or larger), JPG or PNG</small>
+                                </label>
+                                <p class="upload-guidance">Tip: wide landscape photos work best for header banners. Images are fit to frame without cropping.</p>
+                                <p class="upload-feedback" id="header_photo_feedback" aria-live="polite"></p>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Header Photo
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- About Text Section -->
+                <div class="management-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-info-circle"></i>
+                            About Your Food Bank
+                            {% if not profile.about_text %}
+                                <span class="required-badge">Required</span>
+                            {% endif %}
+                        </h2>
+                        <p>Tell donors about your food bank, your work, and your impact</p>
+                    </div>
+                    <div class="section-content">
+                        <form method="post" class="profile-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_profile">
+                            
+                            <div class="form-group">
+                                <label for="about_text">About Text</label>
+                                <textarea 
+                                    name="about_text" 
+                                    id="about_text" 
+                                    rows="6" 
+                                    placeholder="Describe your food bank, the communities you serve, and the work you do..."
+                                    class="form-control">{{ profile.about_text|default:'' }}</textarea>
+                                <small class="form-text">This will be displayed prominently on your public profile</small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save About Text
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Mission Statement Section -->
+                <div class="management-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-bullseye"></i>
+                            Mission Statement
+                            {% if not profile.mission_statement %}
+                                <span class="required-badge">Required</span>
+                            {% endif %}
+                        </h2>
+                        <p>Share your organization's mission and values</p>
+                    </div>
+                    <div class="section-content">
+                        <form method="post" class="profile-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_profile">
+                            
+                            <div class="form-group">
+                                <label for="mission_statement">Mission Statement</label>
+                                <textarea 
+                                    name="mission_statement" 
+                                    id="mission_statement" 
+                                    rows="4" 
+                                    placeholder="Our mission is to..."
+                                    class="form-control">{{ profile.mission_statement|default:'' }}</textarea>
+                                <small class="form-text">A clear, concise statement of your purpose and goals</small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Mission Statement
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="management-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-address-card"></i>
+                            Contact Information
+                        </h2>
+                        <p>Public contact details for donors</p>
+                    </div>
+                    <div class="section-content">
+                        <form method="post" class="profile-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_profile">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="contact_email">Public Email</label>
+                                    <input 
+                                        type="email" 
+                                        name="contact_email" 
+                                        id="contact_email" 
+                                        value="{{ profile.contact_email|default:'' }}"
+                                        placeholder="info@yourfoodbank.org"
+                                        class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_phone">Public Phone</label>
+                                    <input 
+                                        type="tel" 
+                                        name="contact_phone" 
+                                        id="contact_phone" 
+                                        value="{{ profile.contact_phone|default:'' }}"
+                                        placeholder="+1 (555) 123-4567"
+                                        class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="website_url">Website URL</label>
+                                    <input 
+                                        type="url" 
+                                        name="website_url" 
+                                        id="website_url" 
+                                        value="{{ profile.website_url|default:'' }}"
+                                        placeholder="https://yourfoodbank.org"
+                                        class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="established_year">Established Year</label>
+                                    <input 
+                                        type="number" 
+                                        name="established_year" 
+                                        id="established_year" 
+                                        value="{{ profile.established_year|default:'' }}"
+                                        placeholder="2010"
+                                        min="1900" max="2024"
+                                        class="form-control">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Contact Information
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Gallery Section -->
+                <div class="management-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-images"></i>
+                            Photo Gallery
+                        </h2>
+                        <p>Upload photos showing your work and impact</p>
+                    </div>
+                    <div class="section-content">
+                        <!-- Upload New Photo -->
+                        <form method="post" enctype="multipart/form-data" class="gallery-upload-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add_gallery_photo">
+                            
+                            <div class="upload-section">
+                                <div class="form-group">
+                                    <label for="gallery_photo">Upload Photo</label>
+                                    <input type="file" name="gallery_photo" id="gallery_photo" accept="image/*" class="form-control">
+                                    <small class="form-text">Recommended ratio: 4:3 or 1:1 (minimum 1000px wide). Images are shown without cropping.</small>
+                                    <p class="upload-feedback" id="gallery_photo_feedback" aria-live="polite"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="photo_caption">Caption (Optional)</label>
+                                    <input 
+                                        type="text" 
+                                        name="photo_caption" 
+                                        id="photo_caption" 
+                                        placeholder="Describe this photo..."
+                                        class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="is_featured">
+                                        <span class="checkmark"></span>
+                                        Feature this photo prominently
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add Photo
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Existing Photos -->
+                        {% if gallery_photos %}
+                            <div class="gallery-grid">
+                                {% for photo in gallery_photos %}
+                                    <div class="gallery-item">
+                                        <div class="photo-container">
+                                            <img src="{{ photo.photo.url }}" alt="{{ photo.caption|default:'Gallery photo' }}">
+                                            {% if photo.is_featured %}
+                                                <div class="featured-badge">
+                                                    <i class="fas fa-star"></i> Featured
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="photo-info">
+                                            {% if photo.caption %}
+                                                <p class="photo-caption">{{ photo.caption }}</p>
+                                            {% endif %}
+                                            <div class="photo-actions">
+                                                <form method="post" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this photo?')">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="delete_photo">
+                                                    <input type="hidden" name="photo_id" value="{{ photo.id }}">
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-gallery">
+                                <div class="empty-icon">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <p>No photos uploaded yet</p>
+                                <small>Add photos to showcase your food bank's work and impact</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Profile Checklist -->
+                <div class="sidebar-widget">
+                    <div class="widget-header">
+                        <h3>
+                            <i class="fas fa-check-circle"></i>
+                            Profile Checklist
+                        </h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="checklist">
+                            <div class="checklist-item {% if profile.header_photo %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.header_photo %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>Header Photo</span>
+                                {% if not profile.header_photo %}<span class="required">Required</span>{% endif %}
+                            </div>
+                            <div class="checklist-item {% if profile.about_text %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.about_text %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>About Text</span>
+                                {% if not profile.about_text %}<span class="required">Required</span>{% endif %}
+                            </div>
+                            <div class="checklist-item {% if profile.mission_statement %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.mission_statement %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>Mission Statement</span>
+                                {% if not profile.mission_statement %}<span class="required">Required</span>{% endif %}
+                            </div>
+                            <div class="checklist-item {% if profile.contact_email %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.contact_email %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>Contact Email</span>
+                            </div>
+                            <div class="checklist-item {% if profile.contact_phone %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.contact_phone %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>Contact Phone</span>
+                            </div>
+                            <div class="checklist-item {% if profile.website_url %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.website_url %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>Website URL</span>
+                            </div>
+                            <div class="checklist-item {% if profile.established_year %}completed{% endif %}">
+                                <i class="fas fa-{% if profile.established_year %}check-circle{% else %}circle{% endif %}"></i>
+                                <span>Established Year</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="sidebar-widget">
+                    <div class="widget-header">
+                        <h3>
+                            <i class="fas fa-lightbulb"></i>
+                            Profile Tips
+                        </h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="tips-list">
+                            <div class="tip-item">
+                                <i class="fas fa-camera"></i>
+                                <div>
+                                    <strong>Use high-quality photos</strong>
+                                    <p>Clear, bright photos showing your team in action work best</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <i class="fas fa-heart"></i>
+                                <div>
+                                    <strong>Tell your story</strong>
+                                    <p>Share personal stories and specific examples of your impact</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <i class="fas fa-users"></i>
+                                <div>
+                                    <strong>Show community impact</strong>
+                                    <p>Include photos of families and communities you've helped</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <i class="fas fa-phone"></i>
+                                <div>
+                                    <strong>Keep contact info current</strong>
+                                    <p>Make it easy for donors to reach you with questions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #1e40af;
+    --primary-light: #eff6ff;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --white: #ffffff;
+    --border-radius: 12px;
+    --border-radius-sm: 8px;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.profile-management-container {
+    min-height: 100vh;
+    background: var(--gray-50);
+}
+
+/* Header */
+.management-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 2rem 0;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-left h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+.header-left p {
+    margin: 0;
+    color: var(--gray-600);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Completion Indicator */
+.completion-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.completion-circle {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.completion-text strong {
+    display: block;
+    color: var(--gray-800);
+    font-size: 0.875rem;
+}
+
+.completion-text small {
+    color: var(--gray-600);
+    font-size: 0.75rem;
+}
+
+/* Management Content */
+.management-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 3rem;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Management Sections */
+.management-section {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 1.5rem 2rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.section-header h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-header p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.required-badge {
+    background: var(--danger);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+}
+
+.section-content {
+    padding: 2rem;
+}
+
+/* Forms */
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-control {
+    padding: 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-text {
+    color: var(--gray-600);
+    font-size: 0.8rem;
+}
+
+label {
+    font-weight: 500;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+}
+
+/* Upload Areas */
+.current-header {
+    position: relative;
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.current-header img {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    background: #111827;
+}
+
+.header-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+    padding: 1rem;
+    font-weight: 500;
+}
+
+.upload-area {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: var(--gray-600);
+}
+
+.upload-label:hover {
+    color: var(--primary);
+}
+
+.upload-label i {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.upload-label span {
+    font-weight: 500;
+}
+
+.upload-label small {
+    color: var(--gray-500);
+}
+
+.upload-guidance {
+    margin: 0.5rem 0 0;
+    color: var(--gray-600);
+    font-size: 0.8rem;
+}
+
+.upload-feedback {
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
+    min-height: 1rem;
+}
+
+.upload-feedback.ok {
+    color: var(--success);
+}
+
+.upload-feedback.warn {
+    color: var(--warning);
+}
+
+.upload-feedback.error {
+    color: var(--danger);
+}
+
+/* Checkbox */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    background: var(--white);
+    border: 2px solid var(--gray-300);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Gallery */
+.gallery-upload-form {
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+.upload-section {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.gallery-item {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.photo-container {
+    position: relative;
+    background: #111827;
+}
+
+.photo-container img {
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    background: #111827;
+}
+
+.featured-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--warning);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.photo-info {
+    padding: 1rem;
+}
+
+.photo-caption {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.delete-form {
+    margin: 0;
+}
+
+.empty-gallery {
+    text-align: center;
+    padding: 3rem;
+    color: var(--gray-500);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--gray-300);
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sidebar-widget {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.widget-header {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.widget-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.widget-content {
+    padding: 1.5rem;
+}
+
+/* Checklist */
+.checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.checklist-item.completed {
+    color: var(--success);
+}
+
+.checklist-item:not(.completed) {
+    color: var(--gray-600);
+}
+
+.checklist-item .required {
+    background: var(--danger);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    margin-left: auto;
+}
+
+/* Tips */
+.tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tip-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.tip-item i {
+    color: var(--primary);
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.tip-item strong {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.tip-item p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    line-height: 1.4;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    text-decoration: none;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+    }
+    
+    .completion-indicator {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .management-content {
+        padding: 2rem 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .upload-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    bindImageFeedback('header_photo', 'header_photo_feedback', {
+        label: 'Header photo',
+        idealRatio: 3 / 1,
+        ratioTolerance: 0.22,
+        minWidth: 1200,
+        minHeight: 400
+    });
+
+    bindImageFeedback('gallery_photo', 'gallery_photo_feedback', {
+        label: 'Gallery photo',
+        idealRatio: 4 / 3,
+        ratioTolerance: 0.35,
+        minWidth: 1000,
+        minHeight: 750
+    });
+});
+
+function bindImageFeedback(inputId, feedbackId, config) {
+    const input = document.getElementById(inputId);
+    const feedback = document.getElementById(feedbackId);
+
+    if (!input || !feedback) {
+        return;
+    }
+
+    input.addEventListener('change', function () {
+        feedback.textContent = '';
+        feedback.className = 'upload-feedback';
+
+        const file = input.files && input.files[0];
+        if (!file) {
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            feedback.textContent = config.label + ': selected file is not an image.';
+            feedback.classList.add('error');
+            input.value = '';
+            return;
+        }
+
+        const image = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        image.onload = function () {
+            const width = image.naturalWidth;
+            const height = image.naturalHeight;
+            const ratio = width / height;
+            const ratioDelta = Math.abs(ratio - config.idealRatio);
+            const isSmall = width < config.minWidth || height < config.minHeight;
+
+            if (isSmall) {
+                feedback.textContent = config.label + ': ' + width + 'x' + height + ' is low resolution. Use at least ' + config.minWidth + 'x' + config.minHeight + ' for best quality.';
+                feedback.classList.add('warn');
+            } else if (ratioDelta > config.ratioTolerance) {
+                feedback.textContent = config.label + ': ' + width + 'x' + height + ' uploaded. Different ratio detected; photo will still be shown fully (no crop), but may have empty margins.';
+                feedback.classList.add('warn');
+            } else {
+                feedback.textContent = config.label + ': ' + width + 'x' + height + ' looks good.';
+                feedback.classList.add('ok');
+            }
+
+            URL.revokeObjectURL(objectUrl);
+        };
+
+        image.onerror = function () {
+            feedback.textContent = config.label + ': unable to read image. Please choose another file.';
+            feedback.classList.add('error');
+            URL.revokeObjectURL(objectUrl);
+        };
+
+        image.src = objectUrl;
+    });
+}
+</script>
+{% endblock %}

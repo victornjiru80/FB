@@ -1,0 +1,855 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subsidized Donations Management{% endblock %}
+
+{% block content %}
+<style>
+    .compact-table {
+        font-size: 0.8rem;
+        background: #fff;
+    }
+
+    .compact-table.table-hover tbody tr:hover {
+        transform: none !important;
+    }
+    .table.compact-table {
+        border-collapse: collapse;
+        border: 1px solid #dee2e6 !important;
+    }
+    .table.compact-table th,
+    .table.compact-table td {
+        padding: 0.25rem 0.35rem;
+        line-height: 1.2;
+        border: 1px solid #dee2e6 !important;
+        vertical-align: middle;
+    }
+    .table.compact-table thead {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #fff;
+    }
+    .table.compact-table thead th {
+        border-bottom: 0 !important;
+        background: transparent !important;
+        color: #fff !important;
+    }
+    .compact-table th {
+        font-size: 0.7rem;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        font-weight: 600;
+    }
+    .table.compact-table thead th {
+        text-transform: none !important;
+        letter-spacing: 0.02em !important;
+    }
+    .compact-table td {
+        font-size: 0.7rem;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .compact-table td strong {
+        font-size: inherit;
+    }
+    .compact-table td small {
+        font-size: 0.65rem;
+    }
+    .compact-table .wrap-cell {
+        white-space: normal;
+        max-width: 130px;
+    }
+    .compact-table td:nth-child(3) .badge,
+    .compact-table td:nth-child(4) {
+        display: inline-block;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    .compact-table td:nth-child(3) {
+        overflow: visible;
+    }
+    .compact-table td:nth-child(3) .badge {
+        white-space: nowrap;
+    }
+    .compact-table td:nth-child(4) {
+        overflow: hidden;
+    }
+    .compact-table .btn-sm {
+        padding: 0.12rem 0.3rem;
+        font-size: 0.65rem;
+    }
+    .compact-table .badge {
+        font-size: 0.6rem;
+    }
+    /* Keep status/category/delivery badges and cell content still (no flash or size change) */
+    .compact-table .badge,
+    .compact-table td {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+    }
+    .compact-table .avatar-circle {
+        width: 26px;
+        height: 26px;
+        font-size: 0.68rem;
+    }
+    .subsidized-table-responsive {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        background: #fff;
+        margin: 0 0 1.5rem;
+        padding: 0.65rem;
+    }
+    .compact-table {
+        table-layout: auto;
+        width: max(100%, 1530px);
+        min-width: 1530px;
+        max-width: none;
+    }
+    .compact-table th {
+        white-space: normal;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        padding: 0.4rem 0.4rem;
+        line-height: 1.15;
+        box-sizing: border-box;
+    }
+    .compact-table td {
+        padding: 0.4rem 0.4rem;
+        box-sizing: border-box;
+    }
+    .compact-table th:nth-child(4) { min-width: 4.5em; }
+    .compact-table th:nth-child(7) { min-width: 5.5em; }
+    .compact-table th:nth-child(9) { min-width: 4.5em; }
+    .compact-table th:nth-child(8),
+    .compact-table th:nth-child(10),
+    .compact-table td:nth-child(8),
+    .compact-table td:nth-child(10) {
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .notes-cell {
+        min-width: 0;
+        width: 5%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    .notes-cell .view-notes-btn {
+        max-width: 100%;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .subsidized-note-box {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+    }
+    .compact-table .actions-cell {
+        min-width: 112px;
+        width: 112px;
+        white-space: nowrap;
+        padding: 0.3rem 0.5rem;
+        vertical-align: middle;
+    }
+    .compact-table .actions-cell .btn {
+        white-space: nowrap;
+    }
+    .compact-table .actions-cell .actions-accepted-label {
+        white-space: normal;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+    }
+    .compact-table .date-cell {
+        font-size: 0.62rem;
+        white-space: nowrap;
+        color: #6b7280;
+        max-width: 3.5em;
+    }
+    .compact-table .actions-cell form,
+    .compact-table .actions-cell .d-inline {
+        display: inline;
+    }
+    .compact-table td:nth-child(11) {
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .compact-table td:nth-child(11) .badge {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        line-height: 1.2;
+        text-align: left;
+        box-sizing: border-box;
+    }
+    .note-label {
+        font-size: 0.55rem;
+        text-transform: none;
+        letter-spacing: 0.03em;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 0.1rem;
+        display: block;
+    }
+    .note-text {
+        font-size: 0.65rem;
+        color: #334155;
+        margin-bottom: 0.25rem;
+        line-height: 1.3;
+    }
+    .note-empty {
+        color: #94a3b8;
+        font-style: italic;
+    }
+</style>
+<div class="container-fluid py-5 px-2 px-md-3">
+    <div class="row">
+        <div class="col-lg-12 mx-auto">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-tags me-2 text-primary"></i>Subsidized Donations Management</h2>
+                    <p class="text-muted">Review and manage subsidized goods donations from donors</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>About Subsidized Donations:</strong> These are discounted goods offered by donors at reduced prices. 
+                When you accept a donation, it becomes available for all recipients to claim at the subsidized rate.
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="text-secondary mb-1">{{ total_count }}</h4>
+                            <small class="text-muted">Total donations</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="text-warning mb-1">{{ pending_count }}</h4>
+                            <small class="text-muted">Pending review</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="text-success mb-1">{{ accepted_count }}</h4>
+                            <small class="text-muted">Accepted</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="text-danger mb-1">{{ declined_count }}</h4>
+                            <small class="text-muted">Rejected by foodbank</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Reports -->
+            <div class="mb-3">
+                <div class="dropdown">
+                    <button class="btn btn-success fw-semibold shadow-sm dropdown-toggle" type="button" id="foodbankSubsidizedExportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-2"></i>Download Reports
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="foodbankSubsidizedExportDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'foodbank_subsidized_donations_export' %}?format=pdf{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i>Download PDF
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'foodbank_subsidized_donations_export' %}?format=csv{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-file-csv me-2 text-success"></i>Download CSV
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'foodbank_subsidized_donations_export' %}?format=excel{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-file-excel me-2 text-success"></i>Download Excel
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-filter me-1"></i>Status</label>
+                            <select name="status" class="form-select">
+                                <option value="all" {% if status == 'all' %}selected{% endif %}>All statuses</option>
+                                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending review</option>
+                                <option value="accepted" {% if status == 'accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="declined" {% if status == 'declined' %}selected{% endif %}>Rejected by foodbank</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-tags me-1"></i>Type</label>
+                            <select name="type" class="form-select">
+                                <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All types</option>
+                                <option value="food" {% if type_filter == 'food' %}selected{% endif %}>Food</option>
+                                <option value="non_food" {% if type_filter == 'non_food' %}selected{% endif %}>Non-food</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-truck me-1"></i>Delivery method</label>
+                            <select name="delivery" class="form-select">
+                                <option value="all" {% if delivery_filter == 'all' %}selected{% endif %}>All Methods</option>
+                                <option value="pickup" {% if delivery_filter == 'pickup' %}selected{% endif %}>Pickup</option>
+                                <option value="delivery" {% if delivery_filter == 'delivery' %}selected{% endif %}>Delivery</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-user-check me-1"></i>Recipient</label>
+                            <select name="recipient" class="form-select">
+                                <option value="all" {% if recipient_filter == 'all' %}selected{% endif %}>All</option>
+                                <option value="claimed" {% if recipient_filter == 'claimed' %}selected{% endif %}>Claimed</option>
+                                <option value="unclaimed" {% if recipient_filter == 'unclaimed' %}selected{% endif %}>Unclaimed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-weight-hanging me-1"></i>Quantity range</label>
+                            <select name="quantity" class="form-select">
+                                <option value="all" {% if quantity_filter == 'all' %}selected{% endif %}>All</option>
+                                <option value="small" {% if quantity_filter == 'small' %}selected{% endif %}>0-100</option>
+                                <option value="medium" {% if quantity_filter == 'medium' %}selected{% endif %}>101-500</option>
+                                <option value="large" {% if quantity_filter == 'large' %}selected{% endif %}>&gt;500</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-coins me-1"></i>Amount range (KES)</label>
+                            <select name="amount" class="form-select">
+                                <option value="all" {% if amount_filter == 'all' %}selected{% endif %}>All</option>
+                                <option value="small" {% if amount_filter == 'small' %}selected{% endif %}>0-100</option>
+                                <option value="medium" {% if amount_filter == 'medium' %}selected{% endif %}>101-500</option>
+                                <option value="large" {% if amount_filter == 'large' %}selected{% endif %}>&gt;500</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Date from</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Date to</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="fas fa-search me-1"></i>Search</label>
+                            <input type="text" name="search" class="form-control" placeholder="Search donor, product..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-1"></i>Apply
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'foodbank_subsidized_donations' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Donations Table -->
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>All Subsidized Donations
+                    </h5>
+                    <span class="badge bg-secondary">{{ donations|length }} result{{ donations|length|pluralize }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if donations %}
+                        <div class="table-responsive subsidized-table-responsive">
+                            <table class="table table-hover mb-0 compact-table">
+                                <colgroup>
+                                    <col style="width: 40px">
+                                    <col style="width: 58px">
+                                    <col style="width: 150px">
+                                    <col style="width: 88px">
+                                    <col style="width: 86px">
+                                    <col style="width: 165px">
+                                    <col style="width: 108px">
+                                    <col style="width: 100px">
+                                    <col style="width: 82px">
+                                    <col style="width: 100px">
+                                    <col style="width: 190px">
+                                    <col style="width: 90px">
+                                    <col style="width: 160px">
+                                    <col style="width: 118px">
+                                    <col style="width: 84px">
+                                    <col style="width: 112px">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>S/No</th>
+                                        <th>Date</th>
+                                        <th>Donor</th>
+                                        <th>Category</th>
+                                        <th>Type</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Market price</th>
+                                        <th>Subsidy</th>
+                                        <th>New price</th>
+                                        <th>Status</th>
+                                        <th>Delivery</th>
+                                        <th>Location</th>
+                                        <th>Recipient</th>
+                                        <th class="notes-cell">Notes</th>
+                                        <th class="actions-cell">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for donation in donations %}
+                                    <tr>
+                                        <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                        <td class="date-cell" title="{{ donation.donated_at|date:'M j, Y H:i' }}">{{ donation.donated_at|date:"M j" }}</td>
+                                        <td>
+                                            <strong>
+                                                {% if donation.donor.donor_profile.full_name %}
+                                                    {{ donation.donor.donor_profile.full_name|truncatechars:30 }}
+                                                {% elif donation.donor.donor_profile.is_organization and donation.donor.donor_profile.organization_name %}
+                                                    {{ donation.donor.donor_profile.organization_name|truncatechars:30 }}
+                                                {% else %}
+                                                    {{ donation.donor.email|truncatechars:30 }}
+                                                {% endif %}
+                                            </strong>
+                                        </td>
+                                        <td><span class="badge bg-success text-white">Subsidized</span></td>
+                                        <td>{{ donation.get_donation_category_display|default:"Food" }}</td>
+                                        <td>
+                                            <strong>{{ donation.subsidized_product_type|default:"Subsidized Goods"|truncatechars:30 }}</strong>
+                                        </td>
+                                        <td>
+                                            {% with qty=donation.subsidized_quantity|default:donation.quantity unit=donation.subsidized_quantity_unit|default:donation.quantity_unit %}
+                                                {% if qty %}
+                                                    <strong>{{ qty }}</strong> {{ unit|default:"units" }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            {% if donation.subsidized_initial_amount %}
+                                                <strong>KES {{ donation.subsidized_initial_amount|floatformat:0 }}</strong>
+                                            {% elif donation.subsidized_market_price %}
+                                                <strong>KES {{ donation.subsidized_market_price|floatformat:0 }}</strong>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if donation.subsidized_subsidy_amount %}
+                                                <span class="text-danger">KES {{ donation.subsidized_subsidy_amount|floatformat:0 }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="text-success fw-bold">KES {{ donation.subsidized_price|floatformat:0 }}</span>
+                                        </td>
+                                        <td>
+                                            {% if donation.status == 'pending' %}
+                                                <span class="badge" style="background: #fef3c7; color: #92400e;">
+                                                    <i class="fas fa-clock me-1"></i>Awaiting review
+                                                </span>
+                                            {% elif donation.status == 'accepted' %}
+                                                {% if donation.accepted_by_recipient %}
+                                                    {% if donation.delivery_status == 'delivered' %}
+                                                        <span class="badge" style="background: #d1fae5; color: #065f46;">
+                                                            <i class="fas fa-box-open me-1"></i>Received by recipient
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge" style="background: #dbeafe; color: #1d4ed8;">
+                                                            <i class="fas fa-user-check me-1"></i>Accepted by recipient
+                                                        </span>
+                                                    {% endif %}
+                                                {% elif donation.declined_by_recipient %}
+                                                    <span class="badge" style="background: #fef3c7; color: #92400e; white-space: normal; text-align: left; max-width: 11em;">
+                                                        <i class="fas fa-times me-1"></i>Rejected - broadcasted to other recipients
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge" style="background: #dcfce7; color: #166534;">
+                                                        <i class="fas fa-paper-plane me-1"></i>Available to recipients
+                                                    </span>
+                                                {% endif %}
+                                            {% elif donation.status == 'fulfilled' %}
+                                                <span class="badge" style="background: #d1fae5; color: #065f46;">
+                                                    <i class="fas fa-hand-holding-heart me-1"></i>Fulfilled & allocated
+                                                </span>
+                                            {% elif donation.status == 'declined' %}
+                                                <span class="badge" style="background: #fee2e2; color: #991b1b;">
+                                                    <i class="fas fa-times me-1"></i>Rejected by foodbank
+                                                </span>
+                                            {% else %}
+                                                <span class="badge" style="background: #e5e7eb; color: #374151;">
+                                                    <i class="fas fa-info-circle me-1"></i>{{ donation.get_status_display|default:"Status pending" }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if donation.delivery_method %}
+                                                <span class="badge" style="background: #f3f4f6; color: #1f2937;">
+                                                    {{ donation.get_delivery_method_display|default:donation.delivery_method|capfirst }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="wrap-cell">
+                                            {{ donation.foodbank_request.location|default:donation.foodbank.address|default:"Not provided" }}
+                                        </td>
+                                        <td>
+                                            {% if donation.accepted_by_recipient %}
+                                                {{ donation.recipient_display_name|default:donation.accepted_by_recipient.full_name|default:donation.accepted_by_recipient.user.email|truncatechars:30 }}
+                                            {% elif donation.status == 'accepted' %}
+                                                <span class="badge bg-light text-secondary fw-semibold" style="font-size: 0.7rem;">Not claimed</span>
+                                            {% elif donation.status == 'declined' %}
+                                                <span class="text-muted">None</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="notes-cell">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary btn-sm view-notes-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#subsidizedNotesModal"
+                                                    data-donation-id="{{ donation.id }}"
+                                                    data-donor-note="{{ donation.donor_note_display|escapejs }}"
+                                                    data-recipient-note="{{ donation.recipient_note_display|escapejs }}"
+                                                    data-foodbank-decline-note="{{ donation.foodbank_decline_note_display|escapejs }}"
+                                                    data-recipient-rejections="{{ donation.recipient_rejection_notes_display|escapejs }}"
+                                                    data-has-foodbank-decline="{{ donation.has_foodbank_decline_note|yesno:'1,0' }}"
+                                                    data-has-recipient-rejections="{{ donation.has_recipient_rejection_notes|yesno:'1,0' }}">
+                                                View
+                                            </button>
+                                        </td>
+                                        <td class="actions-cell">
+                                            {% if donation.status == 'pending' %}
+                                                <form method="POST" action="{% url 'foodbank_accept_subsidized_donation' donation.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check"></i> Accept
+                                                    </button>
+                                                </form>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-outline-danger btn-sm decline-btn"
+                                                    data-donation-id="{{ donation.id }}"
+                                                    data-product="{{ donation.subsidized_product_type|default:'Subsidized Goods' }}"
+                                                    data-price="{{ donation.subsidized_price|floatformat:0 }}"
+                                                    data-donor="{{ donation.donor.email }}"
+                                                >
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+
+                                            {% else %}
+                                                
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Decline confirmation modal -->
+                        <div class="modal fade" id="declineModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-times-circle me-2"></i>
+                                            Decline Subsidized Donation
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <form method="POST" id="declineForm">
+                                        {% csrf_token %}
+
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to decline this subsidized donation?</p>
+
+                                            <div class="alert alert-info">
+                                                <strong id="modalProduct"></strong><br>
+                                                Price: <span id="modalPrice"></span><br>
+                                                <small>From: <span id="modalDonor"></span></small>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Reason for declining (optional)</label>
+                                                <textarea
+                                                    name="decline_reason"
+                                                    class="form-control"
+                                                    rows="3"
+                                                    placeholder="Enter reason for declining..."
+                                                ></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="fas fa-times me-1"></i>
+                                                Decline Donation
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <div class="card-footer">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?status={{ status }}&type={{ type_filter }}&delivery={{ delivery_filter }}&recipient={{ recipient_filter }}&quantity={{ quantity_filter }}&amount={{ amount_filter }}&date_from={{ date_from }}&date_to={{ date_to }}&search={{ search_query }}&page={{ page_obj.previous_page_number }}">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item"><a class="page-link" href="?status={{ status }}&type={{ type_filter }}&delivery={{ delivery_filter }}&recipient={{ recipient_filter }}&quantity={{ quantity_filter }}&amount={{ amount_filter }}&date_from={{ date_from }}&date_to={{ date_to }}&search={{ search_query }}&page={{ num }}">{{ num }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?status={{ status }}&type={{ type_filter }}&delivery={{ delivery_filter }}&recipient={{ recipient_filter }}&quantity={{ quantity_filter }}&amount={{ amount_filter }}&date_from={{ date_from }}&date_to={{ date_to }}&search={{ search_query }}&page={{ page_obj.next_page_number }}">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            <p class="text-center text-muted small mt-2 mb-0">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} total donations)
+                            </p>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No subsidized donations found</h5>
+                            <p class="text-muted">When donors offer subsidized goods to your foodbank, they'll appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="subsidizedNotesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Donation Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Donation</div>
+                    <div class="fw-semibold" id="subsidizedNotesDonationId">-</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Donor note</div>
+                    <div id="subsidizedNotesDonorText" class="p-2 border rounded bg-light subsidized-note-box">No donor note</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Recipient note</div>
+                    <div id="subsidizedNotesRecipientText" class="p-2 border rounded bg-light subsidized-note-box">No recipient note</div>
+                </div>
+                <div class="mb-3 d-none" id="subsidizedNotesFoodbankDeclineWrap">
+                    <div class="text-muted small mb-1">Foodbank rejection note</div>
+                    <div id="subsidizedNotesFoodbankDeclineText" class="p-2 border rounded bg-light subsidized-note-box">No foodbank rejection note</div>
+                </div>
+                <div class="mb-1 d-none" id="subsidizedNotesRecipientRejectionsWrap">
+                    <div class="text-muted small mb-1">Recipient rejection notes</div>
+                    <div id="subsidizedNotesRecipientRejectionsText" class="p-2 border rounded bg-light subsidized-note-box">No recipient rejection notes</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const declineModalEl = document.getElementById('declineModal');
+    const declineForm = document.getElementById('declineForm');
+    const modalProduct = document.getElementById('modalProduct');
+    const modalPrice = document.getElementById('modalPrice');
+    const modalDonor = document.getElementById('modalDonor');
+    const declineReasonTextarea = declineForm ? declineForm.querySelector('textarea[name="decline_reason"]') : null;
+
+    if (declineModalEl && declineModalEl.parentElement !== document.body) {
+        document.body.appendChild(declineModalEl);
+    }
+    
+    // Initialize modal once with proper configuration
+    const declineModal = (declineModalEl && declineForm)
+        ? (bootstrap.Modal.getOrCreateInstance
+            ? bootstrap.Modal.getOrCreateInstance(declineModalEl, { backdrop: 'static', keyboard: true })
+            : new bootstrap.Modal(declineModalEl, { backdrop: 'static', keyboard: true }))
+        : null;
+
+    if (declineModalEl && declineForm) {
+        declineModalEl.addEventListener('shown.bs.modal', function () {
+            if (declineReasonTextarea) {
+                declineReasonTextarea.focus();
+            }
+        });
+
+        // Handle modal hide event - reset form
+        declineModalEl.addEventListener('hide.bs.modal', function () {
+            if (declineReasonTextarea) {
+                declineReasonTextarea.value = '';
+            }
+        });
+
+        // Attach click handlers to all decline buttons
+        document.querySelectorAll('.decline-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Update modal content BEFORE showing
+                const donationId = this.dataset.donationId;
+                const product = this.dataset.product || 'Item';
+                const price = this.dataset.price || '';
+                const donor = this.dataset.donor || '';
+                
+                modalProduct.textContent = product;
+                modalPrice.textContent = price;
+                modalDonor.textContent = donor;
+                
+                // Set form action URL
+                declineForm.action = `/foodbank/subsidized-donation/${donationId}/decline/`;
+                
+                // Reset textarea
+                if (declineReasonTextarea) {
+                    declineReasonTextarea.value = '';
+                }
+                
+                // Show modal without delay
+                if (declineModal) {
+                    declineModal.show();
+                }
+            });
+        });
+
+        // Handle form submission
+        declineForm.addEventListener('submit', function (e) {
+            const reason = declineReasonTextarea ? declineReasonTextarea.value.trim() : '';
+            
+            // Optional: Add client-side validation
+            if (reason.length > 500) {
+                e.preventDefault();
+                alert('Reason should not exceed 500 characters');
+                return false;
+            }
+            
+            // Form will submit via POST to the action URL
+        });
+    }
+
+    const notesModalEl = document.getElementById('subsidizedNotesModal');
+    const notesDonationIdEl = document.getElementById('subsidizedNotesDonationId');
+    const notesDonorTextEl = document.getElementById('subsidizedNotesDonorText');
+    const notesRecipientTextEl = document.getElementById('subsidizedNotesRecipientText');
+    const notesFoodbankDeclineWrap = document.getElementById('subsidizedNotesFoodbankDeclineWrap');
+    const notesFoodbankDeclineTextEl = document.getElementById('subsidizedNotesFoodbankDeclineText');
+    const notesRecipientRejectionsWrap = document.getElementById('subsidizedNotesRecipientRejectionsWrap');
+    const notesRecipientRejectionsTextEl = document.getElementById('subsidizedNotesRecipientRejectionsText');
+
+    const normalizeNote = (value, fallback) => {
+        const note = (value || '').trim();
+        return note || fallback;
+    };
+
+    if (notesModalEl) {
+        notesModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) {
+                return;
+            }
+
+            const donationId = normalizeNote(button.getAttribute('data-donation-id'), '-');
+            const donorNote = normalizeNote(button.getAttribute('data-donor-note'), 'No donor note');
+            const recipientNote = normalizeNote(button.getAttribute('data-recipient-note'), 'No recipient note');
+            const foodbankDeclineNote = normalizeNote(button.getAttribute('data-foodbank-decline-note'), 'No foodbank rejection note');
+            const recipientRejectionNotes = normalizeNote(button.getAttribute('data-recipient-rejections'), 'No recipient rejection notes');
+            const hasFoodbankDecline = button.getAttribute('data-has-foodbank-decline') === '1';
+            const hasRecipientRejections = button.getAttribute('data-has-recipient-rejections') === '1';
+
+            if (notesDonationIdEl) notesDonationIdEl.textContent = `#${donationId}`;
+            if (notesDonorTextEl) notesDonorTextEl.textContent = donorNote;
+            if (notesRecipientTextEl) notesRecipientTextEl.textContent = recipientNote;
+            if (notesFoodbankDeclineTextEl) notesFoodbankDeclineTextEl.textContent = foodbankDeclineNote;
+            if (notesRecipientRejectionsTextEl) notesRecipientRejectionsTextEl.textContent = recipientRejectionNotes;
+
+            if (notesFoodbankDeclineWrap) notesFoodbankDeclineWrap.classList.toggle('d-none', !hasFoodbankDecline);
+            if (notesRecipientRejectionsWrap) notesRecipientRejectionsWrap.classList.toggle('d-none', !hasRecipientRejections);
+        });
+
+        notesModalEl.addEventListener('hidden.bs.modal', function () {
+            if (notesDonationIdEl) notesDonationIdEl.textContent = '-';
+            if (notesDonorTextEl) notesDonorTextEl.textContent = 'No donor note';
+            if (notesRecipientTextEl) notesRecipientTextEl.textContent = 'No recipient note';
+            if (notesFoodbankDeclineTextEl) notesFoodbankDeclineTextEl.textContent = 'No foodbank rejection note';
+            if (notesRecipientRejectionsTextEl) notesRecipientRejectionsTextEl.textContent = 'No recipient rejection notes';
+            if (notesFoodbankDeclineWrap) notesFoodbankDeclineWrap.classList.add('d-none');
+            if (notesRecipientRejectionsWrap) notesRecipientRejectionsWrap.classList.add('d-none');
+        });
+    }
+});
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register as Admin - FoodBank Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Reduce page top offset under fixed navbar by half for this page */
+    .main-content { padding-top: 30px; }
+    .split-container {
+        display: flex;
+        background: #fff;
+    }
+
+    .form-section {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #fff;
+    }
+
+    .form-container {
+        max-width: 720px;
+        width: 100%;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .form-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .form-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .admin-notice {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        border: 1px solid #dc3545;
+    }
+
+    .admin-notice h6 {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .admin-notice p {
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .form-group {
+        margin-bottom: 0.75rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-row.single {
+        grid-template-columns: 1fr;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .help-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .password-strength {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+
+    .password-strength h6 {
+        margin-bottom: 0.5rem;
+        color: #495057;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .strength-meter {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 3px;
+    }
+
+    .strength-weak .strength-fill { background: #dc3545; width: 25%; }
+    .strength-fair .strength-fill { background: #ffc107; width: 50%; }
+    .strength-good .strength-fill { background: #17a2b8; width: 75%; }
+    .strength-strong .strength-fill { background: #28a745; width: 100%; }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .requirements-list li {
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .requirements-list li.valid {
+        color: #28a745;
+    }
+
+    .requirements-list li.invalid {
+        color: #6c757d;
+    }
+
+    .requirements-list li i {
+        font-size: 0.7rem;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+    }
+
+    .btn-primary {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .login-link a {
+        color: #28a745;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-container {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="split-container">
+        <div class="form-section">
+            <div class="form-container">
+                <div class="form-header">
+                    <h1 class="form-title">Admin Registration</h1>
+                    <p class="form-subtitle">Register for administrative access to FoodBank Hub</p>
+                </div>
+
+                <div class="admin-notice">
+                    <h6><i class="fas fa-shield-alt"></i> Administrative Access</h6>
+                    <p>This registration is restricted to authorized personnel only. You must have a valid admin authorization code to proceed.</p>
+                </div>
+
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Registration Form -->
+                <form method="post" class="registration-form" id="adminForm">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email Address
+                            </label>
+                            <input type="email" 
+                                   name="{{ form.email.name }}" 
+                                   id="{{ form.email.id_for_label }}" 
+                                   class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                                   placeholder="Enter your email address"
+                                   value="{{ form.email.value|default:'' }}"
+                                   autocomplete="email"
+                                   autofocus
+                                   required>
+                            {% if form.email.errors %}
+                                {% for error in form.email.errors %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                <i class="fas fa-phone me-1"></i>Phone Number
+                            </label>
+                            <input type="tel"
+                                   name="{{ form.phone_number.name }}"
+                                   id="{{ form.phone_number.id_for_label }}"
+                                   class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}"
+                                   placeholder="Enter your phone number"
+                                   value="{{ form.phone_number.value|default:'' }}"
+                                   autocomplete="tel"
+                                   required>
+                            {% if form.phone_number.errors %}
+                                {% for error in form.phone_number.errors %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Admin Authorization -->
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="{{ form.admin_code.id_for_label }}" class="form-label">
+                                <i class="fas fa-key"></i> Admin Authorization Code
+                            </label>
+                            <input type="text" 
+                                   name="{{ form.admin_code.name }}" 
+                                   id="{{ form.admin_code.id_for_label }}" 
+                                   class="form-control {% if form.admin_code.errors %}is-invalid{% endif %}"
+                                   placeholder="Enter admin authorization code"
+                                   value="{{ form.admin_code.value|default:'' }}"
+                                   required>
+                            {% if form.admin_code.help_text %}
+                                <div class="help-text">{{ form.admin_code.help_text }}</div>
+                            {% endif %}
+                            {% if form.admin_code.errors %}
+                                {% for error in form.admin_code.errors %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Password Fields -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Password
+                            </label>
+                            <div style="position: relative;">
+                                <input type="password" 
+                                       name="{{ form.password1.name }}" 
+                                       id="{{ form.password1.id_for_label }}" 
+                                       class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                                       placeholder="Enter your password"
+                                       value="{{ form.password1.value|default:'' }}"
+                                       autocomplete="new-password"
+                                       aria-describedby="password1-help"
+                                       required>
+                                <button type="button" id="togglePwd1" 
+                                        style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#6c757d; cursor:pointer;"
+                                        aria-label="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                                {% for error in form.password1.errors %}
+                                    <div class="error-message" role="alert">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Confirm Password
+                            </label>
+                            <div style="position: relative;">
+                                <input type="password" 
+                                       name="{{ form.password2.name }}" 
+                                       id="{{ form.password2.id_for_label }}" 
+                                       class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                                       placeholder="Confirm your password"
+                                       value="{{ form.password2.value|default:'' }}"
+                                       autocomplete="new-password"
+                                       aria-describedby="password2-help"
+                                       required>
+                                <button type="button" id="togglePwd2" 
+                                        style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#6c757d; cursor:pointer;"
+                                        aria-label="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                                {% for error in form.password2.errors %}
+                                    <div class="error-message" role="alert">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Password Strength Indicator -->
+                    <div class="password-strength" id="passwordStrength" style="display: none;">
+                        <h6>Password Strength</h6>
+                        <div class="strength-meter">
+                            <div class="strength-fill"></div>
+                        </div>
+                        <ul class="requirements-list">
+                            <li id="length-req"><i class="fas fa-times"></i> At least 8 characters</li>
+                            <li id="uppercase-req"><i class="fas fa-times"></i> One uppercase letter</li>
+                            <li id="lowercase-req"><i class="fas fa-times"></i> One lowercase letter</li>
+                            <li id="number-req"><i class="fas fa-times"></i> One number</li>
+                        </ul>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-user-shield"></i> Register as Admin
+                    </button>
+                </form>
+
+                <div class="login-link">
+                    <p>Already have an account? <a href="{% url 'login' %}">Sign in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password1 = document.getElementById('{{ form.password1.id_for_label }}');
+    const password2 = document.getElementById('{{ form.password2.id_for_label }}');
+    const strengthIndicator = document.getElementById('passwordStrength');
+    const strengthMeter = document.querySelector('.strength-meter');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Password strength checking
+    password1.addEventListener('input', function() {
+        const password = this.value;
+        
+        if (password.length > 0) {
+            strengthIndicator.style.display = 'block';
+            checkPasswordStrength(password);
+        } else {
+            strengthIndicator.style.display = 'none';
+        }
+    });
+
+    function checkPasswordStrength(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password)
+        };
+
+        // Update requirement indicators
+        updateRequirement('length-req', requirements.length);
+        updateRequirement('uppercase-req', requirements.uppercase);
+        updateRequirement('lowercase-req', requirements.lowercase);
+        updateRequirement('number-req', requirements.number);
+
+        // Calculate strength
+        const score = Object.values(requirements).filter(Boolean).length;
+        const strengthClasses = ['strength-weak', 'strength-fair', 'strength-good', 'strength-strong'];
+        
+        strengthMeter.className = 'strength-meter';
+        if (score > 0) {
+            strengthMeter.classList.add(strengthClasses[score - 1]);
+        }
+    }
+
+    function updateRequirement(id, met) {
+        const element = document.getElementById(id);
+        const icon = element.querySelector('i');
+        
+        if (met) {
+            element.classList.add('valid');
+            element.classList.remove('invalid');
+            icon.className = 'fas fa-check';
+        } else {
+            element.classList.add('invalid');
+            element.classList.remove('valid');
+            icon.className = 'fas fa-times';
+        }
+    }
+
+    // Password visibility toggles
+    document.getElementById('togglePwd1')?.addEventListener('click', function() {
+        const input = document.getElementById('{{ form.password1.id_for_label }}');
+        const icon = this.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+            this.setAttribute('aria-label', 'Hide password');
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+            this.setAttribute('aria-label', 'Show password');
+        }
+    });
+
+    document.getElementById('togglePwd2')?.addEventListener('click', function() {
+        const input = document.getElementById('{{ form.password2.id_for_label }}');
+        const icon = this.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+            this.setAttribute('aria-label', 'Hide password');
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+            this.setAttribute('aria-label', 'Show password');
+        }
+    });
+
+    // Password confirmation validation
+    password2.addEventListener('input', function() {
+        const password1Value = password1.value;
+        const password2Value = this.value;
+        
+        if (password2Value && password1Value !== password2Value) {
+            this.setCustomValidity('Passwords do not match');
+            this.classList.add('is-invalid');
+        } else {
+            this.setCustomValidity('');
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    // Form validation
+    document.getElementById('adminForm').addEventListener('submit', function(e) {
+        const password1Value = password1.value;
+        const password2Value = password2.value;
+
+        if (password1Value !== password2Value) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+
+        // Disable submit button to prevent double submission
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+    });
+});
+</script>
+{% endblock %}

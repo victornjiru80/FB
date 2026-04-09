@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Available Special Donations - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-handshake me-2 text-info"></i>Available Special Donations
+            </h1>
+            <p class="text-muted">Donors offering special items that require discussion</p>
+        </div>
+    </div>
+
+    {% if other_donations %}
+        <div class="row">
+            {% for donation in other_donations %}
+            <div class="col-lg-6 mb-4">
+                <div class="card donation-card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-gift me-2"></i>Special Donation
+                        </h5>
+                        <small>From: {{ donation.donor.email }}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="donation-description mb-3">
+                            <h6 class="text-muted">Description:</h6>
+                            <p>{{ donation.other_description }}</p>
+                        </div>
+                        
+                        <div class="donation-meta">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Posted: {{ donation.donated_at|date:"M d, Y" }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'start_donation_discussion' donation.id %}" 
+                           class="btn btn-info btn-sm">
+                            <i class="fas fa-comments me-2"></i>Start Discussion
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h4>No Special Donations Available</h4>
+                    <p class="mb-0">There are currently no special donations requiring discussion. Check back later!</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.donation-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.donation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.donation-description {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #17a2b8;
+}
+
+.donation-meta {
+    border-top: 1px solid #e9ecef;
+    padding-top: 0.5rem;
+}
+</style>
+{% endblock %}

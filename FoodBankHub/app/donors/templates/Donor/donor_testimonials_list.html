@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Testimonials - FoodBank Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-quote-right text-primary me-2"></i>
+                        My Testimonials
+                    </h2>
+                    <p class="text-muted mb-0">Share your giving experience and inspire others</p>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="toggleDonorTestimonialDisplayedTime">
+                        <label class="form-check-label small" for="toggleDonorTestimonialDisplayedTime">
+                            Show time displayed on landing
+                        </label>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'create_donor_testimonial' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add New Testimonial
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Testimonials List -->
+            {% if pending_testimonials or displayed_testimonials or archived_testimonials or rejected_testimonials %}
+                <div class="accordion" id="donorTestimonialsAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="donorHeadingPending">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#donorCollapsePending" aria-expanded="true" aria-controls="donorCollapsePending">
+                                Pending ({{ pending_testimonials|length }})
+                            </button>
+                        </h2>
+                        <div id="donorCollapsePending" class="accordion-collapse collapse show" aria-labelledby="donorHeadingPending" data-bs-parent="#donorTestimonialsAccordion">
+                            <div class="accordion-body">
+                                {% if pending_testimonials %}
+                                    <div class="row">
+                                        {% for testimonial in pending_testimonials %}
+                                        <div class="col-md-6 col-lg-4 mb-4">
+                                            <div class="card h-100 shadow-sm">
+                                                {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" class="card-img-top" alt="Impact Image" style="height: 200px; object-fit: cover;">
+                                                {% endif %}
+                                                <div class="card-body d-flex flex-column">
+                                                    <div class="mb-3">
+                                                        <span class="badge bg-warning">
+                                                            <i class="fas fa-clock me-1"></i>Pending Review
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <p class="card-text">{{ testimonial.message|truncatewords:30 }}</p>
+                                                    </div>
+                                                    <div class="text-muted small mb-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        Created {{ testimonial.created_at|date:"M d, Y" }}
+                                                    </div>
+                                                    <div class="d-flex gap-2 mt-auto">
+                                                        <a href="{% url 'edit_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-edit me-1"></i>Edit
+                                                        </a>
+                                                        <a href="{% url 'delete_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this testimonial?')">
+                                                            <i class="fas fa-trash me-1"></i>Delete
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted">No pending testimonials.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="donorHeadingDisplayed">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#donorCollapseDisplayed" aria-expanded="false" aria-controls="donorCollapseDisplayed">
+                                Displayed ({{ displayed_testimonials|length }})
+                            </button>
+                        </h2>
+                        <div id="donorCollapseDisplayed" class="accordion-collapse collapse" aria-labelledby="donorHeadingDisplayed" data-bs-parent="#donorTestimonialsAccordion">
+                            <div class="accordion-body">
+                                {% if displayed_testimonials %}
+                                    <div class="row">
+                                        {% for testimonial in displayed_testimonials %}
+                                        <div class="col-md-6 col-lg-4 mb-4">
+                                            <div class="card h-100 shadow-sm">
+                                                {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" class="card-img-top" alt="Impact Image" style="height: 200px; object-fit: cover;">
+                                                {% endif %}
+                                                <div class="card-body d-flex flex-column">
+                                                    <div class="mb-3">
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i>Approved
+                                                        </span>
+                                                        <span class="badge bg-info ms-1">
+                                                            <i class="fas fa-eye me-1"></i>Public
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <p class="card-text">{{ testimonial.message|truncatewords:30 }}</p>
+                                                    </div>
+                                                    <div class="text-muted small mb-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        Created {{ testimonial.created_at|date:"M d, Y" }}
+                                                        {% if testimonial.reviewed_at %}
+                                                            <br>
+                                                            <i class="fas fa-user-check me-1"></i>
+                                                            Reviewed {{ testimonial.reviewed_at|date:"M d, Y" }}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% with display_since=testimonial.display_start_date|default:testimonial.reviewed_at|default:testimonial.created_at %}
+                                                        <div class="text-muted small mb-3 js-testimonial-displayed-time d-none">
+                                                            <i class="fas fa-hourglass-half me-1"></i>
+                                                            Displayed for: {{ display_since|timesince }}
+                                                        </div>
+                                                    {% endwith %}
+                                                    <div class="d-flex gap-2 mt-auto">
+                                                        <a href="{% url 'toggle_donor_testimonial_display' testimonial.id %}" class="btn btn-sm btn-outline-info">
+                                                            <i class="fas fa-eye-slash me-1"></i>Hide
+                                                        </a>
+                                                        <a href="{% url 'delete_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this testimonial?')">
+                                                            <i class="fas fa-trash me-1"></i>Delete
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted">No displayed testimonials.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="donorHeadingArchived">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#donorCollapseArchived" aria-expanded="false" aria-controls="donorCollapseArchived">
+                                Archived ({{ archived_testimonials|length }})
+                            </button>
+                        </h2>
+                        <div id="donorCollapseArchived" class="accordion-collapse collapse" aria-labelledby="donorHeadingArchived" data-bs-parent="#donorTestimonialsAccordion">
+                            <div class="accordion-body">
+                                {% if archived_testimonials %}
+                                    <div class="row">
+                                        {% for testimonial in archived_testimonials %}
+                                        <div class="col-md-6 col-lg-4 mb-4">
+                                            <div class="card h-100 shadow-sm">
+                                                {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" class="card-img-top" alt="Impact Image" style="height: 200px; object-fit: cover;">
+                                                {% endif %}
+                                                <div class="card-body d-flex flex-column">
+                                                    <div class="mb-3">
+                                                        {% if testimonial.approval_status == 'approved' %}
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check me-1"></i>Approved
+                                                            </span>
+                                                            <span class="badge bg-secondary ms-1">
+                                                                <i class="fas fa-eye-slash me-1"></i>Hidden
+                                                            </span>
+                                                        {% elif testimonial.approval_status == 'pending' %}
+                                                            <span class="badge bg-warning">
+                                                                <i class="fas fa-clock me-1"></i>Pending Review
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-times me-1"></i>Rejected
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <p class="card-text">{{ testimonial.message|truncatewords:30 }}</p>
+                                                    </div>
+                                                    <div class="text-muted small mb-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        Created {{ testimonial.created_at|date:"M d, Y" }}
+                                                        {% if testimonial.reviewed_at %}
+                                                            <br>
+                                                            <i class="fas fa-user-check me-1"></i>
+                                                            Reviewed {{ testimonial.reviewed_at|date:"M d, Y" }}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if testimonial.approval_status == 'rejected' and testimonial.rejection_reason %}
+                                                    <div class="alert alert-danger small mb-3">
+                                                        <strong>Rejection Reason:</strong> {{ testimonial.rejection_reason }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="d-flex gap-2 mt-auto">
+                                                        {% if testimonial.approval_status != 'approved' %}
+                                                            <a href="{% url 'edit_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-edit me-1"></i>Edit
+                                                            </a>
+                                                        {% endif %}
+
+                                                        {% if testimonial.approval_status == 'approved' %}
+                                                            <a href="{% url 'toggle_donor_testimonial_display' testimonial.id %}" class="btn btn-sm btn-outline-info">
+                                                                <i class="fas fa-eye me-1"></i>Show
+                                                            </a>
+                                                        {% endif %}
+
+                                                        <a href="{% url 'delete_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this testimonial?')">
+                                                            <i class="fas fa-trash me-1"></i>Delete
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted">No archived testimonials.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="donorHeadingRejected">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#donorCollapseRejected" aria-expanded="false" aria-controls="donorCollapseRejected">
+                                Rejected ({{ rejected_testimonials|length }})
+                            </button>
+                        </h2>
+                        <div id="donorCollapseRejected" class="accordion-collapse collapse" aria-labelledby="donorHeadingRejected" data-bs-parent="#donorTestimonialsAccordion">
+                            <div class="accordion-body">
+                                {% if rejected_testimonials %}
+                                    <div class="row">
+                                        {% for testimonial in rejected_testimonials %}
+                                        <div class="col-md-6 col-lg-4 mb-4">
+                                            <div class="card h-100 shadow-sm">
+                                                {% if testimonial.impact_image %}
+                                                <img src="{{ testimonial.impact_image.url }}" class="card-img-top" alt="Impact Image" style="height: 200px; object-fit: cover;">
+                                                {% endif %}
+                                                <div class="card-body d-flex flex-column">
+                                                    <div class="mb-3">
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times me-1"></i>Rejected
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <p class="card-text">{{ testimonial.message|truncatewords:30 }}</p>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        {% if testimonial.rejection_reason %}
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#donorTestimonialRejectionModal"
+                                                                    data-title="Rejection Reason (Testimonial #{{ testimonial.id }})"
+                                                                    data-reason="{{ testimonial.rejection_reason|escape }}">
+                                                                View Reason
+                                                            </button>
+                                                        {% else %}
+                                                            <span class="text-muted small">No reason provided</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="text-muted small mb-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        Created {{ testimonial.created_at|date:"M d, Y" }}
+                                                        {% if testimonial.reviewed_at %}
+                                                            <br>
+                                                            <i class="fas fa-user-check me-1"></i>
+                                                            Reviewed {{ testimonial.reviewed_at|date:"M d, Y" }}
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="d-flex gap-2 mt-auto">
+                                                        <a href="{% url 'edit_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-edit me-1"></i>Edit
+                                                        </a>
+                                                        <a href="{% url 'delete_donor_testimonial' testimonial.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this testimonial?')">
+                                                            <i class="fas fa-trash me-1"></i>Delete
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted">No rejected testimonials.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-quote-right text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">No Testimonials Yet</h4>
+                    <p class="text-muted mb-4">Share your giving experience and inspire others to make a difference!</p>
+                    <a href="{% url 'create_donor_testimonial' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Your First Testimonial
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="donorTestimonialRejectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Rejection Reason</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body js-donor-rejection-reason-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.btn-sm {
+    font-size: 0.8rem;
+}
+</style>
+
+<script>
+    (function() {
+        const key = 'fbh_show_testimonial_displayed_time';
+        const toggle = document.getElementById('toggleDonorTestimonialDisplayedTime');
+        if (!toggle) {
+            return;
+        }
+
+        function apply(show) {
+            document.querySelectorAll('.js-testimonial-displayed-time').forEach(function(el) {
+                el.classList.toggle('d-none', !show);
+            });
+        }
+
+        const saved = localStorage.getItem(key);
+        toggle.checked = saved === '1';
+        apply(toggle.checked);
+
+        toggle.addEventListener('change', function() {
+            localStorage.setItem(key, toggle.checked ? '1' : '0');
+            apply(toggle.checked);
+        });
+    })();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('donorTestimonialRejectionModal');
+        if (!modalEl) {
+            return;
+        }
+        modalEl.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            if (!button) {
+                return;
+            }
+            const title = button.getAttribute('data-title') || 'Rejection Reason';
+            const reason = button.getAttribute('data-reason') || 'No reason provided';
+            const titleEl = modalEl.querySelector('.modal-title');
+            const bodyEl = modalEl.querySelector('.js-donor-rejection-reason-body');
+            if (titleEl) {
+                titleEl.textContent = title;
+            }
+            if (bodyEl) {
+                bodyEl.textContent = reason;
+            }
+        });
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            const bodyEl = modalEl.querySelector('.js-donor-rejection-reason-body');
+            if (bodyEl) {
+                bodyEl.textContent = '';
+            }
+        });
+    });
+</script>
+{% endblock %}

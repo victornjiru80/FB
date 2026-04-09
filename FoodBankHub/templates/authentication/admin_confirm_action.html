@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if action == 'approve' %}Approve{% else %}Reject{% endif %} Food Bank Application - Admin Panel
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirm-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+    }
+    
+    .confirm-card {
+        max-width: 600px;
+        width: 100%;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 3rem rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .confirm-header {
+        padding: 2rem;
+        text-align: center;
+        {% if action == 'approve' %}
+            background: linear-gradient(135deg, #28a745, #20c997);
+        {% else %}
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        {% endif %}
+        color: white;
+    }
+    
+    .confirm-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    
+    .confirm-icon i {
+        font-size: 2rem;
+    }
+    
+    .confirm-body {
+        padding: 2rem;
+    }
+    
+    .foodbank-info {
+        background: #f8f9fc;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .info-value {
+        color: #6c757d;
+    }
+    
+    .rejection-reason {
+        margin-bottom: 1.5rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+        border-color: #218838;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        border-color: #c82333;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border-color: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        border-color: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+    
+    @media (max-width: 768px) {
+        .confirm-card {
+            margin: 1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-container">
+    <div class="confirm-card">
+        <div class="confirm-header">
+            <div class="confirm-icon">
+                {% if action == 'approve' %}
+                    <i class="fas fa-check"></i>
+                {% else %}
+                    <i class="fas fa-times"></i>
+                {% endif %}
+            </div>
+            <h2 class="mb-0">
+                {% if action == 'approve' %}
+                    Approve Application
+                {% else %}
+                    Reject Application
+                {% endif %}
+            </h2>
+            <p class="mb-0 mt-2 opacity-75">
+                {% if action == 'approve' %}
+                    Confirm approval of this food bank registration
+                {% else %}
+                    Confirm rejection of this food bank registration
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="confirm-body">
+            <!-- Food Bank Information -->
+            <div class="foodbank-info">
+                <h5 class="mb-3">Application Details</h5>
+                
+                <div class="info-row">
+                    <span class="info-label">Food Bank Name:</span>
+                    <span class="info-value">{{ foodbank_profile.foodbank_name }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Contact Person:</span>
+                    <span class="info-value">{{ foodbank_profile.contact_person }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ foodbank_profile.user.email }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{ foodbank_profile.address|default:"Not provided" }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Service Type:</span>
+                    <span class="info-value">{{ foodbank_profile.get_service_type_display }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Applied:</span>
+                    <span class="info-value">{{ foodbank_profile.application_date|date:"M d, Y" }}</span>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if action == 'reject' %}
+                    <div class="rejection-reason">
+                        <label for="rejection_reason" class="form-label">
+                            <strong>Reason for Rejection <span class="text-danger">*</span></strong>
+                        </label>
+                        <textarea name="rejection_reason" id="rejection_reason" 
+                                  class="form-control" rows="4" required
+                                  placeholder="Please provide a clear reason for rejecting this application. This will be sent to the applicant."></textarea>
+                        <div class="form-text">
+                            Be specific and constructive. This helps the applicant understand what they need to improve.
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="action-buttons">
+                    {% if action == 'approve' %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i>
+                            Confirm Approval
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i>
+                            Confirm Rejection
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'admin_pending_registrations' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+            
+            {% if action == 'approve' %}
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="text-success mb-2">
+                        <i class="fas fa-info-circle me-1"></i>What happens after approval?
+                    </h6>
+                    <ul class="mb-0 small text-muted">
+                        <li>The food bank will receive an approval email notification</li>
+                        <li>Their account will be activated for immediate use</li>
+                        <li>They can start creating requests and managing donations</li>
+                        <li>Their profile will be visible to donors and recipients</li>
+                    </ul>
+                </div>
+            {% else %}
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="text-danger mb-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i>What happens after rejection?
+                    </h6>
+                    <ul class="mb-0 small text-muted">
+                        <li>The applicant will receive a rejection email with your reason</li>
+                        <li>Their account will remain inactive</li>
+                        <li>They can contact support to address the issues and reapply</li>
+                        <li>The application will be marked as rejected in the system</li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation for rejection reason
+    {% if action == 'reject' %}
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const reason = document.getElementById('rejection_reason').value.trim();
+            if (reason.length < 10) {
+                e.preventDefault();
+                alert('Please provide a more detailed reason for rejection (at least 10 characters).');
+                return false;
+            }
+        });
+    {% endif %}
+    
+    // Confirmation dialog
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const action = '{{ action }}';
+        const foodbankName = '{{ foodbank_profile.foodbank_name }}';
+        const message = `Are you sure you want to ${action} the application for "${foodbankName}"?`;
+        
+        if (!confirm(message)) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}
