@@ -4,8 +4,9 @@ services:
     name: foodbankhub
     runtime: docker
     plan: free
-    dockerfilePath: ./FoodBankHub/Dockerfile
-    dockerContext: ./FoodBankHub
+    # No leading "./" — some Render path handling can mis-resolve to ".FoodBankHub"
+    dockerfilePath: FoodBankHub/Dockerfile
+    dockerContext: FoodBankHub
     healthCheckPath: /
     preDeployCommand: python manage.py migrate --noinput
     envVars:
