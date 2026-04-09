@@ -1,12 +1,14 @@
 # Blueprint: https://render.com/docs/blueprint-spec
+# With rootDir, dockerfilePath and dockerContext are relative to FoodBankHub/ — not the repo root.
+# See: https://render.com/docs/monorepo-support#setting-a-root-directory
 services:
   - type: web
     name: foodbankhub
     runtime: docker
     plan: free
-    # No leading "./" — some Render path handling can mis-resolve to ".FoodBankHub"
-    dockerfilePath: FoodBankHub/Dockerfile
-    dockerContext: FoodBankHub
+    rootDir: FoodBankHub
+    dockerfilePath: Dockerfile
+    dockerContext: .
     healthCheckPath: /
     preDeployCommand: python manage.py migrate --noinput
     envVars:
