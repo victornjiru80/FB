@@ -281,20 +281,24 @@ else:
 _csrf_trusted = config('CSRF_TRUSTED_ORIGINS', default='').strip()
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
 
-# Logging: avoid FileHandler on read-only or missing logs/ in containers
+# Logging: dictConfig configures every entry in handlers, so do not register
+# FileHandler when DEBUG is False (Docker collectstatic, Render — no logs/ dir).
 _log_handlers = ['console', 'file'] if DEBUG else ['console']
+_logging_handlers = {
+    'console': {
+        'class': 'logging.StreamHandler',
+    },
+}
+if DEBUG:
+    _logging_handlers['file'] = {
+        'class': 'logging.FileHandler',
+        'filename': BASE_DIR / 'logs' / 'django.log',
+    }
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-        },
-    },
+    'handlers': _logging_handlers,
     'root': {
         'handlers': _log_handlers,
         'level': 'INFO',
