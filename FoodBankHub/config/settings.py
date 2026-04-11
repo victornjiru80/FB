@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from decouple import Csv, config
@@ -29,11 +30,16 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-jvg9$85_4ln!e1hyr47#_
 # Local: set DEBUG=True in .env (see .env.example).
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,testserver',
-    cast=Csv(),
+ALLOWED_HOSTS = list(
+    config(
+        'ALLOWED_HOSTS',
+        default='localhost,127.0.0.1,testserver',
+        cast=Csv(),
+    )
 )
+# On Render, allow your *.onrender.com hostname without manual env (see RENDER in Render docs).
+if os.environ.get('RENDER', '').lower() in ('true', '1', 'yes') and '.onrender.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('.onrender.com')
 
 
 # Application definition
@@ -267,6 +273,13 @@ SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)  # For admin e
 
 # Site configuration for emails and absolute links
 SITE_URL = config('SITE_URL', default='http://localhost:8000').strip()
+_render_url = os.environ.get('RENDER_EXTERNAL_URL', '').strip().rstrip('/')
+if (
+    os.environ.get('RENDER', '').lower() in ('true', '1', 'yes')
+    and _render_url
+    and SITE_URL in ('http://localhost:8000', 'https://localhost:8000', '')
+):
+    SITE_URL = _render_url
 
 # Production HTTPS (Render, etc.): terminate TLS at proxy
 if not DEBUG:
@@ -282,6 +295,12 @@ else:
 
 _csrf_trusted = config('CSRF_TRUSTED_ORIGINS', default='').strip()
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
+if (
+    os.environ.get('RENDER', '').lower() in ('true', '1', 'yes')
+    and _render_url
+    and _render_url not in CSRF_TRUSTED_ORIGINS
+):
+    CSRF_TRUSTED_ORIGINS.append(_render_url)
 
 # Logging: dictConfig configures every entry in handlers, so do not register
 # FileHandler when DEBUG is False (Docker collectstatic, Render).
